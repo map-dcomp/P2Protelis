@@ -1,0 +1,75 @@
+[
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":1, "alias":"Database 1",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.DummyMonitorable",
+ 	"port":5001,
+ 	"dependencyList":[]
+ 	},
+ "environment":[["messages",
+ 	 [{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"A1","incoming":true},
+ 	  {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"A2","incoming":false},
+ 	  {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"C1","incoming":true},
+ 	  {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"C2","incoming":false}]],
+ 	["badMessages",
+ 	 [{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"C1","incoming":true}]]]
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":2, "alias":"Database 2",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.DummyMonitorable",
+ 	"port":5002,
+ 	"dependencyList":[]
+ 	},
+ "environment":[["messages",
+ 	[{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"B1","incoming":true},
+ 	 {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"D1","incoming":true},
+ 	 {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"B2","incoming":false},
+ 	 {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"D2","incoming":false}]],
+ 	["badMessages",[]]]
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":3, "alias":"Webserver 1",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.DummyMonitorable",
+ 	"port":5003,
+ 	"dependencyList":[5001, 5002]
+ 	},
+ "environment":[["messages",
+ 	[{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"A1","incoming":false},
+ 	 {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"B1","incoming":false},
+ 	 {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"A2","incoming":true},
+ 	 {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"B2","incoming":true}]],
+ 	["badMessages",[]]]
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":4, "alias":"Webserver 2",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.DummyMonitorable",
+ 	"port":5004,
+ 	"dependencyList":[5001, 5002]
+ 	},
+ "environment":[["messages",
+ 	[{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"C1","incoming":false},
+ 	 {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"C2","incoming":true},
+ 	 {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"D1","incoming":false},
+ 	 {"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		"contents":"D2","incoming":true}]],
+ 	["badMessages",[]]]
+ }
+]

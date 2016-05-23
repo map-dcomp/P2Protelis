@@ -1,0 +1,49 @@
+[
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":1, "alias":"Database 1",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Database 1", "shortName":"D1",
+ 	"port":5001,
+ 	"originator":false,
+ 	"dependencyList":[],
+ 	"recording":true
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":2, "alias":"Database 2",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Database 2", "shortName":"D2",
+ 	"port":5002,
+ 	"originator":false,
+ 	"dependencyList":[],
+ 	"recording":true
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":3, "alias":"Webserver 1",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Webserver 1", "shortName":"W1",
+ 	"port":5003,
+ 	"originator":true,
+ 	"dependencyList":[["localhost",5001],["localhost",5002]],
+ 	"recording":true
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":4, "alias":"Webserver 2",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Webserver 2", "shortName":"W2",
+ 	"port":5004,
+ 	"originator":true,
+ 	"dependencyList":[["localhost",5001],["localhost",5002]],
+ 	"recording":true,
+ 	"attackModel":{"@type":"com.bbn.protelis.processmanagement.testbed.client.SpecificAttackModel",
+ 		"session":1,
+ 		"targetName":"Database 1"
+ 		}
+ 	}
+ }
+]

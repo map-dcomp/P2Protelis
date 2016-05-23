@@ -1,0 +1,8 @@
+module test:reference
+import test:reference2
+
+public def testFun() {
+	2+testFun2();
+}
+
+testFun();

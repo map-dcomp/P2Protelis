@@ -1,0 +1,16 @@
+[
+	[1,[{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		 "uid":"A1","incoming":true},
+ 	 	{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		 "uid":"A2","incoming":false}]],
+	[2,[{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		 "uid":"B1","incoming":true}]],
+	[3,[{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		 "uid":"A1","incoming":false},
+ 	 	{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		 "uid":"B1","incoming":false},
+ 	 	{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		 "uid":"A2","incoming":true}]],
+	[4,[{"@type":"com.bbn.protelis.processmanagement.testbed.client.Message",
+ 		 "uid":"C1","incoming":false}]]
+]

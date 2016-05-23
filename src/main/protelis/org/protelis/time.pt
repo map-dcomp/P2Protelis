@@ -1,0 +1,18 @@
+module org:protelis:time
+
+import java.lang.System.currentTimeMillis
+
+public def once(v) { rep(x <- v) { x } }
+
+/**
+ *  timer returns the number of seconds that have elapsed (with an expected accuracy of ~10ms, as it is based on Java's System.currentTimeMillis()
+ */
+public def timer() {
+	let current = currentTimeMillis();
+	let initial = once(current);
+	(current - initial) / 1000;
+}
+
+public def counter() {
+	rep(n <- 0) { n+1 }
+}
