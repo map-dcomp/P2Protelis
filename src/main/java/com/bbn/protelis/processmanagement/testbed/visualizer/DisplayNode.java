@@ -2,13 +2,13 @@ package com.bbn.protelis.processmanagement.testbed.visualizer;
 
 import org.danilopianini.lang.util.FasterString;
 import org.protelis.lang.datatype.DeviceUID;
+import org.protelis.vm.ExecutionEnvironment;
 
 import java.awt.Color;
 import java.awt.Paint;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,9 +61,9 @@ public class DisplayNode implements Listener {
 	}
 
 	public Paint getVertexColor() {
-		float r = objectToColorComponent(source.getEnvironment().get(new FasterString("red")));
-		float g = objectToColorComponent(source.getEnvironment().get(new FasterString("green")));
-		float b = objectToColorComponent(source.getEnvironment().get(new FasterString("blue")));
+		float r = objectToColorComponent(source.getEnvironment().get("red"));
+		float g = objectToColorComponent(source.getEnvironment().get("green"));
+		float b = objectToColorComponent(source.getEnvironment().get("blue"));
 		if(r==0 && g==0 && b==0) return null;
 		return new Color(r,g,b);
 	}
@@ -119,7 +119,7 @@ public class DisplayNode implements Listener {
 	 * @param selected
 	 */
 	public void setEnvironmentVariable(String var, boolean selected) {
-		source.getEnvironment().put(new FasterString(var), selected);
+		source.getEnvironment().put(var, selected);
 	}
 
 	@Override
@@ -157,13 +157,15 @@ public class DisplayNode implements Listener {
 	
 	private static final Set<FasterString> ignores = new HashSet<>();
 	private String debugString() {
-		Map<FasterString,Object> env = source.getEnvironment();
 		boolean hasAny = false;
 		String s = "<br><font color=\"444444\"><small><i>";
-		for(Iterator<FasterString> i=env.keySet().iterator(); i.hasNext();) {
-			FasterString k = i.next();
-			if(!ignores.contains(k)) { hasAny = true; s += "<br>"+k+" = "+env.get(k); }
-		}
+		
+		// TODO: need to have key set exposed for iteration; for now, disabling
+//		ExecutionEnvironment env = source.getEnvironment();
+//		for(Iterator<FasterString> i=env.keySet().iterator(); i.hasNext();) {
+//			FasterString k = i.next();
+//			if(!ignores.contains(k)) { hasAny = true; s += "<br>"+k+" = "+env.get(k); }
+//		}
 		// No entries = no display
 		if(!hasAny) return ""; 
 		s += "</i></small></font>";

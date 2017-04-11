@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
-import org.protelis.vm.IProgram;
+import org.protelis.vm.ProtelisProgram;
 import org.slf4j.Logger;
 
 import com.bbn.protelis.processmanagement.daemon.Daemon;
@@ -23,7 +23,7 @@ public abstract class AbstractDaemonWrapper implements DaemonWrapper, Daemon.Lis
 	public String alias;	// Display name (may not be unique)
 	// TODO: determine if "location" is needed
 	public int[] location; 	// Display location
-	public IProgram program; // Protelis program run by daemon
+	public ProtelisProgram program; // Protelis program run by daemon
 	public Object[][] environment = new Object[][] {}; // [[String,String/Integer],...]
 
 	public ProcessStatus getDaemonStatus() {

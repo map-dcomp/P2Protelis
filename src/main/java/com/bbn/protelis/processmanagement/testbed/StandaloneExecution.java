@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import org.junit.Assert;
 import org.protelis.lang.ProtelisLoader;
-import org.protelis.vm.IProgram;
+import org.protelis.vm.ProtelisProgram;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
@@ -120,7 +120,7 @@ public class StandaloneExecution {
 		}
 	}
 	
-	private static IProgram parseProgram(String program, boolean anonymous) {
+	private static ProtelisProgram parseProgram(String program, boolean anonymous) {
 		// TODO: handle anonymous appropriately
 		if(anonymous) {
 			return ProtelisLoader.parseAnonymousModule(program);

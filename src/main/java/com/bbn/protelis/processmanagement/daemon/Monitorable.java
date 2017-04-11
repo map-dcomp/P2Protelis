@@ -1,6 +1,7 @@
 package com.bbn.protelis.processmanagement.daemon;
 
 import org.protelis.lang.datatype.Tuple;
+import org.protelis.lang.datatype.impl.ArrayTupleImpl;
 
 import com.bbn.protelis.processmanagement.testbed.client.Message;
 
@@ -9,10 +10,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public abstract class Monitorable {
 	static public interface Listener {
@@ -38,7 +37,7 @@ public abstract class Monitorable {
 	public Tuple getRecordAsTuple() { 
 		ArrayList<Object> l = new ArrayList<>();
 		for(Message m : record) { l.add(m); }
-		return Tuple.create(l);
+		return new ArrayTupleImpl(l);
 	}
 
 	private Set<Listener> listeners = new HashSet<>();

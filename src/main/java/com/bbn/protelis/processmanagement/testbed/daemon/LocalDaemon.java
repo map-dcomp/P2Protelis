@@ -3,14 +3,14 @@ package com.bbn.protelis.processmanagement.testbed.daemon;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.danilopianini.lang.util.FasterString;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.lang.datatype.Tuple;
+import org.protelis.lang.datatype.impl.ArrayTupleImpl;
+import org.protelis.vm.ExecutionEnvironment;
 
 import com.bbn.protelis.processmanagement.daemon.Daemon;
 import com.bbn.protelis.processmanagement.daemon.LongDeviceUID;
@@ -39,21 +39,21 @@ public class LocalDaemon extends AbstractDaemonWrapper {
 		// Initialize the environment
 		// ... from environment buttons (this also allows a scenario to tell if it's got a UI)
 		for(String var : scenario.environmentButtons) {
-			daemon.currentEnvironment().put(new FasterString(var), false);
+			daemon.getExecutionEnvironment().put(var, false);
 		}
 		// ... from JSON'ed array spec
 		for(Object[] epair : environment) {
 			if(epair.length!=2 || !(epair[0] instanceof String)) {
 				scenario.logger.warn("Ignoring bad enviroment element: "+epair); continue;
 			}
-			FasterString key = new FasterString((String)epair[0]);
+			String key = (String)epair[0];
 			Object value = epair[1];
 			if(value instanceof Object[]) {
 				List<Object> l = new ArrayList<>();
 				for(Object v : (Object[])value) { l.add(v); }
-				value = Tuple.create(l);
+				value = new ArrayTupleImpl(l);
 			}
-			daemon.currentEnvironment().put(key, value);
+			daemon.getExecutionEnvironment().put(key, value);
 		}
 
 		// Run the daemon
@@ -97,11 +97,6 @@ public class LocalDaemon extends AbstractDaemonWrapper {
 	}
 
 	@Override
-	public Map<FasterString, Object> getEnvironment() {
-		return daemon.currentEnvironment();
-	}
-
-	@Override
 	public void signalProcess(ProcessStatus init) {
 		// TODO Auto-generated method stub
 		
@@ -121,12 +116,17 @@ public class LocalDaemon extends AbstractDaemonWrapper {
 	@Override
 	public Set<DeviceUID> getLogicalNeighbors() {
 		try {
-			Tuple ln = (Tuple)daemon.currentEnvironment().get(new FasterString("logicalNeighbors"));
+			Tuple ln = (Tuple)daemon.getExecutionEnvironment().get("logicalNeighbors");
 			return (Set)StreamSupport.stream(ln.spliterator(), false)
 					.map((id) -> { return new LongDeviceUID(((Number)id).longValue()); })
 					.collect(Collectors.toSet());
 		} catch(Exception e) {
 			return null;
 		}
+	}
+
+	@Override
+	public ExecutionEnvironment getEnvironment() {
+		return daemon.getExecutionEnvironment();
 	}
 }

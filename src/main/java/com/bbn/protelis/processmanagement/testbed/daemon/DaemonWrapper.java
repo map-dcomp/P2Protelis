@@ -1,11 +1,10 @@
 package com.bbn.protelis.processmanagement.testbed.daemon;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Set;
 
-import org.danilopianini.lang.util.FasterString;
 import org.protelis.lang.datatype.DeviceUID;
+import org.protelis.vm.ExecutionEnvironment;
 
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
 import com.bbn.protelis.processmanagement.testbed.Scenario;
@@ -33,7 +32,7 @@ public interface DaemonWrapper {
 	
 	public Object getValue();
 	public int getRound();
-	public Map<FasterString, Object> getEnvironment();
+	public ExecutionEnvironment getEnvironment();
 	public long getUID();
 	public void signalProcess(ProcessStatus init);
 	public Set<DeviceUID> getPhysicalNeighbors();

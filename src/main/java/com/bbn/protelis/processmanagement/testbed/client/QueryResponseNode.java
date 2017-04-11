@@ -1,12 +1,11 @@
 package com.bbn.protelis.processmanagement.testbed.client;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.UnhandledException;
 import org.protelis.lang.datatype.Tuple;
+import org.protelis.lang.datatype.Tuples;
+import org.protelis.lang.datatype.impl.ArrayTupleImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.bbn.protelis.processmanagement.daemon.Monitorable;
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
 import com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon;
 
@@ -27,10 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.UUID;
-import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
 
 public class QueryResponseNode extends CrumpleZoneMonitorable {
@@ -58,7 +55,7 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
 	/** Time before a query is dropped for lack of response */
 	//private final int QUERY_DROP_TIME = 5000;
 	/** Live dependencies processed from the original dependencyList */
-	private Tuple dependencies = Tuple.create();
+	private Tuple dependencies = new ArrayTupleImpl();
 	private boolean firstInit = true;
 
 	private class State {
@@ -268,7 +265,7 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
 	private class PendingQueryRecord {
 		public PendingQueryRecord(DependencyQuery stimulus) { 
 			//timeout = System.currentTimeMillis() + QUERY_DROP_TIME;
-			satisfied = Tuple.fill(false, dependencies.size());
+			satisfied = Tuples.fill(false, dependencies.size());
 			this.stimulus = stimulus;
 		}
 		//public long timeout;
@@ -426,9 +423,9 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
 				assert(d.length==2 && d[0] instanceof String && d[1] instanceof Integer);
 				InetAddress depAddr = InetAddress.getByName((String) d[0]);
 				int depPort = LocalDaemon.testPortOffset+((Number)d[1]).intValue();
-				dlist.add(Tuple.create(depAddr,depPort));
+				dlist.add(new ArrayTupleImpl(depAddr,depPort));
 			}
-			dependencies = Tuple.create(dlist);
+			dependencies = new ArrayTupleImpl(dlist);
 		} catch(UnknownHostException e) {
 			// ignore, just end up with no dependencies
 			// TODO: actually report this problem

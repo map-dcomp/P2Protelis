@@ -1,6 +1,7 @@
 package com.bbn.protelis.processmanagement.testbed.client;
 
 import org.protelis.lang.datatype.Tuple;
+import org.protelis.lang.datatype.impl.ArrayTupleImpl;
 
 import com.bbn.protelis.processmanagement.daemon.Monitorable;
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
@@ -15,7 +16,7 @@ public class DummyMonitorable extends Monitorable {
 	private ProcessStatus status = ProcessStatus.run;
 	private int port = (int) (5000+Math.round(10000*Math.random()));
 	private int[] dependencyList = new int[0];
-	private Tuple dependencies = Tuple.create();
+	private Tuple dependencies = new ArrayTupleImpl();
 	private boolean firstInit = true;
 
 	private void initializePersistentState() {
@@ -24,9 +25,9 @@ public class DummyMonitorable extends Monitorable {
 			InetAddress local = InetAddress.getLocalHost();
 			List<Tuple> dlist = new ArrayList<>();
 			for(int d : dependencyList) {
-				dlist.add(Tuple.create(local,d+LocalDaemon.testPortOffset));
+				dlist.add(new ArrayTupleImpl(local,d+LocalDaemon.testPortOffset));
 			}
-			dependencies = Tuple.create(dlist);
+			dependencies = new ArrayTupleImpl(dlist);
 		} catch(UnknownHostException e) {
 			// ignore, just end up with no dependencies
 			// TODO: actually report this problem

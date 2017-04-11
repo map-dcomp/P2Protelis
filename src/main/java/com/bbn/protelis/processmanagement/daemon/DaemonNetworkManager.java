@@ -92,14 +92,14 @@ public class DaemonNetworkManager implements NetworkManager, Monitorable.Listene
 	/* ********************************* */
 	Map<DeviceUID,Map<CodePath, Object>> nbrValues = new HashMap<>();
 	@Override
-	public Map<DeviceUID,Map<CodePath, Object>> takeMessages() {
+	public Map<DeviceUID,Map<CodePath, Object>> getNeighborState() {
 		nbrValues.clear();
 		nbrs.forEach((id,nbr) -> { if(nbr.status==Neighbor.Status.running) nbrValues.put(new LongDeviceUID(id), nbr.sharedValues); });
 		return nbrValues;
 	}
 
 	@Override
-	public void sendMessage(Map<CodePath, Object> toSend) {
+	public void shareState(Map<CodePath, Object> toSend) {
 		nbrs.forEach((id,nbr) -> { nbr.sendMessage(toSend); });
 	}
 

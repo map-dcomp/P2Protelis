@@ -6,13 +6,11 @@ package com.bbn.protelis.processmanagement.daemon;
 import org.apache.commons.math3.random.BitsStreamGenerator;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.protelis.lang.datatype.DeviceUID;
-import org.protelis.vm.IProgram;
 import org.protelis.vm.impl.AbstractExecutionContext;
+import org.protelis.vm.impl.SimpleExecutionEnvironment;
+import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
 
-import it.unibo.alchemist.model.interfaces.IPosition;
-
-import org.danilopianini.lang.util.FasterString;
 import org.slf4j.Logger;
 
 import java.io.Serializable;
@@ -38,7 +36,6 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
 	private final DaemonNetworkManager network;
 	private final Monitorable client;
 	private final BitsStreamGenerator rng = new MersenneTwister();
-	private final Map<FasterString, Object> environment = new ConcurrentHashMap<>();
 		
 	// Management of debugging, reporting, and external control
 	private Logger logger = null;
@@ -51,8 +48,8 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
 	/*          Constructors             */
 	/* ********************************* */
 	//   Internal, fully-specified constructor
-	private Daemon(IProgram program, boolean specifiedUID, long uid, Monitorable client, Logger log) throws UnknownHostException {
-		super(new DaemonNetworkManager(client,uid,log));
+	private Daemon(ProtelisProgram program, boolean specifiedUID, long uid, Monitorable client, Logger log) throws UnknownHostException {
+		super(new SimpleExecutionEnvironment(), new DaemonNetworkManager(client,uid,log));
 		this.client = client;
 		network = (DaemonNetworkManager)this.getNetworkManager();
 		network.setParent(this);
@@ -66,11 +63,11 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
 	}
 
 	//   Construct with specified UID
-	public Daemon(IProgram program, long uid, Monitorable client, Logger log) throws UnknownHostException {
+	public Daemon(ProtelisProgram program, long uid, Monitorable client, Logger log) throws UnknownHostException {
 		this(program,true,uid,client,log);
 	}	
 	//   Construct with random UID
-	public Daemon(IProgram program, Monitorable client, Logger log) throws UnknownHostException {
+	public Daemon(ProtelisProgram program, Monitorable client, Logger log) throws UnknownHostException {
 		this(program,false,0,client,log);
 	}
 
@@ -163,16 +160,6 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
 		return ((double)System.currentTimeMillis())/1000.0;
 	}
 
-	@Override
-	public Map<FasterString, Object> currentEnvironment() {
-		return environment;
-	}
-
-	@Override
-	protected void setEnvironment(Map<FasterString, Object> newEnvironment) {
-		environment.putAll(environment);
-	}
-
 	public long getId() {
 		return uid;
 	}
@@ -183,17 +170,6 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
 	}
 
 	/* ********* Unimplemented ********* */
-	@Override
-	public double distanceTo(DeviceUID target) {
-		throw new UnsupportedOperationException();
-		// Could also maybe be "1"?
-	}
-
-	@Override
-	public IPosition getDevicePosition() {
-		throw new UnsupportedOperationException();
-	}
-
 	@Override
 	protected AbstractExecutionContext instance() {
 		throw new UnsupportedOperationException();
