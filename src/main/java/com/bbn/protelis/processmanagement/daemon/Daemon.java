@@ -144,6 +144,14 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
 		debugs = new ConcurrentHashMap<>();
 	}
 	
+	/* Passthroughs for Protelis calls */
+	public Object getEnvironmentVariable(String id) {
+		return getExecutionEnvironment().get(id);
+	}
+	public void putEnvironmentVariable(String id, Object value) {
+		getExecutionEnvironment().put(id,value);
+	}
+	
 
 	/* ********************************* */
 	/*        Required Functions         */
