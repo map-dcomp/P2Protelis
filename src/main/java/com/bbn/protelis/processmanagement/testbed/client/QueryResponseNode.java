@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
 import com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon;
 
+import cern.colt.Arrays;
+
 import java.io.IOException;
 import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
@@ -420,10 +422,12 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
 		try {
 			List<Tuple> dlist = new ArrayList<>();
 			for(Object[] d : dependencyList) {
-				assert(d.length==2 && d[0] instanceof String && d[1] instanceof Integer);
+				if(!(d.length==2 && d[0] instanceof String && d[1] instanceof Number)) {
+					throw new AssertionError("Dependency list not [string,integer]: "+Arrays.toString(d));
+				};
 				InetAddress depAddr = InetAddress.getByName((String) d[0]);
 				int depPort = LocalDaemon.testPortOffset+((Number)d[1]).intValue();
-				dlist.add(new ArrayTupleImpl(depAddr,depPort));
+				dlist.add(new ArrayTupleImpl(depAddr,(Object)depPort));
 			}
 			dependencies = new ArrayTupleImpl(dlist);
 		} catch(UnknownHostException e) {

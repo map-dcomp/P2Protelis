@@ -148,8 +148,18 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
 	public Object getEnvironmentVariable(String id) {
 		return getExecutionEnvironment().get(id);
 	}
+	public Object getEnvironmentVariable(String id, Object defaultValue) {
+		if (this.hasEnvironmentVariable(id)) {
+			return getExecutionEnvironment().get(id);
+		} else {
+			return defaultValue;
+		}
+	}
 	public void putEnvironmentVariable(String id, Object value) {
 		getExecutionEnvironment().put(id,value);
+	}
+	public boolean hasEnvironmentVariable(String id) {
+		return getExecutionEnvironment().has(id);
 	}
 	
 
