@@ -9,8 +9,6 @@ import com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DummyMonitorable extends Monitorable {
 	private ProcessStatus status = ProcessStatus.run;
@@ -23,11 +21,11 @@ public class DummyMonitorable extends Monitorable {
 		port += LocalDaemon.testPortOffset;
 		try {
 			InetAddress local = InetAddress.getLocalHost();
-			List<Tuple> dlist = new ArrayList<>();
-			for(int d : dependencyList) {
-				dlist.add(new ArrayTupleImpl(local,d+LocalDaemon.testPortOffset));
+			Tuple[] dlist = new Tuple[dependencyList.length];
+			for(int i=0; i< dependencyList.length; i++) {
+				dlist[i] = new ArrayTupleImpl(local,(Object)(dependencyList[i]+LocalDaemon.testPortOffset));
 			}
-			dependencies = new ArrayTupleImpl(dlist);
+			dependencies = new ArrayTupleImpl((Object[])dlist);
 		} catch(UnknownHostException e) {
 			// ignore, just end up with no dependencies
 			// TODO: actually report this problem
