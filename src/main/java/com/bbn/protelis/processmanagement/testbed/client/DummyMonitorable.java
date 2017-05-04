@@ -17,6 +17,14 @@ public class DummyMonitorable extends Monitorable {
 	private Tuple dependencies = new ArrayTupleImpl();
 	private boolean firstInit = true;
 
+	public DummyMonitorable() {
+	}
+	
+	public DummyMonitorable(final int port, final int[] dependencyList) {
+		this.port = port;
+		this.dependencyList = dependencyList;
+	}
+	
 	private void initializePersistentState() {
 		port += LocalDaemon.testPortOffset;
 		try {
