@@ -1,0 +1,115 @@
+[
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":1, "alias":"Database",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Database 1", "shortName":"DB",
+ 	"port":5001,
+ 	"originator":false,
+ 	"dependencyList":[],
+ 	"recording":true
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":2, "alias":"Core Logic 3",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Core Logic 3", "shortName":"C2",
+ 	"port":5002,
+ 	"originator":false,
+ 	"dependencyList":[],
+ 	"recording":true
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":3, "alias":"Core Logic 2",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Core Logic 2", "shortName":"C2",
+ 	"port":5003,
+ 	"originator":false,
+ 	"dependencyList":[],
+ 	"recording":true
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":4, "alias":"Core Logic 1",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Core logic 1", "shortName":"C1",
+ 	"port":5004,
+ 	"originator":false,
+ 	"dependencyList":[["localhost",5001],["localhost",5003]],
+ 	"recording":true
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":5, "alias":"Exchange",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Exchange", "shortName":"EX",
+ 	"port":5005,
+ 	"originator":false,
+ 	"dependencyList":[["localhost",5002]],
+ 	"recording":true
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":6, "alias":"Legacy Unix",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Legacy Unix", "shortName":"LU",
+ 	"port":5006,
+ 	"originator":false,
+ 	"dependencyList":[["localhost",5001],["localhost",5004]],
+ 	"recording":true
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":7, "alias":"App Server 1",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"App Server 1", "shortName":"A1",
+ 	"port":5007,
+ 	"originator":false,
+ 	"dependencyList":[["localhost",5001],["localhost",5004]],
+ 	"recording":true
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":8, "alias":"App Server 2",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"App Server 2", "shortName":"A2",
+ 	"port":5008,
+ 	"originator":false,
+ 	"dependencyList":[["localhost",5001]],
+ 	"recording":true
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":9, "alias":"Gateway A",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Gateway A", "shortName":"G1",
+ 	"port":5009,
+ 	"originator":true,
+ 	"dependencyList":[["localhost",5006],["localhost",5007],["localhost",5008]],
+ 	"recording":true,
+ 	"attackModel":{"@type":"com.bbn.protelis.processmanagement.testbed.client.SpecificAttackModel",
+ 		"session":2,
+ 		"targetName":"Legacy Unix"
+ 		}
+ 	}
+ },
+
+{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+ "uid":10, "alias":"Gateway B",
+ "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.QueryResponseNode",
+ 	"identifier":"Gateway B", "shortName":"G2",
+ 	"port":5010,
+ 	"originator":true,
+ 	"dependencyList":[["localhost",5005]],
+ 	"recording":true
+ 	}
+ }
+]
