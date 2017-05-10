@@ -1,4 +1,4 @@
-package com.bbn.protelis.processmanagement.testbed.visualizer;
+package com.bbn.protelis.visualizer.common;
 
 /*
  * Copyright (c) 2005, the JUNG Project and the Regents of the University of

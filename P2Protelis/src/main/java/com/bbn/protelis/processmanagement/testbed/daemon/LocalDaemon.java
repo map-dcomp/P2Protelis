@@ -27,6 +27,13 @@ public class LocalDaemon extends AbstractDaemonWrapper {
 	 */
 	public static int testPortOffset = 0;
 	
+	public void setClient(final Monitorable v) {
+		if (null != client) {
+			throw new IllegalStateException("Cannot change a non-null client");
+		}
+		this.client = v;
+	}
+
 	@Override
 	public void initialize(Scenario scenario) throws UnknownHostException {
 		// Start the client
