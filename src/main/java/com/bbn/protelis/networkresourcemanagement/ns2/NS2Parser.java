@@ -1,4 +1,4 @@
-package com.bbn.protelis.ns2;
+package com.bbn.protelis.networkresourcemanagement.ns2;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -10,18 +10,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.protelis.lang.ProtelisLoader;
+import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.bbn.protelis.processmanagement.testbed.Scenario;
-import com.bbn.protelis.processmanagement.testbed.ScenarioRunner;
-import com.bbn.protelis.processmanagement.testbed.client.DummyMonitorable;
-import com.bbn.protelis.processmanagement.testbed.daemon.AbstractDaemonWrapper;
-import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
-import com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon;
+import com.bbn.protelis.networkresourcemanagement.Link;
+import com.bbn.protelis.networkresourcemanagement.Node;
+import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
+import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
+import com.bbn.protelis.utils.StringUID;
 
 /**
  * Read NS2 files in and create a network for protelis.
@@ -31,74 +32,45 @@ import com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon;
  */
 public class NS2Parser {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger("NS2Parser");
+	private static final Logger LOGGER = LoggerFactory.getLogger(NS2Parser.class);
 
 	public static void main(final String... args) throws IOException {
 
 		final ProtelisProgram program = ProtelisLoader.parseAnonymousModule("true");
 
-		Scenario scenario = new Scenario(LOGGER);
+		if (args.length < 1) {
+			throw new IllegalArgumentException("You must specify the NS2 file to read as the first argument");
+		}
 
-		final String filename = "/Users/jschewe/projects/map/multinode.ns";
+		final String filename = args[0];
 		try (final Reader reader = new FileReader(filename)) {
-			final Map<String, Node> nodes = parse(reader);
+			final Scenario scenario = parse(filename, reader, program);
 
-			int uid = 0;
-			final Map<String, LocalDaemon> daemons = new HashMap<>();
+			scenario.setVisualize(true);
 
-			// create daemons
-			for (final Map.Entry<String, Node> entry : nodes.entrySet()) {
-				final String name = entry.getKey();
+			// ScenarioRunner emulation = new ScenarioRunner(scenario);
+			// emulation.run();
+			final ScenarioVisualizer visualizer = new ScenarioVisualizer(scenario);
 
-				final LocalDaemon daemon = new LocalDaemon();
-				daemon.uid = uid;
-				daemon.alias = name;
-				daemon.program = program;
-
-				daemons.put(name, daemon);
-
-				++uid;
-			}
-
-			// connect daemons
-			for (final Map.Entry<String, Node> entry : nodes.entrySet()) {
-				final String name = entry.getKey();
-				final Node node = entry.getValue();
-				final LocalDaemon daemon = daemons.get(name);
-
-				final int[] dependencyPorts = node.neighbors.stream().mapToInt((n) -> {
-					final LocalDaemon neighbor = daemons.get(n.name);
-					return portNumberForDaemon(neighbor);
-				}).toArray();
-
-				final DummyMonitorable client = new DummyMonitorable(portNumberForDaemon(daemon), dependencyPorts);
-				daemon.setClient(client);
-			}
-
-			scenario.network = daemons.values().toArray(new DaemonWrapper[0]);
-			scenario.visualize = true;
-
-			ScenarioRunner emulation = new ScenarioRunner(scenario);
-			emulation.run();
 		} // reader
 
-	}
-
-	private static int portNumberForDaemon(final AbstractDaemonWrapper daemon) {
-		return (int) (5000 + daemon.uid);
 	}
 
 	/**
 	 * Parse an NS2 file into a map of Nodes.
 	 * 
+	 * @param scenarioName
+	 *            name of the scenario to create
 	 * @param reader
 	 *            where to read the data from
-	 * @return key = name, value = Node
+	 * @return the network scenario
 	 * @throws IOException
 	 *             if there is an error reading from the reader
 	 */
-	public static Map<String, Node> parse(final Reader reader) throws IOException {
-		final Map<String, Node> nodes = new HashMap<>();
+	public static Scenario parse(final String scenarioName, final Reader reader, final ProtelisProgram program)
+			throws IOException {
+		final Map<String, Node> nodesByName = new HashMap<>();
+		final Set<Link> links = new HashSet<>();
 
 		String simulator = null;
 
@@ -145,8 +117,8 @@ public class NS2Parser {
 
 							final String objectType = tokens[1];
 							if ("node".equals(objectType)) {
-								final Node node = new Node(name);
-								nodes.put(name, node);
+								final Node node = new Node(program, name);
+								nodesByName.put(name, node);
 							} else if ("duplex-link".equals(objectType)) {
 								if (!tokens[2].startsWith("$") || !tokens[3].startsWith("$")) {
 									throw new NS2FormatException(
@@ -156,18 +128,21 @@ public class NS2Parser {
 								final String leftNodeName = tokens[2].substring(1);
 								final String rightNodeName = tokens[3].substring(1);
 
-								if (!nodes.containsKey(leftNodeName)) {
+								if (!nodesByName.containsKey(leftNodeName)) {
 									throw new NS2FormatException("Unknown node " + leftNodeName + " on line: " + line);
 								}
 
-								if (!nodes.containsKey(rightNodeName)) {
+								if (!nodesByName.containsKey(rightNodeName)) {
 									throw new NS2FormatException("Unknown node " + rightNodeName + " on line: " + line);
 								}
 
-								final Node leftNode = nodes.get(leftNodeName);
-								final Node rightNode = nodes.get(rightNodeName);
-								leftNode.neighbors.add(rightNode);
-								rightNode.neighbors.add(leftNode);
+								final Node leftNode = nodesByName.get(leftNodeName);
+								final Node rightNode = nodesByName.get(rightNodeName);
+								leftNode.addNeighbor(rightNode);
+								rightNode.addNeighbor(leftNode);
+
+								final Link link = new Link(name, leftNode, rightNode);
+								links.add(link);
 							} else {
 								throw new NS2FormatException(
 										"Unsupported object type: " + objectType + " on line: " + line);
@@ -185,12 +160,12 @@ public class NS2Parser {
 					}
 					final String nodeName = tokens[1].substring(1);
 
-					if (!nodes.containsKey(nodeName)) {
+					if (!nodesByName.containsKey(nodeName)) {
 						throw new NS2FormatException("Unknown node " + nodeName + " on line: " + line);
 					}
 
-					final Node node = nodes.get(nodeName);
-					node.operatingSystem = tokens[2];
+					// final Node node = nodes.get(nodeName);
+					// node.operatingSystem = tokens[2];
 
 				} else {
 					LOGGER.error("Ignoring unknown line '" + line + "'");
@@ -199,25 +174,10 @@ public class NS2Parser {
 
 		} // bufReader
 
-		return nodes;
-	}
-	/*
-	 * private static final class Link { public String name = null; public
-	 * String type = null; public Node left = null; public Node right = null;
-	 * 
-	 * 
-	 * 
-	 * public String queueing = null; }
-	 */
-
-	private static final class Node {
-		public String name = null;
-		public String operatingSystem = null;
-		public Set<Node> neighbors = new HashSet<>();
-
-		public Node(final String pName) {
-			this.name = pName;
-		}
+		final Map<DeviceUID, Node> nodes = nodesByName.entrySet().stream()
+				.collect(Collectors.toMap(e -> new StringUID(e.getKey()), Map.Entry::getValue));
+		final Scenario scenario = new Scenario(scenarioName, nodes, links);
+		return scenario;
 	}
 
 	/**
@@ -227,6 +187,8 @@ public class NS2Parser {
 	 *
 	 */
 	public static final class NS2FormatException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+
 		public NS2FormatException(final String message) {
 			super(message);
 		}
