@@ -8,7 +8,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.lang3.ArrayUtils;
-import org.junit.Assert;
 import org.protelis.lang.ProtelisLoader;
 import org.protelis.vm.ProtelisProgram;
 import org.slf4j.Logger;
@@ -109,10 +108,14 @@ public class StandaloneExecution {
 		String type = termArgs[0];
 		switch(type) {
 		case "never": 
-			Assert.assertEquals("Terminate 'never' should not have additional arguments.",termArgs.length, 1);
+			if (termArgs.length != 1) {
+				throw new IllegalArgumentException("Terminate 'never' should not have additional arguments.");
+			}
 			return new NeverTerminate<DaemonWrapper[]>();
-		case "rounds": 
-			Assert.assertEquals("'round' termination has form 'rounds [integer]'",termArgs.length, 2);
+		case "rounds":
+			if (termArgs.length != 2) {
+				throw new IllegalArgumentException("'round' termination has form 'rounds [integer]'");
+			}
 			return new RoundNumberTermination(Integer.parseUnsignedInt(termArgs[1]));
 		default:
 			logger.warn("Don't recognize requested termination type '"+type+"', running without termination.");
