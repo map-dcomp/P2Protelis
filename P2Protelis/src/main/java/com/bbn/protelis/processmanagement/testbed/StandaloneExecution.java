@@ -2,23 +2,23 @@ package com.bbn.protelis.processmanagement.testbed;
 
 import java.io.IOException;
 
-import org.junit.Assert;
-import org.protelis.lang.ProtelisLoader;
-import org.protelis.vm.ProtelisProgram;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.lang3.ArrayUtils;
+import org.junit.Assert;
+import org.protelis.lang.ProtelisLoader;
+import org.protelis.vm.ProtelisProgram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.bbn.protelis.common.testbed.termination.NeverTerminate;
+import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.processmanagement.testbed.daemon.AbstractDaemonWrapper;
 import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
-import com.bbn.protelis.processmanagement.testbed.termination.NeverTerminate;
 import com.bbn.protelis.processmanagement.testbed.termination.RoundNumberTermination;
-import com.bbn.protelis.processmanagement.testbed.termination.TerminationCondition;
 import com.bbn.protelis.processmanagement.testbed.visualizer.DisplayNode;
 
 public class StandaloneExecution {
@@ -104,13 +104,13 @@ public class StandaloneExecution {
 		return scenario;
 	}
 
-	private static TerminationCondition parseTermination(CommandLine cmd) {
+	private static TerminationCondition<DaemonWrapper[]> parseTermination(CommandLine cmd) {
 		String[] termArgs = cmd.getOptionValues('t');
 		String type = termArgs[0];
 		switch(type) {
 		case "never": 
 			Assert.assertEquals("Terminate 'never' should not have additional arguments.",termArgs.length, 1);
-			return new NeverTerminate();
+			return new NeverTerminate<DaemonWrapper[]>();
 		case "rounds": 
 			Assert.assertEquals("'round' termination has form 'rounds [integer]'",termArgs.length, 2);
 			return new RoundNumberTermination(Integer.parseUnsignedInt(termArgs[1]));

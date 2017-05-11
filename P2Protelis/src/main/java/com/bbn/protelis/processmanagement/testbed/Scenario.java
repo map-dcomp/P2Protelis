@@ -2,8 +2,8 @@ package com.bbn.protelis.processmanagement.testbed;
 
 import org.slf4j.Logger;
 
+import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
-import com.bbn.protelis.processmanagement.testbed.termination.TerminationCondition;
 
 public class Scenario {
 	/**
@@ -35,7 +35,7 @@ public class Scenario {
 	 * Determines when a scenario should automatically terminate.
 	 * If null, then there is no automatic termination.
 	 */
-	public TerminationCondition termination = null;
+	public TerminationCondition<DaemonWrapper[]> termination = null;
 	
 	/**
 	 * Milliseconds between checks for termination

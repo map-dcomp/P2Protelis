@@ -31,6 +31,13 @@ public class Node extends AbstractExecutionContext {
 
 	private volatile long executionCount = 0;
 
+	/**
+	 * The number of times this node has executed.
+	 */
+	public final long getExecutionCount() {
+		return executionCount;
+	}
+
 	private long sleepTime = DEFAULT_SLEEP_TIME_MS;
 
 	/**

@@ -4,18 +4,28 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.protelis.lang.ProtelisLoader;
+import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 
 import com.bbn.protelis.networkresourcemanagement.ns2.NS2Parser;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
-import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
+import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
+import com.bbn.protelis.networkresourcemanagement.testbed.termination.ExecutionCountTermination;
+
+//import static org.hamcrest.Matchers.*;
 
 public class NS2ParserTest {
 
+	/**
+	 * Test that ns2/multinode.ns parses and check that the nodes die when they should.
+	 * 
+	 * @throws IOException
+	 */
 	@Test
 	public void testSimpleGraph() throws IOException {
 		final ProtelisProgram program = ProtelisLoader.parseAnonymousModule("true");
@@ -28,12 +38,21 @@ public class NS2ParserTest {
 				final Scenario scenario = NS2Parser.parse(filename, reader, program);
 				Assert.assertNotNull("Parse didn't create a scenario", scenario);
 
-				scenario.setVisualize(true);
+				final int maxExecutions = 5;
+				
+				scenario.setVisualize(false);
+				scenario.setTerminationCondition(new ExecutionCountTermination(maxExecutions));
 
-				// ScenarioRunner emulation = new ScenarioRunner(scenario);
-				// emulation.run();
-				final ScenarioVisualizer visualizer = new ScenarioVisualizer(scenario);
-				visualizer.waitForClose();
+				final ScenarioRunner emulation = new ScenarioRunner(scenario);
+				emulation.run();
+				
+				for(final Map.Entry<DeviceUID, Node> entry : scenario.getNodes().entrySet()) {
+					final Node node = entry.getValue();
+					Assert.assertFalse("Node: " + node.getName() + " isn't dead", node.isExecuting());
+					
+					//Assert.assertThat(node.getExecutionCount(), greaterThan(maxExecutions));
+				}
+				
 			} // reader
 		} // stream
 	}

@@ -30,10 +30,10 @@ import javax.swing.Timer;
 
 import org.apache.commons.collections15.Transformer;
 
+import com.bbn.protelis.common.visualizer.MultiVertexRenderer;
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
 import com.bbn.protelis.processmanagement.testbed.Scenario;
 import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
-import com.bbn.protelis.visualizer.common.MultiVertexRenderer;
 
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.KKLayout;

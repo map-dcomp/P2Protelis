@@ -27,10 +27,10 @@ import org.protelis.lang.datatype.DeviceUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.bbn.protelis.common.visualizer.MultiVertexRenderer;
 import com.bbn.protelis.networkresourcemanagement.Link;
 import com.bbn.protelis.networkresourcemanagement.Node;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
-import com.bbn.protelis.visualizer.common.MultiVertexRenderer;
 
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;

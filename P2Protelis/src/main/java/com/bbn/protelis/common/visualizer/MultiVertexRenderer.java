@@ -1,4 +1,4 @@
-package com.bbn.protelis.visualizer.common;
+package com.bbn.protelis.common.visualizer;
 
 /*
  * Copyright (c) 2005, the JUNG Project and the Regents of the University of

@@ -21,7 +21,8 @@ import org.slf4j.LoggerFactory;
 import com.bbn.protelis.networkresourcemanagement.Link;
 import com.bbn.protelis.networkresourcemanagement.Node;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
-import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
+import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
+import com.bbn.protelis.networkresourcemanagement.testbed.termination.ExecutionCountTermination;
 import com.bbn.protelis.utils.StringUID;
 
 /**
@@ -46,11 +47,13 @@ public class NS2Parser {
 		try (final Reader reader = new FileReader(filename)) {
 			final Scenario scenario = parse(filename, reader, program);
 
-			scenario.setVisualize(true);
+//			scenario.setVisualize(true);
+			scenario.setTerminationCondition(new ExecutionCountTermination(5));
 
-			// ScenarioRunner emulation = new ScenarioRunner(scenario);
-			// emulation.run();
-			final ScenarioVisualizer visualizer = new ScenarioVisualizer(scenario);
+			final ScenarioRunner emulation = new ScenarioRunner(scenario);
+			emulation.run();
+			// final ScenarioVisualizer visualizer = new
+			// ScenarioVisualizer(scenario);
 
 		} // reader
 

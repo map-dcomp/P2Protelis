@@ -1,8 +1,9 @@
 package com.bbn.protelis.processmanagement.testbed.termination;
 
+import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
 
-public class RoundNumberTermination implements TerminationCondition {
+public class RoundNumberTermination implements TerminationCondition<DaemonWrapper[]> {
 	private final int round;
 	
 	public RoundNumberTermination(int round) {
