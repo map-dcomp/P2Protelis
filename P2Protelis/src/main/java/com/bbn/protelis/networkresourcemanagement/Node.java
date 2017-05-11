@@ -9,6 +9,8 @@ import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
 import org.protelis.vm.impl.AbstractExecutionContext;
 import org.protelis.vm.impl.SimpleExecutionEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.utils.StringUID;
 
@@ -17,11 +19,31 @@ import com.bbn.protelis.utils.StringUID;
  */
 public class Node extends AbstractExecutionContext {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(Node.class);
+
 	/** Device numerical identifier */
 	private final StringUID uid;
 
 	/** The Protelis VM to be executed by the device */
 	private final ProtelisVM vm;
+
+	public static final long DEFAULT_SLEEP_TIME_MS = 2 * 1000;
+
+	private volatile long executionCount = 0;
+
+	private long sleepTime = DEFAULT_SLEEP_TIME_MS;
+
+	/**
+	 * How long between executions of the protelis program. Defaults to
+	 * {@link #DEFAULT_SLEEP_TIME_MS}.
+	 */
+	public final long getSleepTime() {
+		return sleepTime;
+	}
+
+	public final void setSleepTime(final long v) {
+		sleepTime = v;
+	}
 
 	/**
 	 * The neighboring nodes.
@@ -33,7 +55,7 @@ public class Node extends AbstractExecutionContext {
 	 * 
 	 * @return unmodifiable set
 	 */
-	public Set<DeviceUID> getNeighbors() {
+	public final Set<DeviceUID> getNeighbors() {
 		return Collections.unmodifiableSet(neighbors);
 	}
 
@@ -43,10 +65,11 @@ public class Node extends AbstractExecutionContext {
 	 * @param v
 	 *            the UID of the neighbor
 	 */
-	public void addNeighbor(final DeviceUID v) {
+	public final void addNeighbor(final DeviceUID v) {
 		neighbors.add(v);
 	}
-	public void addNeighbor(final Node v) {
+
+	public final void addNeighbor(final Node v) {
 		addNeighbor(v.getDeviceUID());
 	}
 
@@ -76,7 +99,7 @@ public class Node extends AbstractExecutionContext {
 	/**
 	 * Accessor for virtual machine, to allow external execution triggering
 	 */
-	public ProtelisVM getVM() {
+	public final ProtelisVM getVM() {
 		return vm;
 	}
 
@@ -85,31 +108,96 @@ public class Node extends AbstractExecutionContext {
 	 * real devices, the NetworkManager usually runs autonomously in its own
 	 * thread(s)
 	 */
-	public NodeNetworkManager accessNetworkManager() {
+	public final NodeNetworkManager accessNetworkManager() {
 		return (NodeNetworkManager) super.getNetworkManager();
 	}
 
-	public String getName() {
+	public final String getName() {
 		return uid.getUID();
 	}
 
 	@Override
-	public DeviceUID getDeviceUID() {
+	public final DeviceUID getDeviceUID() {
 		return uid;
 	}
 
 	@Override
-	public Number getCurrentTime() {
+	public final Number getCurrentTime() {
 		return System.currentTimeMillis();
 	}
 
 	@Override
-	protected AbstractExecutionContext instance() {
+	protected final AbstractExecutionContext instance() {
 		return new Node(uid);
 	}
 
 	@Override
-	public double nextRandomDouble() {
+	public final double nextRandomDouble() {
 		return Math.random();
 	}
+
+	/**
+	 * Gather information about the resources used on this node.
+	 */
+	protected void gatherResourceInformation() {
+		// FIXME implement
+	}
+
+	/**
+	 * Execute the protolis program
+	 */
+	private void run() {
+		boolean running = true;
+		while (running) {
+			try {
+				getVM().runCycle(); // execute the Protelis program
+				++executionCount;
+
+				gatherResourceInformation();
+
+				Thread.sleep(sleepTime);
+			} catch (final InterruptedException e) {
+				LOGGER.debug("Got interrupted, time to quit", e);
+				running = false;
+			} catch (final Exception e) {
+				LOGGER.error("Exception thrown: terminating Protelis", e);
+				running = false;
+			}
+		}
+	}
+
+	private Thread executeThread = null;
+
+	public final boolean isExecuting() {
+		return null != executeThread && executeThread.isAlive();
+	}
+
+	/**
+	 * Start the node executing.
+	 */
+	public final void startExecuting() {
+		if (null != executeThread) {
+			throw new IllegalStateException("Already executing, cannot start again!");
+		}
+
+		executeThread = new Thread(() -> run());
+		executeThread.setName("Node-" + getName());
+		executeThread.start();
+	}
+
+	/**
+	 * Stop the node executing and wait for the stop.
+	 */
+	public final void stopExecuting() {
+		if (null != executeThread) {
+			executeThread.interrupt();
+			try {
+				executeThread.join(); // may want to have a timeout here
+			} catch (final InterruptedException e) {
+				LOGGER.debug("Got interrupted waiting for join, probably just time to shutdown", e);
+			}
+			executeThread = null;
+		}
+	}
+
 }

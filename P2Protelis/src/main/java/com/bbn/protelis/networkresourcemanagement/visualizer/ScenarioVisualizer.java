@@ -8,6 +8,8 @@ import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -39,13 +41,15 @@ import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
 
 public class ScenarioVisualizer extends JApplet {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioVisualizer.class);
-	
+
 	// Serialization inherited from JApplet
 	private static final long serialVersionUID = 1L;
 
 	private static final int DEFAULT_WIDTH = 1200;// 640;//1920;
 	private static final int DEFAULT_HEIGHT = 800;// 480;//1080;
 	private static final int REFRESH_RATE = 100;// 500
+	private final Object closeLock = new Object();
+	private volatile boolean frameOpen = false;
 
 	private Timer refresher;
 
@@ -58,7 +62,7 @@ public class ScenarioVisualizer extends JApplet {
 
 	public ScenarioVisualizer(final Scenario scenario) {
 		this.scenario = scenario;
-		
+
 		// Add the nodes and edges
 		createGraphFromNetwork();
 		// Configure the rendering environment
@@ -74,7 +78,7 @@ public class ScenarioVisualizer extends JApplet {
 		}
 		refreshEdges();
 	}
-	
+
 	private DisplayNode addNode(final Node node) {
 		final DisplayNode n = new DisplayNode(node);
 		g.addVertex(n);
@@ -88,25 +92,27 @@ public class ScenarioVisualizer extends JApplet {
 			g.removeEdge(e);
 		}
 		edges.clear();
-		
+
 		// Next, add all edges
-		for(final Link l : scenario.getLinks()) {
+		for (final Link l : scenario.getLinks()) {
 			DisplayNode leftNode = nodes.get(l.getLeft().getDeviceUID());
-			if(null == leftNode) {
-				LOGGER.warn("Link " + l.getName() + " refers to node " + l.getLeft().getName() + " that isn't in the graph, adding.");
+			if (null == leftNode) {
+				LOGGER.warn("Link " + l.getName() + " refers to node " + l.getLeft().getName()
+						+ " that isn't in the graph, adding.");
 				leftNode = addNode(l.getLeft());
 			}
 			DisplayNode rightNode = nodes.get(l.getRight().getDeviceUID());
-			if(null == rightNode) {
-				LOGGER.warn("Link " + l.getName() + " refers to node " + l.getRight().getName() + " that isn't in the graph, adding.");
+			if (null == rightNode) {
+				LOGGER.warn("Link " + l.getName() + " refers to node " + l.getRight().getName()
+						+ " that isn't in the graph, adding.");
 				rightNode = addNode(l.getRight());
 			}
-			
+
 			final DisplayEdge edge = new DisplayEdge(l, leftNode, rightNode);
 			g.addEdge(edge, leftNode, rightNode);
 			edges.add(edge);
 		}
-		
+
 	}
 
 	private VisualizationViewer<DisplayNode, DisplayEdge> configureGraphRendering() {
@@ -214,18 +220,34 @@ public class ScenarioVisualizer extends JApplet {
 		return vv;
 	}
 
-	private void initializeSwingComponents(final VisualizationViewer<DisplayNode, DisplayEdge> vv) {
-		JFrame frame = new JFrame("Graph View: " + scenario.getName());
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		// The the display that it should kill the remote nodes on window close.
-		// frame.addWindowListener(new WindowAdapter() {
-		// @Override
-		// public void windowClosing(WindowEvent e) {
-		// status = ProcessStatus.stop;
-		// }
-		// });
+	public void waitForClose() {
+		if (frameOpen) {
+			synchronized (closeLock) {
+				try {
+					closeLock.wait();
+				} catch (final InterruptedException e) {
+					LOGGER.debug("Got interrupted, should be time to shutdown", e);
+				}
+			}
+		}
+	}
 
-		JPanel jungPanel = new JPanel();
+	private void initializeSwingComponents(final VisualizationViewer<DisplayNode, DisplayEdge> vv) {
+		final JFrame frame = new JFrame("Graph View: " + scenario.getName());
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		// The the display that it should kill the remote nodes on window close.
+		frame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(final WindowEvent e) {
+				// status = ProcessStatus.stop;
+				synchronized (closeLock) {
+					closeLock.notifyAll();
+				}
+			}
+		});
+
+		final JPanel jungPanel = new JPanel();
 		jungPanel.setLayout(new BoxLayout(jungPanel, BoxLayout.Y_AXIS));
 
 		// JPanel envPanel = new JPanel();
@@ -253,7 +275,7 @@ public class ScenarioVisualizer extends JApplet {
 
 		jungPanel.add(vv);
 
-		JPanel masterPanel = new JPanel();
+		final JPanel masterPanel = new JPanel();
 
 		masterPanel.setLayout(new BoxLayout(masterPanel, BoxLayout.Y_AXIS));
 		masterPanel.add(jungPanel);
@@ -262,6 +284,7 @@ public class ScenarioVisualizer extends JApplet {
 		frame.add(masterPanel);
 		frame.pack();
 		frame.setVisible(true);
+		frameOpen = true;
 
 		// TODO: figure out if this needs to be here
 		// for(DisplayNode dn : g.getVertices()) {
