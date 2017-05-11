@@ -65,6 +65,7 @@
 		<JDK-VERSION>1.8</JDK-VERSION>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<description>Network emulator for exploring process management with Protelis</description>
 </project>
