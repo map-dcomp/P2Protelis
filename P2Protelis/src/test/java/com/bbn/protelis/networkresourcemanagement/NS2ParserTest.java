@@ -17,7 +17,7 @@ import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
 import com.bbn.protelis.networkresourcemanagement.testbed.termination.ExecutionCountTermination;
 
-//import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.*;
 
 public class NS2ParserTest {
 
@@ -38,7 +38,7 @@ public class NS2ParserTest {
 				final Scenario scenario = NS2Parser.parse(filename, reader, program);
 				Assert.assertNotNull("Parse didn't create a scenario", scenario);
 
-				final int maxExecutions = 5;
+				final long maxExecutions = 5;
 				
 				scenario.setVisualize(false);
 				scenario.setTerminationCondition(new ExecutionCountTermination(maxExecutions));
@@ -50,7 +50,7 @@ public class NS2ParserTest {
 					final Node node = entry.getValue();
 					Assert.assertFalse("Node: " + node.getName() + " isn't dead", node.isExecuting());
 					
-					//Assert.assertThat(node.getExecutionCount(), greaterThan(maxExecutions));
+					Assert.assertThat(node.getExecutionCount(), greaterThanOrEqualTo(maxExecutions));
 				}
 				
 			} // reader

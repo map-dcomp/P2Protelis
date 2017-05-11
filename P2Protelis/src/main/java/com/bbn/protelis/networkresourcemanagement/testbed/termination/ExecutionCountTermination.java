@@ -8,14 +8,14 @@ import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.networkresourcemanagement.Node;
 
 public class ExecutionCountTermination implements TerminationCondition<Map<DeviceUID, Node>> {
-	private final int round;
+	private final long round;
 
 	/**
 	 * 
 	 * @param round
 	 *            how many executions to terminate after
 	 */
-	public ExecutionCountTermination(final int round) {
+	public ExecutionCountTermination(final long round) {
 		this.round = round;
 	}
 
