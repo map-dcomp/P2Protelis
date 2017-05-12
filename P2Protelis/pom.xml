@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.bbn</groupId>
 	<artifactId>com.bbn.protelis.process-management-testbed</artifactId>
-	<name>Protelis Process Management Testbed</name>
+	<name>Protelis Testbed</name>
 	<dependencies>
 		<dependency>
 		  <groupId>com.cedarsoftware</groupId>
