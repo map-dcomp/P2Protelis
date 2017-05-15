@@ -1,7 +1,6 @@
 package com.bbn.protelis.networkresourcemanagement.ns2;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
@@ -12,7 +11,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.protelis.lang.ProtelisLoader;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 import org.slf4j.Logger;
@@ -20,9 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.networkresourcemanagement.Link;
 import com.bbn.protelis.networkresourcemanagement.Node;
+import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
-import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
-import com.bbn.protelis.networkresourcemanagement.testbed.termination.ExecutionCountTermination;
 import com.bbn.protelis.utils.StringUID;
 
 /**
@@ -35,30 +32,6 @@ public class NS2Parser {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(NS2Parser.class);
 
-	public static void main(final String... args) throws IOException {
-
-		final ProtelisProgram program = ProtelisLoader.parseAnonymousModule("true");
-
-		if (args.length < 1) {
-			throw new IllegalArgumentException("You must specify the NS2 file to read as the first argument");
-		}
-
-		final String filename = args[0];
-		try (final Reader reader = new FileReader(filename)) {
-			final Scenario scenario = parse(filename, reader, program);
-
-//			scenario.setVisualize(true);
-			scenario.setTerminationCondition(new ExecutionCountTermination(5));
-
-			final ScenarioRunner emulation = new ScenarioRunner(scenario);
-			emulation.run();
-			// final ScenarioVisualizer visualizer = new
-			// ScenarioVisualizer(scenario);
-
-		} // reader
-
-	}
-
 	/**
 	 * Parse an NS2 file into a map of Nodes.
 	 * 
@@ -70,8 +43,8 @@ public class NS2Parser {
 	 * @throws IOException
 	 *             if there is an error reading from the reader
 	 */
-	public static Scenario parse(final String scenarioName, final Reader reader, final ProtelisProgram program)
-			throws IOException {
+	public static Scenario parse(final String scenarioName, final Reader reader, final ProtelisProgram program,
+			final NodeLookupService lookupService) throws IOException {
 		final Map<String, Node> nodesByName = new HashMap<>();
 		final Set<Link> links = new HashSet<>();
 
@@ -120,7 +93,7 @@ public class NS2Parser {
 
 							final String objectType = tokens[1];
 							if ("node".equals(objectType)) {
-								final Node node = new Node(program, name);
+								final Node node = new Node(lookupService, program, name);
 								nodesByName.put(name, node);
 							} else if ("duplex-link".equals(objectType)) {
 								if (!tokens[2].startsWith("$") || !tokens[3].startsWith("$")) {

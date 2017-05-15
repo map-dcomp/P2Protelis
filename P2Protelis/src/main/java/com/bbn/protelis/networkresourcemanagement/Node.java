@@ -86,21 +86,12 @@ public class Node extends AbstractExecutionContext {
 	 * @param name
 	 *            the name of the node (must be unique)
 	 */
-	public Node(final ProtelisProgram program, final String name) {
-		super(new SimpleExecutionEnvironment(), new NodeNetworkManager());
+	public Node(final NodeLookupService lookupService, final ProtelisProgram program, final String name) {
+		super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
 		this.uid = new StringUID(name);
 
 		// Finish making the new device and add it to our collection
 		vm = new ProtelisVM(program, this);
-	}
-
-	/**
-	 * Internal-only lightweight constructor to support "instance"
-	 */
-	private Node(final StringUID uid) {
-		super(new SimpleExecutionEnvironment(), new NodeNetworkManager());
-		this.uid = uid;
-		vm = null;
 	}
 
 	/**
@@ -135,7 +126,7 @@ public class Node extends AbstractExecutionContext {
 
 	@Override
 	protected final AbstractExecutionContext instance() {
-		return new Node(uid);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -154,8 +145,7 @@ public class Node extends AbstractExecutionContext {
 	 * Execute the protolis program
 	 */
 	private void run() {
-		boolean running = true;
-		while (running) {
+		while (!Thread.interrupted()) {
 			try {
 				getVM().runCycle(); // execute the Protelis program
 				++executionCount;
@@ -164,11 +154,11 @@ public class Node extends AbstractExecutionContext {
 
 				Thread.sleep(sleepTime);
 			} catch (final InterruptedException e) {
-				LOGGER.debug("Got interrupted, time to quit", e);
-				running = false;
+				LOGGER.debug("Node " + getName() + " got interrupted, time to quit", e);
+				break;
 			} catch (final Exception e) {
-				LOGGER.error("Exception thrown: terminating Protelis", e);
-				running = false;
+				LOGGER.error("Exception thrown: terminating Protelis on node: " + getName(), e);
+				break;
 			}
 		}
 	}
@@ -186,6 +176,8 @@ public class Node extends AbstractExecutionContext {
 		if (null != executeThread) {
 			throw new IllegalStateException("Already executing, cannot start again!");
 		}
+
+		accessNetworkManager().start(this);
 
 		executeThread = new Thread(() -> run());
 		executeThread.setName("Node-" + getName());
