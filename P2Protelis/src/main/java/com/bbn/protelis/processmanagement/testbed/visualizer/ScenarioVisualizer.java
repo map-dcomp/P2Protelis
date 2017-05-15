@@ -1,7 +1,5 @@
 package com.bbn.protelis.processmanagement.testbed.visualizer;
 
-import org.protelis.lang.datatype.DeviceUID;
-
 import java.awt.BasicStroke;
 import java.awt.Dimension;
 import java.awt.Paint;
@@ -29,6 +27,7 @@ import javax.swing.JToggleButton;
 import javax.swing.Timer;
 
 import org.apache.commons.collections15.Transformer;
+import org.protelis.lang.datatype.DeviceUID;
 
 import com.bbn.protelis.common.visualizer.MultiVertexRenderer;
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
@@ -36,7 +35,6 @@ import com.bbn.protelis.processmanagement.testbed.Scenario;
 import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
 
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
-import edu.uci.ics.jung.algorithms.layout.KKLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.SparseMultigraph;

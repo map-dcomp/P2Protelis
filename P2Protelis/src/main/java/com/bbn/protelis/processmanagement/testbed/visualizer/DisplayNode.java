@@ -1,9 +1,5 @@
 package com.bbn.protelis.processmanagement.testbed.visualizer;
 
-import org.danilopianini.lang.util.FasterString;
-import org.protelis.lang.datatype.DeviceUID;
-import org.protelis.vm.ExecutionEnvironment;
-
 import java.awt.Color;
 import java.awt.Paint;
 import java.util.Arrays;
@@ -14,6 +10,9 @@ import java.util.Set;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+
+import org.danilopianini.lang.util.FasterString;
+import org.protelis.lang.datatype.DeviceUID;
 
 import com.bbn.protelis.processmanagement.daemon.LongDeviceUID;
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
@@ -110,6 +109,8 @@ public class DisplayNode implements Listener {
 		case hung:
 			source.signalProcess(ProcessStatus.shutdown);
 			break;
+		default:
+			throw new RuntimeException("Unknown process state");
 		}
 	}
 
