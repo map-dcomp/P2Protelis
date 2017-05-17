@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
@@ -17,7 +18,7 @@ import com.bbn.protelis.utils.StringUID;
 /**
  * A node in the network.
  */
-public class Node extends AbstractExecutionContext {
+public class Node extends AbstractExecutionContext implements ResourceSummaryProvider {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Node.class);
 
@@ -135,13 +136,6 @@ public class Node extends AbstractExecutionContext {
 	}
 
 	/**
-	 * Gather information about the resources used on this node.
-	 */
-	protected void gatherResourceInformation() {
-		// FIXME implement
-	}
-
-	/**
 	 * Execute the protolis program
 	 */
 	private void run() {
@@ -197,6 +191,19 @@ public class Node extends AbstractExecutionContext {
 			}
 			executeThread = null;
 		}
+	}
+
+	// -------- ResourceSummaryProvider
+	public ResourceSummary getLatestState() {
+		throw new NotImplementedException("Currently unimplemented");
+	}
+
+	// -------- end ResourceSummaryProvider
+	/**
+	 * Gather information about the resources used on this node.
+	 */
+	protected void gatherResourceInformation() {
+		// FIXME implement
 	}
 
 }

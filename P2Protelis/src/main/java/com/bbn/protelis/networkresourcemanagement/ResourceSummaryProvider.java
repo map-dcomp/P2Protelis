@@ -1,10 +1,9 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 /**
- * The interface with a consumer of {@link ResourceSummary} information.
- * 
+ * The interface used by a consumer of {@link ResourceSummary} information.
  */
-public interface ResourceSummaryConsumer {
+public interface ResourceSummaryProvider {
 
 	/**
 	 * Provide the consumer with the latest summary information.
@@ -12,5 +11,5 @@ public interface ResourceSummaryConsumer {
 	 * @param summary
 	 *            the most recent summary information. Not null.
 	 */
-	public void updateState(final ResourceSummary summary);
+	public ResourceSummary getLatestState();
 }
