@@ -5,13 +5,13 @@ import org.junit.Test;
 public class StandaloneFrameworkTests extends JSONFrameworkTest {
 	@Test
 	public void smokeTest() {
-		String[] extraArgs = {"-v","true"};
+		String[] extraArgs = {"-v","false"};
 		runTest("3",false,"networks/mini.json",1,"tests/smokeTest.json",extraArgs);
 	}
 
 	@Test
 	public void debugTest() {
-		String[] extraArgs = {"-v","true"};
+		String[] extraArgs = {"-v","false"};
 		runTest("self.putEnvironmentVariable(\"red\",self.getId()-1); self.putEnvironmentVariable(\"blue\",self.getId()==1); self.putEnvironmentVariable(\"debugTest\",self.getId()+4); self.getEnvironmentVariable(\"debugTest\");",false,"networks/mini.json",2,"tests/debugTest.json",extraArgs);
 	}
 
@@ -29,7 +29,7 @@ public class StandaloneFrameworkTests extends JSONFrameworkTest {
 	
 	@Test
 	public void networkTest() {
-		String[] extraArgs = {"-v","true"};
+		String[] extraArgs = {"-v","false"};
 		runTest("self.putEnvironmentVariable(\"logicalNeighbors\",[1]); minHood PlusSelf(nbr(self.getId()))",false,"networks/mini.json",3,"tests/networkTest.json",extraArgs);
 	}
 	
