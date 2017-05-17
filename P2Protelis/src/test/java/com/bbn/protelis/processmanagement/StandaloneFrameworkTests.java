@@ -42,7 +42,7 @@ public class StandaloneFrameworkTests extends JSONFrameworkTest {
 	@Test
 	public void moduleTestB() {
 		String[] extraArgs = {"-v","false"};
-		runTest("import test:reference\n testFun();",false,"networks/mini.json",1,"tests/moduleTest.json",extraArgs);
+		runTest("import protelis:test:reference\n testFun();",false,"networks/mini.json",1,"tests/moduleTest.json",extraArgs);
 	}
 
 	@Test
