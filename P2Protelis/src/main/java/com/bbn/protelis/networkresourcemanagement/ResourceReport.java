@@ -8,11 +8,11 @@ import java.util.Map;
  */
 public interface ResourceReport {
 
-	/**
-	 * The current state of the resources for a device.
-	 * 
-	 * @return resource name -> resource value. Not null.
-	 */
-	public Map<String, Object> getState();
+    /**
+     * The current state of the resources for a device.
+     * 
+     * @return resource name -> resource value. Not null.
+     */
+    public Map<String, Object> getState();
 
 }

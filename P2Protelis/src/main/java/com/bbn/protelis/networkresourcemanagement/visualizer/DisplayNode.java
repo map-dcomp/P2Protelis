@@ -16,68 +16,68 @@ import org.protelis.lang.datatype.DeviceUID;
 import com.bbn.protelis.networkresourcemanagement.Node;
 
 public class DisplayNode {
-	// Image collection:
-	static final Icon serverRun = new ImageIcon(DisplayNode.class.getResource("/server-small-green.png"));
-	static final Icon serverHung = new ImageIcon(DisplayNode.class.getResource("/server-small-red.png"));
-	static final Icon serverCompromised = new ImageIcon(DisplayNode.class.getResource("/server-small-orange.png"));
-	static final Icon serverContaminated = new ImageIcon(DisplayNode.class.getResource("/server-small-yellow.png"));
-	static final Icon serverStop = new ImageIcon(DisplayNode.class.getResource("/server-small-blue.png"));
-	static final Icon serverInit = new ImageIcon(DisplayNode.class.getResource("/server-small-purple.png"));
-	static final Icon serverShutdown = new ImageIcon(DisplayNode.class.getResource("/server-small-purple.png"));
-	static final Icon serverNull = new ImageIcon(DisplayNode.class.getResource("/server-small.png"));
+    // Image collection:
+    static final Icon serverRun = new ImageIcon(DisplayNode.class.getResource("/server-small-green.png"));
+    static final Icon serverHung = new ImageIcon(DisplayNode.class.getResource("/server-small-red.png"));
+    static final Icon serverCompromised = new ImageIcon(DisplayNode.class.getResource("/server-small-orange.png"));
+    static final Icon serverContaminated = new ImageIcon(DisplayNode.class.getResource("/server-small-yellow.png"));
+    static final Icon serverStop = new ImageIcon(DisplayNode.class.getResource("/server-small-blue.png"));
+    static final Icon serverInit = new ImageIcon(DisplayNode.class.getResource("/server-small-purple.png"));
+    static final Icon serverShutdown = new ImageIcon(DisplayNode.class.getResource("/server-small-purple.png"));
+    static final Icon serverNull = new ImageIcon(DisplayNode.class.getResource("/server-small.png"));
 
-	private final Node node;
-	private Set<DeviceUID> neighbors = new HashSet<>();
-	private String vertexLabel;
+    private final Node node;
+    private Set<DeviceUID> neighbors = new HashSet<>();
+    private String vertexLabel;
 
-	public DisplayNode(final Node n) {
-		ensureInitialized();
+    public DisplayNode(final Node n) {
+        ensureInitialized();
 
-		node = n;
-		setVertexLabel(node.getName());
+        node = n;
+        setVertexLabel(node.getName());
 
-		for (final DeviceUID neighbor : node.getNeighbors()) {
-			neighbors.add(neighbor);
-		}
-	}
+        for (final DeviceUID neighbor : node.getNeighbors()) {
+            neighbors.add(neighbor);
+        }
+    }
 
-	public Set<DeviceUID> getNeighbors() {
-		return Collections.unmodifiableSet(neighbors);
-	}
+    public Set<DeviceUID> getNeighbors() {
+        return Collections.unmodifiableSet(neighbors);
+    }
 
-	public DeviceUID getUID() {
-		return node.getDeviceUID();
-	}
+    public DeviceUID getUID() {
+        return node.getDeviceUID();
+    }
 
-	public String getVertexLabel() {
-		return vertexLabel;
-	}
+    public String getVertexLabel() {
+        return vertexLabel;
+    }
 
-	public void setVertexLabel(final String label) {
-		vertexLabel = label;
-	}
+    public void setVertexLabel(final String label) {
+        vertexLabel = label;
+    }
 
-	public Paint getVertexColor() {
-		return Color.BLACK;
-	}
+    public Paint getVertexColor() {
+        return Color.BLACK;
+    }
 
-	public Icon getIcon() {
-		return serverRun;
-	}
+    public Icon getIcon() {
+        return serverRun;
+    }
 
-	private static final Set<FasterString> ignores = new HashSet<>();
+    private static final Set<FasterString> ignores = new HashSet<>();
 
-	static private boolean initialized = false;
+    static private boolean initialized = false;
 
-	private void ensureInitialized() {
-		if (initialized)
-			return;
-		// Set up ignores
-		Arrays.asList("red", "green", "blue", "logicalNeighbors").forEach((s) -> ignores.add(new FasterString(s)));
-		initialized = true;
-	}
+    private void ensureInitialized() {
+        if (initialized)
+            return;
+        // Set up ignores
+        Arrays.asList("red", "green", "blue", "logicalNeighbors").forEach((s) -> ignores.add(new FasterString(s)));
+        initialized = true;
+    }
 
-	public static void ignore(String s) {
-		ignores.add(new FasterString(s));
-	}
+    public static void ignore(String s) {
+        ignores.add(new FasterString(s));
+    }
 }
