@@ -12,7 +12,7 @@ public interface ResourceSummary {
      * @return resource name -> resource value. Not null.
      * @see ResourceReport#getState()
      */
-    public Map<String, Object> getState();
+    Map<String, Object> getState();
 
     /**
      * Merge an existing summary with this one. Creates a new object.
@@ -21,7 +21,7 @@ public interface ResourceSummary {
      *            the summary to merge. Not null.
      * @return a newly created summary. Not null.
      */
-    public ResourceSummary merge(final ResourceSummary other);
+    ResourceSummary merge(ResourceSummary other);
 
     /**
      * Merge a {@link ResourceReport} with this one. Creates a new object.
@@ -30,6 +30,6 @@ public interface ResourceSummary {
      *            the report to merge. Not null.
      * @return a newly created summary. Not null.
      */
-    public ResourceSummary merge(final ResourceReport report);
+    ResourceSummary merge(ResourceReport report);
 
 }

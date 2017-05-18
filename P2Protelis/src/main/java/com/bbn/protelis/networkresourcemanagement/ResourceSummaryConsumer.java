@@ -12,5 +12,5 @@ public interface ResourceSummaryConsumer {
      * @param summary
      *            the most recent summary information. Not null.
      */
-    public void updateState(final ResourceSummary summary);
+    void updateState(ResourceSummary summary);
 }

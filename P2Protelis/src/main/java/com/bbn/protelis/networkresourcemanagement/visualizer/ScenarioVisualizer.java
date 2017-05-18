@@ -39,6 +39,10 @@ import edu.uci.ics.jung.graph.SparseMultigraph;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
 
+/**
+ * Visualizer for a {@link Scenario}.
+ *
+ */
 public class ScenarioVisualizer extends JApplet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioVisualizer.class);
 
@@ -47,19 +51,27 @@ public class ScenarioVisualizer extends JApplet {
 
     private static final int DEFAULT_WIDTH = 1200;// 640;//1920;
     private static final int DEFAULT_HEIGHT = 800;// 480;//1080;
+    private static final int LAYOUT_WIDTH = (int) (0.9 * DEFAULT_WIDTH);
+    private static final int LAYOUT_HEIGHT = (int) (0.9 * DEFAULT_HEIGHT);
     private static final int REFRESH_RATE = 100;// 500
     private final Object closeLock = new Object();
     private volatile boolean frameOpen = false;
 
     private Timer refresher;
 
-    Graph<DisplayNode, DisplayEdge> g = new SparseMultigraph<DisplayNode, DisplayEdge>();
+    private final Graph<DisplayNode, DisplayEdge> g = new SparseMultigraph<DisplayNode, DisplayEdge>();
 
     // Graph contents
     private Map<DeviceUID, DisplayNode> nodes = new HashMap<>();
     private Set<DisplayEdge> edges = new HashSet<DisplayEdge>();
     private final Scenario scenario;
 
+    /**
+     * Create a visualization.
+     * 
+     * @param scenario
+     *            the scenario to visualize
+     */
     public ScenarioVisualizer(final Scenario scenario) {
         this.scenario = scenario;
 
@@ -119,13 +131,13 @@ public class ScenarioVisualizer extends JApplet {
         // Layout<DisplayNode,DisplayEdge> layout = new KKLayout<DisplayNode,
         // DisplayEdge>(g);
         Layout<DisplayNode, DisplayEdge> layout = new ISOMLayout<DisplayNode, DisplayEdge>(g);
-        layout.setSize(new Dimension((int) (DEFAULT_WIDTH * 0.9), (int) (DEFAULT_HEIGHT * 0.9))); // sets
-                                                                                                    // the
-                                                                                                    // initial
-                                                                                                    // size
-                                                                                                    // of
-                                                                                                    // the
-                                                                                                    // space
+        layout.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT)); // sets
+                                                                    // the
+                                                                    // initial
+                                                                    // size
+                                                                    // of
+                                                                    // the
+                                                                    // space
         VisualizationViewer<DisplayNode, DisplayEdge> vv = new VisualizationViewer<DisplayNode, DisplayEdge>(layout);
         vv.setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 
@@ -163,7 +175,7 @@ public class ScenarioVisualizer extends JApplet {
 
         Transformer<DisplayEdge, Paint> arrowPaint = new Transformer<DisplayEdge, Paint>() {
             @Override
-            public Paint transform(DisplayEdge e) {
+            public Paint transform(final DisplayEdge e) {
                 return e.getEdgeColor();
             }
         };
@@ -173,14 +185,23 @@ public class ScenarioVisualizer extends JApplet {
 
         vv.getRenderContext().setVertexShapeTransformer(new Transformer<DisplayNode, Shape>() {
             @Override
-            public Shape transform(DisplayNode dn) {
+            public Shape transform(final DisplayNode dn) {
                 // The first 2 arguments here had better be half of the height
                 // and width respectively or it
                 // screws up Jung's attempt to draw the arrows on directed
                 // edges.
                 // return new Rectangle(-19,-25,38,50); // size of icon
-                return new Rectangle(-22, -28, 44, 56); // slightly bigger than
-                                                        // icon
+                final Icon icon = dn.getIcon();
+
+                // icon is 37x50
+                final int rectangleWidth = icon.getIconWidth() + 7;
+                final int rectangleHeight = icon.getIconHeight() + 6;
+                final int rectangleX = -1 * rectangleWidth / 2;
+                final int rectangleY = -1 * rectangleHeight / 2;
+                return new Rectangle(rectangleX, rectangleY, rectangleWidth, rectangleHeight); // slightly
+                                                                             // bigger
+                                                                             // than
+                // icon
             }
         });
 
@@ -220,6 +241,9 @@ public class ScenarioVisualizer extends JApplet {
         return vv;
     }
 
+    /**
+     * Wait for the visualizer to close.
+     */
     public void waitForClose() {
         if (frameOpen) {
             synchronized (closeLock) {
@@ -293,7 +317,7 @@ public class ScenarioVisualizer extends JApplet {
 
         refresher = new Timer(REFRESH_RATE, new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 refreshEdges();
                 vv.repaint();
             }

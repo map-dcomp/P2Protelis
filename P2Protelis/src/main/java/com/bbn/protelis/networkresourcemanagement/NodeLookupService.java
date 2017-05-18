@@ -18,6 +18,6 @@ public interface NodeLookupService {
      *            the UID of the node to find
      * @return the hostname and port.
      */
-    public InetSocketAddress getInetAddressForNode(final DeviceUID uid);
+    InetSocketAddress getInetAddressForNode(DeviceUID uid);
 
 }

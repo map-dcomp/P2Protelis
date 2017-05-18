@@ -24,11 +24,12 @@ import org.slf4j.LoggerFactory;
     private Map<CodePath, Object> sharedValues = new HashMap<>();
 
     /**
-     * @return The data most recently shared from the remote {@link Node}. Not null.
+     * @return The data most recently shared from the remote {@link Node}. Not
+     *         null.
      */
     public Map<CodePath, Object> getSharedValues() {
         synchronized (lock) {
-            if(null == sharedValues) {
+            if (null == sharedValues) {
                 return new HashMap<CodePath, Object>();
             } else {
                 return new HashMap<CodePath, Object>(sharedValues);
@@ -38,8 +39,14 @@ import org.slf4j.LoggerFactory;
 
     /**
      * Used to keep from having parallel connections.
+     * 
+     * @return the value that was passed into the constructor.
      */
-    public final int nonce;
+    /* package */ int getNonce() {
+        return this.nonce;
+    }
+
+    private final int nonce;
 
     private final ObjectInputStream in;
     private final ObjectOutputStream out;
@@ -49,8 +56,8 @@ import org.slf4j.LoggerFactory;
     // us
     private final Object lock = new Object();
 
-    public NetworkNeighbor(final ThreadGroup group, final DeviceUID uid, final int nonce, final InetSocketAddress addr,
-            final Socket s, final ObjectInputStream in, final ObjectOutputStream out) {
+    /* package */ NetworkNeighbor(final ThreadGroup group, final DeviceUID uid, final int nonce,
+            final InetSocketAddress addr, final Socket s, final ObjectInputStream in, final ObjectOutputStream out) {
         super(group, uid.toString() + addr.toString());
 
         this.in = in;

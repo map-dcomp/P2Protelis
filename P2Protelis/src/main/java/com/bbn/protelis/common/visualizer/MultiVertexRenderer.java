@@ -30,6 +30,13 @@ import edu.uci.ics.jung.visualization.transform.MutableTransformer;
 import edu.uci.ics.jung.visualization.transform.MutableTransformerDecorator;
 import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
 
+/**
+ * This class is heavily based on BasicVertexRenderer from JUNG.
+ *
+ * @param <V> vertex type
+ * @param <E> edge type
+ */
+//CHECKSTYLE:OFF - Mostly code from JUNG 
 public class MultiVertexRenderer<V,E> implements Renderer.Vertex<V,E> {
 
     public void paintVertex(RenderContext<V,E> rc, Layout<V,E> layout, V v) {

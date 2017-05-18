@@ -7,6 +7,9 @@ import org.protelis.lang.datatype.DeviceUID;
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.networkresourcemanagement.Node;
 
+/**
+ * Terminate after a number of executions of a set of {@link Node}s.
+ */
 public class ExecutionCountTermination implements TerminationCondition<Map<DeviceUID, Node>> {
     private final long round;
 

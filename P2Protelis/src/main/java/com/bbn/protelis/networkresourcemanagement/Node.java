@@ -27,12 +27,18 @@ public class Node extends AbstractExecutionContext {
     /** The Protelis VM to be executed by the device */
     private final ProtelisVM vm;
 
+    /**
+     * Default time to sleep between executions. Specified in milliseconds.
+     */
     public static final long DEFAULT_SLEEP_TIME_MS = 2 * 1000;
 
     private volatile long executionCount = 0;
 
     /**
      * The number of times this node has executed.
+     * 
+     * @return the number of times that this {@link Node} has executed the
+     *         program.
      */
     public final long getExecutionCount() {
         return executionCount;
@@ -41,13 +47,18 @@ public class Node extends AbstractExecutionContext {
     private long sleepTime = DEFAULT_SLEEP_TIME_MS;
 
     /**
-     * How long between executions of the protelis program. Defaults to
-     * {@link #DEFAULT_SLEEP_TIME_MS}.
+     * @return How long between executions of the protelis program. Defaults to
+     *         {@link #DEFAULT_SLEEP_TIME_MS}.
      */
     public final long getSleepTime() {
         return sleepTime;
     }
 
+    /**
+     * @param v
+     *            Specify the sleep time
+     * @see #getSleepTime()
+     */
     public final void setSleepTime(final long v) {
         sleepTime = v;
     }
@@ -76,6 +87,12 @@ public class Node extends AbstractExecutionContext {
         neighbors.add(v);
     }
 
+    /**
+     * 
+     * @param v
+     *            the neighbor to add
+     * @see #addNeighbor(DeviceUID)
+     */
     public final void addNeighbor(final Node v) {
         addNeighbor(v.getDeviceUID());
     }
@@ -85,6 +102,8 @@ public class Node extends AbstractExecutionContext {
      *            the program to run on the node
      * @param name
      *            the name of the node (must be unique)
+     * @param lookupService
+     *            How to find other nodes
      */
     public Node(final NodeLookupService lookupService, final ProtelisProgram program, final String name) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
@@ -95,21 +114,28 @@ public class Node extends AbstractExecutionContext {
     }
 
     /**
-     * Accessor for virtual machine, to allow external execution triggering
+     * @return Accessor for virtual machine, to allow external execution
+     *         triggering
      */
     public final ProtelisVM getVM() {
         return vm;
     }
 
     /**
-     * Expose the network manager, to allow external simulation of network For
-     * real devices, the NetworkManager usually runs autonomously in its own
-     * thread(s)
+     * Expose the network manager. This is to allow external simulation of
+     * network For real devices, the NetworkManager usually runs autonomously in
+     * its own thread(s).
+     * 
+     * @return the node specific version of the network manager
      */
     public final NodeNetworkManager accessNetworkManager() {
         return (NodeNetworkManager) super.getNetworkManager();
     }
 
+    /**
+     * 
+     * @return the name of the node
+     */
     public final String getName() {
         return uid.getUID();
     }
@@ -165,6 +191,10 @@ public class Node extends AbstractExecutionContext {
 
     private Thread executeThread = null;
 
+    /**
+     * 
+     * @return is the node currently executing?
+     */
     public final boolean isExecuting() {
         return null != executeThread && executeThread.isAlive();
     }

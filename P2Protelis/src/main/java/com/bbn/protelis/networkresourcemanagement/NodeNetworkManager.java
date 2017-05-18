@@ -23,7 +23,7 @@ public class NodeNetworkManager implements NetworkManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NodeNetworkManager.class);
 
-    private static final Random random = new Random();
+    private static final Random RANDOM = new Random();
 
     private final NodeLookupService lookupService;
     private final Object lock = new Object();
@@ -108,6 +108,9 @@ public class NodeNetworkManager implements NetworkManager {
 
     private ThreadGroup threadGroup = null;
 
+    /**
+     * Stop the manager.
+     */
     public void stop() {
         synchronized (lock) {
             if (null != threadGroup) {
@@ -130,7 +133,10 @@ public class NodeNetworkManager implements NetworkManager {
 
     private final Map<DeviceUID, NetworkNeighbor> nbrs = new HashMap<>();
 
-    private void addNeighbor(final DeviceUID uid, final int nonce, final Socket s, final ObjectInputStream in,
+    private void addNeighbor(final DeviceUID uid,
+            final int nonce,
+            final Socket s,
+            final ObjectInputStream in,
             final ObjectOutputStream out) {
         synchronized (lock) {
             // symmetry-break nonce
@@ -138,7 +144,7 @@ public class NodeNetworkManager implements NetworkManager {
 
             final InetSocketAddress remoteAddr = new InetSocketAddress(s.getInetAddress(), s.getPort());
             final NetworkNeighbor other = nbrs.get(uid);
-            if (null == other || other.nonce < nonce) {
+            if (null == other || other.getNonce() < nonce) {
                 if (null != other) {
                     other.terminate();
                 }
@@ -170,7 +176,7 @@ public class NodeNetworkManager implements NetworkManager {
         new Thread(threadGroup, () -> {
 
             while (!Thread.interrupted()) {
-                try (final ServerSocket server = new ServerSocket(port)) {
+                try (ServerSocket server = new ServerSocket(port)) {
                     server.setReuseAddress(true);
                     LOGGER.info("Node: " + node.getName() + " Daemon listening for neighbors on port " + port);
                     while (!Thread.interrupted()) {
@@ -227,7 +233,7 @@ public class NodeNetworkManager implements NetworkManager {
             // Try to link
             final Socket s = new Socket(addr.getAddress(), addr.getPort());
 
-            final int nonce = random.nextInt();
+            final int nonce = RANDOM.nextInt();
 
             // If the link connects, trade UIDs
             final ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());

@@ -1,6 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement.ns2;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
@@ -11,26 +12,30 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.protelis.lang.ProtelisLoader;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.bbn.protelis.common.testbed.termination.NeverTerminate;
 import com.bbn.protelis.networkresourcemanagement.Link;
 import com.bbn.protelis.networkresourcemanagement.Node;
 import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
+import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
+import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
 import com.bbn.protelis.utils.StringUID;
 
 /**
  * Read NS2 files in and create a network for protelis.
- * 
- * @author jschewe
- *
  */
-public class NS2Parser {
+public final class NS2Parser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NS2Parser.class);
+
+    private NS2Parser() {
+    }
 
     /**
      * Parse an NS2 file into a map of Nodes.
@@ -39,18 +44,24 @@ public class NS2Parser {
      *            name of the scenario to create
      * @param reader
      *            where to read the data from
+     * @param program
+     *            the program to run on all of the nodes
+     * @param lookupService
+     *            how to connect to nodes
      * @return the network scenario
      * @throws IOException
      *             if there is an error reading from the reader
      */
-    public static Scenario parse(final String scenarioName, final Reader reader, final ProtelisProgram program,
+    public static Scenario parse(final String scenarioName,
+            final Reader reader,
+            final ProtelisProgram program,
             final NodeLookupService lookupService) throws IOException {
         final Map<String, Node> nodesByName = new HashMap<>();
         final Set<Link> links = new HashSet<>();
 
         String simulator = null;
 
-        try (final BufferedReader bufReader = new BufferedReader(reader)) {
+        try (BufferedReader bufReader = new BufferedReader(reader)) {
 
             // final Pattern setRegExp = Pattern.compile("set (\\s+)
             // \\[([^]]+)\\]");
@@ -63,7 +74,9 @@ public class NS2Parser {
                     // comment or blank
                     continue;
                 } else if (line.startsWith("source ")) {
-                    // ignore
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace("Ignoring source line: " + line);
+                    }
                 } else if (line.startsWith("set")) {
                     final Matcher match = setRegExp.matcher(line);
                     if (!match.matches()) {
@@ -158,15 +171,53 @@ public class NS2Parser {
 
     /**
      * Thrown when there is an error in the NS2 file format.
-     * 
-     * @author jschewe
      *
      */
     public static final class NS2FormatException extends RuntimeException {
         private static final long serialVersionUID = 1L;
 
+        /**
+         * 
+         * @param message
+         *            the reason the exception is thrown
+         */
         public NS2FormatException(final String message) {
             super(message);
         }
     }
+
+    /**
+     * Open up the network specified by the first argument.
+     * 
+     * @param args
+     *            the arguments
+     */
+    public static void main(final String[] args) {
+        try {
+            if (args.length < 1) {
+                LOGGER.error("You need to spcify the file to load");
+                return;
+            }
+
+            final ProtelisProgram program = ProtelisLoader.parseAnonymousModule("true");
+
+            final NodeLookupService lookupService = new LocalNodeLookupService(5000);
+
+            final String filename = "ns2/multinode.ns";
+            try (Reader reader = new FileReader(args[0])) {
+                final Scenario scenario = NS2Parser.parse(filename, reader, program, lookupService);
+
+                scenario.setVisualize(true);
+                scenario.setTerminationCondition(new NeverTerminate<>());
+
+                final ScenarioRunner emulation = new ScenarioRunner(scenario);
+                emulation.run();
+
+            } // reader
+        } catch (final IOException ioe) {
+            LOGGER.error("Error reading the file " + args[0], ioe);
+        }
+
+    }
+
 }

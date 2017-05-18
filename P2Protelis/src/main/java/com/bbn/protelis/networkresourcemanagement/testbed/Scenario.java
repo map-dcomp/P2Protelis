@@ -22,11 +22,19 @@ public class Scenario {
 
     /**
      * Should the system run with visualization, or headless?
+     * 
+     * @param v
+     *            true if the scenario should be displayed
      */
     public void setVisualize(final boolean v) {
         this.visualize = v;
     }
 
+    /**
+     * 
+     * @return should the scenario be displayed?
+     * @see #setVisualize(boolean)
+     */
     public boolean getVisualize() {
         return this.visualize;
     }
@@ -72,12 +80,17 @@ public class Scenario {
      */
     private final String name;
 
+    /**
+     * @return name of the scenario
+     */
     public String getName() {
         return name;
     }
 
     /**
      * Nodes in the network to run, including Protelis program for each device.
+     * 
+     * @return unmodifiable map of the nodes, key is the UID
      */
     public Map<DeviceUID, Node> getNodes() {
         return Collections.unmodifiableMap(this.nodes);
@@ -87,6 +100,8 @@ public class Scenario {
 
     /**
      * Links in the network.
+     * 
+     * @return unmodifiable list of the links
      */
     public Set<Link> getLinks() {
         return Collections.unmodifiableSet(this.links);
@@ -97,6 +112,8 @@ public class Scenario {
     /**
      * Constructor for creating a scenario with default conditions.
      * 
+     * @param name
+     *            the name of the scenario
      * @param nodes
      *            the nodes in the scenario
      * @param links

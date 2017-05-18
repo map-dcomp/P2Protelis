@@ -1,6 +1,5 @@
 package com.bbn.protelis.networkresourcemanagement.testbed;
 
-import java.io.IOException;
 import java.util.Map;
 
 import org.protelis.lang.datatype.DeviceUID;
@@ -11,12 +10,20 @@ import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.networkresourcemanagement.Node;
 import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
 
+/**
+ * Class to run a {@link Scenario}.
+ */
 public class ScenarioRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioRunner.class);
 
     private final Scenario scenario;
     private ScenarioVisualizer visualizer;
 
+    /**
+     * 
+     * @param scenario
+     *            the scenario to run
+     */
     public ScenarioRunner(final Scenario scenario) {
         LOGGER.info("Initializing scenario");
         this.scenario = scenario;
@@ -25,15 +32,12 @@ public class ScenarioRunner {
     /**
      * Run a scenario: the return values live in the scenario network, which can
      * be freely polled after completion.
-     * 
-     * @throws IOException
      */
-    public void run() throws IOException {
+    public void run() {
         // Initialize the daemons
         LOGGER.debug("Initializing daemons");
         for (final Map.Entry<DeviceUID, Node> entry : scenario.getNodes().entrySet()) {
             entry.getValue().startExecuting();
-            ;
         }
 
         // Launch the visualizer, if desired
