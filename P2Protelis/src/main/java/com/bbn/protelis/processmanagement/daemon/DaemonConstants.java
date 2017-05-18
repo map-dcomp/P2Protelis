@@ -4,8 +4,7 @@
 package com.bbn.protelis.processmanagement.daemon;
 
 /**
- * @author Danilo Pianini
- *
+ * A set of constants that are used for configuring the network.
  */
 public final class DaemonConstants {
     
