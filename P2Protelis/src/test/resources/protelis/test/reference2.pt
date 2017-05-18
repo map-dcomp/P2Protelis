@@ -1,0 +1,5 @@
+module protelis:test:reference2
+
+public def testFun2() {
+	5;
+}
