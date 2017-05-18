@@ -32,11 +32,11 @@ public class DisplayNode implements Listener {
     static final Icon serverShutdown = new ImageIcon(DisplayNode.class.getResource("/server-small-purple.png"));
     static final Icon serverNull = new ImageIcon(DisplayNode.class.getResource("/server-small.png"));
     
-    AbstractDaemonWrapper source;
+    private AbstractDaemonWrapper source;
     private Map<DeviceUID,EdgeType> neighbors = new HashMap<>();
     private String vertexLabel;
     
-    public DisplayNode(DaemonWrapper d) {
+    public DisplayNode(final DaemonWrapper d) {
         ensureInitialized();
         
         source = (AbstractDaemonWrapper)d;
@@ -45,7 +45,9 @@ public class DisplayNode implements Listener {
         // TODO sort out labels
     }
     
-    public Map<DeviceUID,EdgeType> getNeighbors() { return neighbors; }
+    public Map<DeviceUID,EdgeType> getNeighbors() { 
+        return neighbors; 
+    }
     
     public DeviceUID getUID() {
         return new LongDeviceUID(source.getUID());
@@ -54,7 +56,7 @@ public class DisplayNode implements Listener {
     public String getVertexLabel() {
         return vertexLabel;
     }
-    public void setVertexLabel(String label) {
+    public void setVertexLabel(final String label) {
         // TODO Auto-generated method stub
         vertexLabel = label;
     }
@@ -63,18 +65,20 @@ public class DisplayNode implements Listener {
         float r = objectToColorComponent(source.getEnvironment().get("red"));
         float g = objectToColorComponent(source.getEnvironment().get("green"));
         float b = objectToColorComponent(source.getEnvironment().get("blue"));
-        if(r==0 && g==0 && b==0) return null;
+        if (r == 0 && g == 0 && b == 0) {
+            return null;
+        }
         return new Color(r,g,b);
     }
-    private float objectToColorComponent(Object o) {
-        if(o==null) { 
+    private float objectToColorComponent(final Object o) {
+        if (o == null) { 
             return 0; 
-        } else if(o instanceof Number) {
+        } else if (o instanceof Number) {
             return ((Number)o).floatValue();
-        } else if(o instanceof Boolean) {
+        } else if (o instanceof Boolean) {
             return ((Boolean) o).booleanValue() ? 1 : 0;
         } else {
-            throw new IllegalArgumentException("Display doesn't know how make a color from "+o);
+            throw new IllegalArgumentException("Display doesn't know how make a color from " + o);
         }
     }
 
@@ -115,28 +119,35 @@ public class DisplayNode implements Listener {
     }
 
     /**
-     * Called by the visualizer to set the environment variable "var" to boolean value "selected" on all daemon devices
+     * Called by the visualizer to set the environment variable "var" to boolean value "selected" on all daemon devices.
      * @param var
      * @param selected
      */
-    public void setEnvironmentVariable(String var, boolean selected) {
+    public void setEnvironmentVariable(final String var, final boolean selected) {
         source.getEnvironment().put(var, selected);
     }
 
     @Override
-    public void daemonUpdated(AbstractDaemonWrapper d) {
+    public void daemonUpdated(final AbstractDaemonWrapper d) {
         updateStatus();
         Set<DeviceUID> logicalNeighbors = d.getLogicalNeighbors();
         Set<DeviceUID> physicalNeighbors = d.getPhysicalNeighbors();
 
         Map<DeviceUID,EdgeType> newNbrs = new HashMap<>();
-        if(logicalNeighbors!=null)
-            logicalNeighbors.forEach((id) -> { newNbrs.put(id,EdgeType.LOGICAL); });
-        if(physicalNeighbors!=null)
-            physicalNeighbors.forEach((id) -> { 
-                if(newNbrs.containsKey(id)) { newNbrs.put(id,EdgeType.BOTH);} 
-                else {newNbrs.put(id,EdgeType.PHYSICAL);} 
+        if (logicalNeighbors != null) {
+            logicalNeighbors.forEach((id) -> { 
+                newNbrs.put(id,EdgeType.LOGICAL);
             });
+        }
+        if (physicalNeighbors != null) {
+            physicalNeighbors.forEach((id) -> { 
+                if (newNbrs.containsKey(id)) { 
+                    newNbrs.put(id,EdgeType.BOTH);
+                } else {
+                    newNbrs.put(id,EdgeType.PHYSICAL);
+                } 
+            });
+        }
         neighbors = newNbrs;
     }
 
@@ -144,8 +155,8 @@ public class DisplayNode implements Listener {
     void updateStatus() {
         String debugStr = debugString();
         Object value = source.getValue();
-        String valueStr= (value==null) ? "<null>" : value.toString();
-        setVertexLabel("<html>"+" #"+source.getUID()+": <b>" + source.alias + "</b><br><hr>" + valueStr + debugStr);
+        String valueStr = (value == null) ? "<null>" : value.toString();
+        setVertexLabel("<html>" + " #" + source.getUID() + ": <b>" + source.alias + "</b><br><hr>" + valueStr + debugStr);
         // TODO: figure out dependencies
 //      try {
 //          if(r.getReport().debug.get("deps") != null) {
@@ -168,18 +179,24 @@ public class DisplayNode implements Listener {
 //          if(!ignores.contains(k)) { hasAny = true; s += "<br>"+k+" = "+env.get(k); }
 //      }
         // No entries = no display
-        if(!hasAny) return ""; 
+        if (!hasAny) {
+            return ""; 
+        }
         s += "</i></small></font>";
         return s;
     }
     
-    static private boolean initialized = false;
+    private static boolean initialized = false;
     private void ensureInitialized() {
-        if(initialized) return;
+        if (initialized) {
+            return;
+        }
         // Set up ignores
         Arrays.asList("red", "green", "blue", "logicalNeighbors")
             .forEach((s) -> ignores.add(new FasterString(s)));
         initialized = true;
     }
-    public static void ignore(String s) { ignores.add(new FasterString(s)); }
+    public static void ignore(final String s) { 
+        ignores.add(new FasterString(s)); 
+    }
 }
