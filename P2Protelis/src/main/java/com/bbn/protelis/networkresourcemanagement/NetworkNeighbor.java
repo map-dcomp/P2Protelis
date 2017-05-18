@@ -17,7 +17,8 @@ import org.slf4j.LoggerFactory;
  * A network link between a {@link Node} and it's neighbor. Used to send and
  * receive data.
  */
-/* package */ final class NetworkNeighbor extends Thread {
+/* package */ 
+final class NetworkNeighbor extends Thread {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkNeighbor.class);
 
@@ -28,7 +29,7 @@ import org.slf4j.LoggerFactory;
      */
     public Map<CodePath, Object> getSharedValues() {
         synchronized (lock) {
-            if(null == sharedValues) {
+            if (null == sharedValues) {
                 return new HashMap<CodePath, Object>();
             } else {
                 return new HashMap<CodePath, Object>(sharedValues);
@@ -49,7 +50,7 @@ import org.slf4j.LoggerFactory;
     // us
     private final Object lock = new Object();
 
-    public NetworkNeighbor(final ThreadGroup group, final DeviceUID uid, final int nonce, final InetSocketAddress addr,
+    NetworkNeighbor(final ThreadGroup group, final DeviceUID uid, final int nonce, final InetSocketAddress addr,
             final Socket s, final ObjectInputStream in, final ObjectOutputStream out) {
         super(group, uid.toString() + addr.toString());
 

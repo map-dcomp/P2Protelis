@@ -95,7 +95,7 @@ public class Node extends AbstractExecutionContext {
     }
 
     /**
-     * Accessor for virtual machine, to allow external execution triggering
+     * Accessor for virtual machine, to allow external execution triggering.
      */
     public final ProtelisVM getVM() {
         return vm;

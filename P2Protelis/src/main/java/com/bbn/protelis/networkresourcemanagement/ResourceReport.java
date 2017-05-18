@@ -13,6 +13,6 @@ public interface ResourceReport {
      * 
      * @return resource name -> resource value. Not null.
      */
-    public Map<String, Object> getState();
+    Map<String, Object> getState();
 
 }

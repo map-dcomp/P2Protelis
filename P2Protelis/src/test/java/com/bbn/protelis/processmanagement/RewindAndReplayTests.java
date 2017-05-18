@@ -5,7 +5,7 @@ import org.junit.Test;
 public class RewindAndReplayTests extends JSONFrameworkTest {
 
     /**
-     * Test rewind function against a fixed message set and dummy processes
+     * Test rewind function against a fixed message set and dummy processes.
      */
     @Test
     public void rewindDummyTest() {
@@ -17,7 +17,7 @@ public class RewindAndReplayTests extends JSONFrameworkTest {
     }
 
     /**
-     * Test rewind function with a set of live processes
+     * Test rewind function with a set of live processes.
      */
     @Test
     public void rewindTest() {
@@ -29,7 +29,7 @@ public class RewindAndReplayTests extends JSONFrameworkTest {
     }
 
     /**
-     * Test rewind function with a chain of live processes
+     * Test rewind function with a chain of live processes.
      */
     @Test
     public void chainTest() {
@@ -41,7 +41,7 @@ public class RewindAndReplayTests extends JSONFrameworkTest {
     }
 
     /**
-     * Test rewind function with a chain of live processes
+     * Test rewind function with a chain of live processes.
      */
     @Test
     public void tbmcsTest() {
@@ -53,7 +53,7 @@ public class RewindAndReplayTests extends JSONFrameworkTest {
     }
 
     /**
-     * Test replay function with a chain of live processes
+     * Test replay function with a chain of live processes.
      */
     @Test
     public void replayTest() {

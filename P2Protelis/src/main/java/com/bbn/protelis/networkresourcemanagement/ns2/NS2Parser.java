@@ -50,7 +50,7 @@ public class NS2Parser {
 
         String simulator = null;
 
-        try (final BufferedReader bufReader = new BufferedReader(reader)) {
+        try (BufferedReader bufReader = new BufferedReader(reader)) {
 
             // final Pattern setRegExp = Pattern.compile("set (\\s+)
             // \\[([^]]+)\\]");

@@ -163,7 +163,7 @@ public class ScenarioVisualizer extends JApplet {
 
         Transformer<DisplayEdge, Paint> arrowPaint = new Transformer<DisplayEdge, Paint>() {
             @Override
-            public Paint transform(DisplayEdge e) {
+            public Paint transform(final DisplayEdge e) {
                 return e.getEdgeColor();
             }
         };
@@ -173,7 +173,7 @@ public class ScenarioVisualizer extends JApplet {
 
         vv.getRenderContext().setVertexShapeTransformer(new Transformer<DisplayNode, Shape>() {
             @Override
-            public Shape transform(DisplayNode dn) {
+            public Shape transform(final DisplayNode dn) {
                 // The first 2 arguments here had better be half of the height
                 // and width respectively or it
                 // screws up Jung's attempt to draw the arrows on directed
@@ -293,7 +293,7 @@ public class ScenarioVisualizer extends JApplet {
 
         refresher = new Timer(REFRESH_RATE, new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 refreshEdges();
                 vv.repaint();
             }

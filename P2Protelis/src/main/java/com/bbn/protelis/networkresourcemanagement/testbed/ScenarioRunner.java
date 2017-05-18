@@ -33,7 +33,6 @@ public class ScenarioRunner {
         LOGGER.debug("Initializing daemons");
         for (final Map.Entry<DeviceUID, Node> entry : scenario.getNodes().entrySet()) {
             entry.getValue().startExecuting();
-            ;
         }
 
         // Launch the visualizer, if desired

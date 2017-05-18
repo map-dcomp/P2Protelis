@@ -4,13 +4,13 @@ import java.awt.Color;
 import java.awt.Paint;
 
 public class DisplayEdge {
-    public static enum EdgeType {PHYSICAL, LOGICAL, BOTH };
+    public enum EdgeType { PHYSICAL, LOGICAL, BOTH };
     
     DisplayNode head;
     DisplayNode tail;
     EdgeType type;
     
-    public DisplayEdge(DisplayNode head, DisplayNode tail, EdgeType type) { 
+    public DisplayEdge(final DisplayNode head, final DisplayNode tail, final EdgeType type) { 
         this.head = head; this.tail = tail; this.type = type;
     }
 

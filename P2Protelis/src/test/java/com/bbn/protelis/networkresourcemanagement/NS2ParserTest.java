@@ -35,10 +35,10 @@ public class NS2ParserTest {
         final NodeLookupService lookupService = new LocalNodeLookupService(5000);
 
         final String filename = "ns2/multinode.ns";
-        try (final InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename)) {
+        try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename)) {
             Assert.assertNotNull("Couldn't find ns2 file: " + filename, stream);
 
-            try (final Reader reader = new InputStreamReader(stream)) {
+            try (Reader reader = new InputStreamReader(stream)) {
                 final Scenario scenario = NS2Parser.parse(filename, reader, program, lookupService);
                 Assert.assertNotNull("Parse didn't create a scenario", scenario);
 

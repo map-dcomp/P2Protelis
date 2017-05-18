@@ -170,7 +170,7 @@ public class NodeNetworkManager implements NetworkManager {
         new Thread(threadGroup, () -> {
 
             while (!Thread.interrupted()) {
-                try (final ServerSocket server = new ServerSocket(port)) {
+                try (ServerSocket server = new ServerSocket(port)) {
                     server.setReuseAddress(true);
                     LOGGER.info("Node: " + node.getName() + " Daemon listening for neighbors on port " + port);
                     while (!Thread.interrupted()) {

@@ -67,17 +67,18 @@ public class DisplayNode {
 
     private static final Set<FasterString> ignores = new HashSet<>();
 
-    static private boolean initialized = false;
+    private static boolean initialized = false;
 
     private void ensureInitialized() {
-        if (initialized)
+        if (initialized) {
             return;
+        }
         // Set up ignores
         Arrays.asList("red", "green", "blue", "logicalNeighbors").forEach((s) -> ignores.add(new FasterString(s)));
         initialized = true;
     }
 
-    public static void ignore(String s) {
+    public static void ignore(final String s) {
         ignores.add(new FasterString(s));
     }
 }

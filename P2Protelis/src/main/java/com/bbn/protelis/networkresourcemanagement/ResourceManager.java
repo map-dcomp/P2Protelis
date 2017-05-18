@@ -10,7 +10,7 @@ public interface ResourceManager {
     /**
      * @return The current state of the device being managed. Not null.
      */
-    public ResourceReport getCurrentResourceReport();
+    ResourceReport getCurrentResourceReport();
 
     // control methods for starting/stopping a service
     // may need migration commands here

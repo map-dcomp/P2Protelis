@@ -25,7 +25,7 @@ public class JSONFrameworkTest {
     
 
     /**
-     * Common pattern of running a 
+     * Common pattern of running a test.
      * @param program   Protelis program to load
      * @param module    Boolean indicating whether the program is anonymous or in a class
      * @param network   JSON file containing serialization of an array of DaemonWrappers
@@ -33,86 +33,108 @@ public class JSONFrameworkTest {
      * @param expectedResult
      * @throws IOException
      */
-    protected void runTest(String program, boolean module, String network, int rounds, String expectedResult) throws IOException {
+    protected void runTest(final String program, final boolean module, final String network, final int rounds, final String expectedResult) throws IOException {
         runTest(program,module,network,rounds,expectedResult,new String[0]);
     }
     
-    protected void runTest(String program, boolean module, String network, int rounds, String expectedResult, String[] extraArgs) {
+    protected void runTest(final String program, final boolean module, final String network, final int rounds, final String expectedResult, final String[] extraArgs) {
         Object[] expected = {};
         try {
             expected = readExpectedResult(expectedResult);
             // Turn parameters into arguments
-            String[] baseArgs = {"-f",network,module?"-c":"-a",program};
-            if(!nonTerminating) baseArgs = ArrayUtils.addAll(baseArgs, new String[]{"-t","rounds",Integer.toString(rounds)});
+            String[] baseArgs = {"-f",network,module ? "-c" : "-a",program};
+            if (!nonTerminating) {
+                baseArgs = ArrayUtils.addAll(baseArgs, new String[]{"-t","rounds",Integer.toString(rounds)});
+            }
             String[] args = ArrayUtils.addAll(baseArgs, extraArgs);
             // Run the simulation
             DaemonWrapper[] returns = StandaloneExecution.runStandalone(args);
             // Reorganize the return values into a map and check if they are correct
             Map<Long,Object> results = new HashMap<>();
-            for(DaemonWrapper d : returns) { results.put(d.getUID(), d.getValue()); }
+            for (DaemonWrapper d : returns) { 
+                results.put(d.getUID(), d.getValue()); 
+            }
             compareValues(expected,results);
         } catch (Exception e) {
             failException(e);
         } finally {
             // shift testing port offset by size of network
-            LocalDaemon.testPortOffset = (LocalDaemon.testPortOffset + expected.length)%portOffsetWrap ;
+            LocalDaemon.testPortOffset = (LocalDaemon.testPortOffset + expected.length) % portOffsetWrap;
         }
     }
 
-    private Object[] readExpectedResult(String resource) throws IOException {
+    private Object[] readExpectedResult(final String resource) throws IOException {
         // Read the specification
         InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
-        if(in==null) throw new FileNotFoundException("Couldn't locate JSON file: "+resource);
+        if (in == null) {
+            throw new FileNotFoundException("Couldn't locate JSON file: " + resource);
+        }
         JsonReader jr = new JsonReader(in);
         Object[] objects = (Object[])jr.readObject();
         jr.close();
         return objects;
     }
 
-    private boolean tupleEquals(Object expected, Object actual) {
+    private boolean tupleEquals(final Object expected, final Object actual) {
         // Test if comparing array and Tuple
-        if(!(expected instanceof Object[])) return false;
-        if(!(actual instanceof Tuple)) return false;
+        if (!(expected instanceof Object[])) {
+            return false;
+        }
+        if (!(actual instanceof Tuple)) {
+            return false;
+        }
         Object[] expectedA = ((Object[])expected);
         Tuple actualT = (Tuple)actual;
         // Perform the actual element-by-element comparison
-        if(expectedA.length != actualT.size()) return false;
-        for(int i=0;i<expectedA.length;i++) {
+        if (expectedA.length != actualT.size()) {
+            return false;
+        }
+        for (int i = 0; i < expectedA.length; i++) {
             Object e_v = expectedA[i];
             Object a_v = actualT.get(i);
-            if(e_v==null) {
-                if(a_v!=null) return false;
+            if (e_v == null) {
+                if (a_v != null) {
+                    return false;
+                }
             } else {
-                if(!(e_v.equals(a_v) || tupleEquals(e_v,a_v))) return false;
+                if (!(e_v.equals(a_v) || tupleEquals(e_v,a_v))) {
+                    return false;
+                }
             }
         }
         return true;
     }
 
-    private void compareValues(Object[] expected, Map<Long,Object> actual) {
+    private void compareValues(final Object[] expected, final Map<Long,Object> actual) {
         Assert.assertEquals("Number of daemons does not match number of results:", expected.length, actual.size());
         String mismatches = "Mismatches:";
         boolean allMatches = true;
-        for(int i=0;i<expected.length;i++) {
+        for (int i = 0; i < expected.length; i++) {
             Object e_i = ((Object[])expected[i])[0];
             Object e_v = ((Object[])expected[i])[1];
             Object a_v = actual.get((Long)e_i);
-            String e_vStr = (e_v==null)?"null":(e_v instanceof Object[]) ? Arrays.deepToString((Object[])e_v) : e_v.toString();
-            if(e_v==null) {
-                if(a_v!=null) { allMatches = false; mismatches+= " Daemon "+e_i+": expected null but observed "+a_v; }
+            String e_vStr = (e_v == null) ? "null" : (e_v instanceof Object[]) ? Arrays.deepToString((Object[])e_v) : e_v.toString();
+            if (e_v == null) {
+                if (a_v != null) { 
+                    allMatches = false; 
+                    mismatches += " Daemon " + e_i + ": expected null but observed " + a_v; 
+                }
             } else {
-                if(a_v==null) { allMatches = false; mismatches+= " Daemon "+e_i+": expected "+e_vStr+" but observed null"; }
-                else if(!(e_v.equals(a_v) || tupleEquals(e_v,a_v))) {
+                if (a_v == null) { 
+                    allMatches = false; 
+                    mismatches += " Daemon " + e_i + ": expected " + e_vStr + " but observed null"; 
+                } else if (!(e_v.equals(a_v) || tupleEquals(e_v,a_v))) {
                     allMatches = false;
-                    mismatches+= " Daemon "+e_i+": expected "+e_vStr+" but observed "+a_v;
+                    mismatches += " Daemon " + e_i + ": expected " + e_vStr + " but observed " + a_v;
                 }
             }
         }
-        if(!allMatches)
+        if (!allMatches) {
             throw new AssertionError(mismatches);
+        }
     }
 
-    private void failException(Exception e) {
+    private void failException(final Exception e) {
         fail(stackTraceToString(e));
     }
 
