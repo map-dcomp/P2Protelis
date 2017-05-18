@@ -51,16 +51,16 @@ public class ScenarioVisualizer extends JApplet {
     private static final int DEFAULT_HEIGHT = 800;//480;//1080;
     private static final int REFRESH_RATE = 100;//500
     
-    ProcessStatus status = ProcessStatus.init;
+    private ProcessStatus status = ProcessStatus.init;
     private Timer refresher;
 
-    Graph<DisplayNode,DisplayEdge> g = new SparseMultigraph<DisplayNode,DisplayEdge>();
+    private Graph<DisplayNode,DisplayEdge> g = new SparseMultigraph<DisplayNode,DisplayEdge>();
 
     // Graph contents
     private Map<DeviceUID,DisplayNode> nodes = new HashMap<>();
-    Set<DisplayEdge> edges = new HashSet<DisplayEdge>();
+    private Set<DisplayEdge> edges = new HashSet<DisplayEdge>();
     
-    public ScenarioVisualizer(Scenario scenario) {
+    public ScenarioVisualizer(final Scenario scenario) {
         // Add the nodes and edges
         createGraphFromNetwork(scenario.network);
         // Configure the rendering environment
@@ -71,9 +71,9 @@ public class ScenarioVisualizer extends JApplet {
         status = ProcessStatus.run;
     }
 
-    private void createGraphFromNetwork(DaemonWrapper[] daemons) {
+    private void createGraphFromNetwork(final DaemonWrapper[] daemons) {
         // First add nodes to collection, so they'll be there for edge addition
-        for(DaemonWrapper d : daemons) { 
+        for (DaemonWrapper d : daemons) { 
             DisplayNode n = new DisplayNode(d);
             g.addVertex(n);
             nodes.put(n.getUID(),n); 
@@ -85,11 +85,13 @@ public class ScenarioVisualizer extends JApplet {
         // TODO: only adjust changed edges, rather than all edges
         
         // First, discard all current edges
-        for(DisplayEdge e : edges) {g.removeEdge(e); }
+        for (DisplayEdge e : edges) {
+            g.removeEdge(e);
+        }
         // Next, add all missing edges
-        for(DisplayNode n : nodes.values()) {
-            for(Entry<DeviceUID, DisplayEdge.EdgeType> id : n.getNeighbors().entrySet()) {
-                if(nodes.get(id.getKey()) != null) {
+        for (DisplayNode n : nodes.values()) {
+            for (Entry<DeviceUID, DisplayEdge.EdgeType> id : n.getNeighbors().entrySet()) {
+                if (nodes.get(id.getKey()) != null) {
                     DisplayEdge e = new DisplayEdge(n, nodes.get(id.getKey()), id.getValue());
                     g.addEdge(e, e.head, e.tail, EdgeType.DIRECTED);
                     edges.add(e);
@@ -101,14 +103,14 @@ public class ScenarioVisualizer extends JApplet {
     private VisualizationViewer<DisplayNode,DisplayEdge> configureGraphRendering() {
         //Layout<DisplayNode,DisplayEdge> layout = new KKLayout<DisplayNode, DisplayEdge>(g);
         Layout<DisplayNode,DisplayEdge> layout = new ISOMLayout<DisplayNode, DisplayEdge>(g);
-        layout.setSize(new Dimension((int)(DEFAULT_WIDTH*0.9),(int)(DEFAULT_HEIGHT*0.9))); // sets the initial size of the space
+        layout.setSize(new Dimension((int)(DEFAULT_WIDTH * 0.9),(int)(DEFAULT_HEIGHT * 0.9))); // sets the initial size of the space
         VisualizationViewer<DisplayNode,DisplayEdge> vv = new VisualizationViewer<DisplayNode,DisplayEdge>(layout);
         vv.setPreferredSize(new Dimension(DEFAULT_WIDTH,DEFAULT_HEIGHT));
         
         vv.getRenderer().setVertexRenderer(new MultiVertexRenderer<DisplayNode,DisplayEdge>());
         vv.getRenderContext().setVertexLabelTransformer(new Transformer<DisplayNode,String>() {
             @Override
-            public String transform(DisplayNode dn) {
+            public String transform(final DisplayNode dn) {
                 return dn.getVertexLabel();
             }
         });
@@ -117,14 +119,14 @@ public class ScenarioVisualizer extends JApplet {
          
         vv.getRenderContext().setVertexFillPaintTransformer(new Transformer<DisplayNode,Paint>() {
             @Override
-            public Paint transform(DisplayNode dn) {
+            public Paint transform(final DisplayNode dn) {
                 return null;
             }
         });
         
         vv.getRenderContext().setVertexDrawPaintTransformer(new Transformer<DisplayNode,Paint>() {
             @Override
-            public Paint transform(DisplayNode dn) {
+            public Paint transform(final DisplayNode dn) {
                 return dn.getVertexColor();
                 
             }
@@ -132,14 +134,14 @@ public class ScenarioVisualizer extends JApplet {
         
         vv.getRenderContext().setVertexStrokeTransformer(new Transformer<DisplayNode,Stroke>() {
             @Override
-            public Stroke transform(DisplayNode dn) {
+            public Stroke transform(final DisplayNode dn) {
                 return new BasicStroke(3);
             }
         });
         
         Transformer<DisplayEdge, Paint> arrowPaint = new Transformer<DisplayEdge, Paint>() {
             @Override
-            public Paint transform(DisplayEdge e) {
+            public Paint transform(final DisplayEdge e) {
                 return e.getEdgeColor();
             }
         };
@@ -149,7 +151,7 @@ public class ScenarioVisualizer extends JApplet {
 
         vv.getRenderContext().setVertexShapeTransformer(new Transformer<DisplayNode,Shape>() {
             @Override
-            public Shape transform(DisplayNode dn) {
+            public Shape transform(final DisplayNode dn) {
                 // The first 2 arguments here had better be half of the height and width respectively or it
                 // screws up Jung's attempt to draw the arrows on directed edges.
                 //return new Rectangle(-19,-25,38,50); // size of icon
@@ -159,14 +161,14 @@ public class ScenarioVisualizer extends JApplet {
         
         vv.getRenderContext().setVertexIconTransformer(new Transformer<DisplayNode,Icon>() {
             @Override
-            public Icon transform(DisplayNode dn) {
+            public Icon transform(final DisplayNode dn) {
                 return dn.getIcon();
             }
         });
 
         vv.addGraphMouseListener(new GraphMouseListener<DisplayNode>() {
             @Override
-            public void graphClicked(DisplayNode v, MouseEvent me) {
+            public void graphClicked(final DisplayNode v, final MouseEvent me) {
                 if (me.getButton() == MouseEvent.BUTTON1) {
                     v.handleClick();
                     vv.repaint();
@@ -175,24 +177,24 @@ public class ScenarioVisualizer extends JApplet {
             }
 
             @Override
-            public void graphPressed(DisplayNode v, MouseEvent me) {
+            public void graphPressed(final DisplayNode v, final MouseEvent me) {
             }
 
             @Override
-            public void graphReleased(DisplayNode v, MouseEvent me) {
+            public void graphReleased(final DisplayNode v, final MouseEvent me) {
             }
         });
         
         return vv;
     }
 
-    private void initializeSwingComponents(Scenario scenario, VisualizationViewer<DisplayNode,DisplayEdge> vv) {
-        JFrame frame = new JFrame("Graph View: "+scenario.scenario_name);
+    private void initializeSwingComponents(final Scenario scenario, final VisualizationViewer<DisplayNode,DisplayEdge> vv) {
+        JFrame frame = new JFrame("Graph View: " + scenario.scenario_name);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         // The the display that it should kill the remote nodes on window close.
         frame.addWindowListener(new WindowAdapter() {
             @Override
-            public void windowClosing(WindowEvent e) {
+            public void windowClosing(final WindowEvent e) {
                 status = ProcessStatus.stop;
             }
         });
@@ -203,15 +205,15 @@ public class ScenarioVisualizer extends JApplet {
         JPanel envPanel = new JPanel();
         envPanel.setLayout(new BoxLayout(envPanel, BoxLayout.X_AXIS));
         // Add a button to the frame to allow the user to toggle each specified global variable.
-        for(String var : scenario.environmentButtons) {
+        for (String var : scenario.environmentButtons) {
             JToggleButton toggle = new JToggleButton(var);
             
             toggle.addActionListener(new ActionListener() {
                 @Override
-                public void actionPerformed(ActionEvent event) {
+                public void actionPerformed(final ActionEvent event) {
                     AbstractButton abstractButton = (AbstractButton)event.getSource();
                     boolean selected = abstractButton.getModel().isSelected();
-                    for(DisplayNode dn : nodes.values()) {
+                    for (DisplayNode dn : nodes.values()) {
                         dn.setEnvironmentVariable(var,selected);
                     }
                 }
@@ -241,7 +243,7 @@ public class ScenarioVisualizer extends JApplet {
         refresher = new Timer(REFRESH_RATE,
                 new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 refreshEdges();
                 vv.repaint();
             }   

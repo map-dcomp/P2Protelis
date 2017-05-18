@@ -12,7 +12,7 @@ import java.net.UnknownHostException;
 
 public class DummyMonitorable extends Monitorable {
     private ProcessStatus status = ProcessStatus.run;
-    private int port = (int) (5000+Math.round(10000*Math.random()));
+    private int port = (int) (5000 + Math.round(10000 * Math.random()));
     private int[] dependencyList = new int[0];
     private Tuple dependencies = new ArrayTupleImpl();
     private boolean firstInit = true;
@@ -30,11 +30,11 @@ public class DummyMonitorable extends Monitorable {
         try {
             InetAddress local = InetAddress.getLocalHost();
             Tuple[] dlist = new Tuple[dependencyList.length];
-            for(int i=0; i< dependencyList.length; i++) {
-                dlist[i] = new ArrayTupleImpl(local,(Object)(dependencyList[i]+LocalDaemon.testPortOffset));
+            for (int i = 0; i < dependencyList.length; i++) {
+                dlist[i] = new ArrayTupleImpl(local,(Object)(dependencyList[i] + LocalDaemon.testPortOffset));
             }
             dependencies = new ArrayTupleImpl((Object[])dlist);
-        } catch(UnknownHostException e) {
+        } catch (UnknownHostException e) {
             // ignore, just end up with no dependencies
             // TODO: actually report this problem
         }
@@ -58,7 +58,10 @@ public class DummyMonitorable extends Monitorable {
 
     @Override
     public boolean init() {
-        if(firstInit) { initializePersistentState(); firstInit = false; }
+        if (firstInit) { 
+            initializePersistentState();
+            firstInit = false;
+        }
         status = ProcessStatus.run;
         return true;
     }

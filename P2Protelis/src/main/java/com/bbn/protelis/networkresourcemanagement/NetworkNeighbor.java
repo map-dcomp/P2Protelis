@@ -17,7 +17,8 @@ import org.slf4j.LoggerFactory;
  * A network link between a {@link Node} and it's neighbor. Used to send and
  * receive data.
  */
-/* package */ final class NetworkNeighbor extends Thread {
+/* package */
+final class NetworkNeighbor extends Thread {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkNeighbor.class);
 

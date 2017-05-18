@@ -14,8 +14,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public abstract class Monitorable {
-    static public interface Listener {
-        public void identifyNeighbor(Monitorable monitorable, InetAddress nbr, int port);
+    public interface Listener {
+        void identifyNeighbor(Monitorable monitorable, InetAddress nbr, int port);
     }
     
     public abstract ProcessStatus getStatus();
@@ -31,26 +31,42 @@ public abstract class Monitorable {
 
     private boolean recording = false;
     protected Deque<Message> record = new ConcurrentLinkedDeque<Message>();
-    public boolean isRecording() { return recording; }
-    public void setRecording(boolean r) { recording = r; }
-    public Deque<Message> getRecord() { return record; }
+    public boolean isRecording() { 
+        return recording;
+    }
+    public void setRecording(final boolean r) { 
+        recording = r;
+    }
+    public Deque<Message> getRecord() { 
+        return record;
+    }
     public Tuple getRecordAsTuple() { 
         ArrayList<Object> l = new ArrayList<>();
-        for(Message m : record) { l.add(m); }
+        for (Message m : record) { 
+            l.add(m);
+        }
         return new ArrayTupleImpl(l);
     }
 
     private Set<Listener> listeners = new HashSet<>();
-    public void addListener(Listener l) { listeners.add(l); }
-    public void deleteListener(Listener l) { listeners.remove(l); }
-    public void identifyNeighbor(InetAddress nbr, int port) {
+    public void addListener(final Listener l) { 
+        listeners.add(l);
+    }
+    public void deleteListener(final Listener l) { 
+        listeners.remove(l);
+    }
+    public void identifyNeighbor(final InetAddress nbr, final int port) {
         listeners.forEach((l) -> {
             l.identifyNeighbor(this,nbr,port);
         });
     }
-    public void recordInteraction(InetAddress nbr, int port, Message packet) {
-        if(port>0) identifyNeighbor(nbr,port);
-        if(recording) record.add(packet);
+    public void recordInteraction(final InetAddress nbr, final int port, final Message packet) {
+        if (port > 0) {
+            identifyNeighbor(nbr,port);
+        }
+        if (recording) {
+            record.add(packet);
+        }
     }
 }
 

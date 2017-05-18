@@ -21,16 +21,16 @@ import com.bbn.protelis.processmanagement.testbed.termination.RoundNumberTermina
 import com.bbn.protelis.processmanagement.testbed.visualizer.DisplayNode;
 
 public class StandaloneExecution {
-    public static Logger logger;
+    private static Logger logger;
     
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         // when invoked directly, make sure visualization is on
         String[] extraArgs = {"-v","true"};
         runStandalone(ArrayUtils.addAll(args, extraArgs));
         System.exit(0); // need to call this because AWT thread doesn't quit otherwise
     }
     
-    public static DaemonWrapper[] runStandalone(String[] args) throws Exception {
+    public static DaemonWrapper[] runStandalone(final String[] args) throws Exception {
         Scenario scenario = parseArguments(args);
         
         ScenarioRunner emulation = new ScenarioRunner(scenario);
@@ -38,7 +38,7 @@ public class StandaloneExecution {
         return scenario.network;
     }
 
-    public static Scenario parseArguments(String[] args) throws ParseException, ClassNotFoundException, IOException {
+    public static Scenario parseArguments(final String[] args) throws ParseException, ClassNotFoundException, IOException {
         /**
          * Set up parsing options
          */
@@ -60,11 +60,11 @@ public class StandaloneExecution {
         
         /**** Parse command line ****/
         CommandLineParser parser = new PosixParser();
-        CommandLine cmd = parser.parse( options, args);
+        CommandLine cmd = parser.parse(options, args);
         
         /**** Interpret parsed options ****/
         // Don't make the logger until we've checked if the level is other than default
-        if(cmd.hasOption('d')) {
+        if (cmd.hasOption('d')) {
             String level = cmd.getOptionValue('d');
             System.getProperties().setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
         }
@@ -72,38 +72,53 @@ public class StandaloneExecution {
 
         Scenario scenario = new Scenario(logger);
         
-        if(cmd.hasOption('v')) scenario.visualize = Boolean.parseBoolean(cmd.getOptionValue('v'));
-        if(cmd.hasOption('n')) scenario.scenario_name = cmd.getOptionValue('n');
+        if (cmd.hasOption('v')) {
+            scenario.visualize = Boolean.parseBoolean(cmd.getOptionValue('v'));
+        }
+        if (cmd.hasOption('n')) {
+            scenario.scenario_name = cmd.getOptionValue('n');
+        }
         
         scenario.network = AbstractDaemonWrapper.configurationFromResource(logger,cmd.getOptionValue('f'));
         // Load Protelis program, if provided
         String defaultProgram = null;
         boolean anonymous = false;
-        if(cmd.hasOption('a')) {
-            if(cmd.hasOption('c'))
+        if (cmd.hasOption('a')) {
+            if (cmd.hasOption('c')) {
                 throw new IllegalArgumentException("Cannot specify both a named and anonymous Protelis class to run");
+            }
             defaultProgram = cmd.getOptionValue('a');
             anonymous = true;
-        } else if(cmd.hasOption('c')) {
+        } else if (cmd.hasOption('c')) {
             defaultProgram = cmd.getOptionValue('c');
             anonymous = false;
         }
         // Walk the network, substituting program where missing, parsing where provided
-        for(AbstractDaemonWrapper d : (AbstractDaemonWrapper[])scenario.network) {
-            if(d.program==null) { d.program = parseProgram(defaultProgram,anonymous); }
+        for (AbstractDaemonWrapper d : (AbstractDaemonWrapper[])scenario.network) {
+            if (d.program == null) { 
+                d.program = parseProgram(defaultProgram,anonymous);
+            }
         }
 
-        if(cmd.hasOption('t')) scenario.termination = parseTermination(cmd);
-        if(cmd.hasOption('T')) scenario.terminationPollFrequency = Integer.parseUnsignedInt(cmd.getOptionValue('T'));
-        if(cmd.hasOption('e')) scenario.environmentButtons = cmd.getOptionValues("e");
-        if(cmd.hasOption('i')) {
-            for(String i : cmd.getOptionValues('i')) { DisplayNode.ignore(i); }
+        if (cmd.hasOption('t')) {
+            scenario.termination = parseTermination(cmd);
+        }
+        if (cmd.hasOption('T')) {
+            scenario.terminationPollFrequency = Integer.parseUnsignedInt(cmd.getOptionValue('T'));
+        }
+        if (cmd.hasOption('e')) {
+            scenario.environmentButtons = cmd.getOptionValues("e");
+        }
+        if (cmd.hasOption('i')) {
+            for (String i : cmd.getOptionValues('i')) { 
+                DisplayNode.ignore(i);
+            }
         }
         
         return scenario;
     }
 
-    private static TerminationCondition<DaemonWrapper[]> parseTermination(CommandLine cmd) {
+    private static TerminationCondition<DaemonWrapper[]> parseTermination(final CommandLine cmd) {
         String[] termArgs = cmd.getOptionValues('t');
         String type = termArgs[0];
         switch(type) {
@@ -118,14 +133,14 @@ public class StandaloneExecution {
             }
             return new RoundNumberTermination(Integer.parseUnsignedInt(termArgs[1]));
         default:
-            logger.warn("Don't recognize requested termination type '"+type+"', running without termination.");
+            logger.warn("Don't recognize requested termination type '" + type + "', running without termination.");
             return null;
         }
     }
     
-    private static ProtelisProgram parseProgram(String program, boolean anonymous) {
+    private static ProtelisProgram parseProgram(final String program, final boolean anonymous) {
         // TODO: handle anonymous appropriately
-        if(anonymous) {
+        if (anonymous) {
             return ProtelisLoader.parseAnonymousModule(program);
         } else {
             return ProtelisLoader.parse(program);

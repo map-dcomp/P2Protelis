@@ -48,13 +48,13 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
     /*          Constructors             */
     /* ********************************* */
     //   Internal, fully-specified constructor
-    private Daemon(ProtelisProgram program, boolean specifiedUID, long uid, Monitorable client, Logger log) throws UnknownHostException {
+    private Daemon(final ProtelisProgram program, final boolean specifiedUID, final long uid, final Monitorable client, final Logger log) throws UnknownHostException {
         super(new SimpleExecutionEnvironment(), new DaemonNetworkManager(client,uid,log));
         this.client = client;
         network = (DaemonNetworkManager)this.getNetworkManager();
         network.setParent(this);
         
-        assert(log!=null);
+        assert (log != null);
         logger = log;
         
         this.uid = (specifiedUID ? uid : UUID.randomUUID().hashCode());
@@ -63,11 +63,11 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
     }
 
     //   Construct with specified UID
-    public Daemon(ProtelisProgram program, long uid, Monitorable client, Logger log) throws UnknownHostException {
+    public Daemon(final ProtelisProgram program, final long uid, final Monitorable client, final Logger log) throws UnknownHostException {
         this(program,true,uid,client,log);
     }   
     //   Construct with random UID
-    public Daemon(ProtelisProgram program, Monitorable client, Logger log) throws UnknownHostException {
+    public Daemon(final ProtelisProgram program, final Monitorable client, final Logger log) throws UnknownHostException {
         this(program,false,0,client,log);
     }
 
@@ -76,10 +76,10 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
     /* ********************************* */
     public void run() {
         running = true;
-        while(running) {
+        while (running) {
             try {
                 program.runCycle();
-                executionCount ++;
+                executionCount++;
 //              logger.debug("Protelis computed: uid=" + node.getId() + " round=" +executionCount + " value=" + currentValue());
                 resetInternal();
                 network.runCycle();
@@ -94,17 +94,19 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
     }
 
     public interface Listener {
-        public void daemonUpdated(Daemon d);
+        void daemonUpdated(Daemon d);
     }
     ArrayList<Listener> listeners = new ArrayList<>();
-    public void addListener(Listener listener) {
+    public void addListener(final Listener listener) {
         listeners.add(listener);
     }
-    public void removeListener(Listener listener) {
+    public void removeListener(final Listener listener) {
         listeners.remove(listener);
     }
     private void notifyListeners() {
-        for(Listener l : listeners) { l.daemonUpdated(this); }
+        for (Listener l : listeners) { 
+            l.daemonUpdated(this);
+        }
     }
 
     public void stop() {
@@ -127,14 +129,18 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
     }
     
     public ProcessStatus getStatus() {
-        if(running) return ProcessStatus.run; else return ProcessStatus.stop;
+        if (running) {
+            return ProcessStatus.run; 
+        } else {
+            return ProcessStatus.stop;
+        }
     }
     
     public Set<DeviceUID> getNeighbors() {
         return network.getNeighbors();
     }
     
-    public Object debug(String token, Object value) {
+    public Object debug(final String token, final Object value) {
         debugs.put(token, value);
         return value;
     }
@@ -145,20 +151,20 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
     }
     
     /* Passthroughs for Protelis calls */
-    public Object getEnvironmentVariable(String id) {
+    public Object getEnvironmentVariable(final String id) {
         return getExecutionEnvironment().get(id);
     }
-    public Object getEnvironmentVariable(String id, Object defaultValue) {
+    public Object getEnvironmentVariable(final String id, final Object defaultValue) {
         if (this.hasEnvironmentVariable(id)) {
             return getExecutionEnvironment().get(id);
         } else {
             return defaultValue;
         }
     }
-    public void putEnvironmentVariable(String id, Object value) {
+    public void putEnvironmentVariable(final String id, final Object value) {
         getExecutionEnvironment().put(id,value);
     }
-    public boolean hasEnvironmentVariable(String id) {
+    public boolean hasEnvironmentVariable(final String id) {
         return getExecutionEnvironment().has(id);
     }
     
@@ -175,7 +181,7 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
 
     @Override
     public Number getCurrentTime() {
-        return ((double)System.currentTimeMillis())/1000.0;
+        return ((double)System.currentTimeMillis()) / 1000.0;
     }
 
     public long getId() {

@@ -3,7 +3,7 @@ package com.bbn.protelis.processmanagement.testbed.client;
 import com.bbn.protelis.processmanagement.daemon.Monitorable;
 
 /**
- * Support a rewindable message
+ * Support a rewindable message.
  * @author jakebeal
  *
  */
@@ -16,7 +16,7 @@ public abstract class CrumpleZoneMonitorable extends Monitorable {
     }
     
     public void rewindUntilSafe() {
-        while((isCompromised() || isContaminated()) && !record.isEmpty()) {
+        while ((isCompromised() || isContaminated()) && !record.isEmpty()) {
             rewindOneStep();
         }
     }

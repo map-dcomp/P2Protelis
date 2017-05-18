@@ -2,7 +2,7 @@ package com.bbn.protelis.utils;
 
 import org.protelis.lang.datatype.DeviceUID;
 
-/** Simple integer UIDs */
+/** Simple integer UIDs. */
 public class IntegerUID implements DeviceUID {
     private static final long serialVersionUID = 1L;
     private final int uid;
