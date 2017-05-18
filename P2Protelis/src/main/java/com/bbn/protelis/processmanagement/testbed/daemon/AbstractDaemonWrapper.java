@@ -35,15 +35,16 @@ public abstract class AbstractDaemonWrapper implements DaemonWrapper, Daemon.Lis
     }
 
 
-    public static DaemonWrapper[] configurationFromResource(Logger logger, String name) throws IOException {
+    public static DaemonWrapper[] configurationFromResource(final Logger logger, final String name) throws IOException {
         try {
         InputStream scenario = Thread.currentThread().getContextClassLoader().getResourceAsStream(name);
-        if(scenario==null) // try as absolute instead
+        if (scenario == null) { // try as absolute instead
             scenario = new FileInputStream(new File(name));
+        }
         
         return readConfigurations(logger, scenario);
-        } catch(FileNotFoundException e) {
-            logger.error("Could not locate configuration resource: "+name);
+        } catch (FileNotFoundException e) {
+            logger.error("Could not locate configuration resource: " + name);
             throw e;
         }
     }
@@ -57,7 +58,7 @@ public abstract class AbstractDaemonWrapper implements DaemonWrapper, Daemon.Lis
      * @throws IllegalAccessException 
      * @throws IllegalArgumentException 
      */
-    private static DaemonWrapper[] readConfigurations(Logger logger, InputStream in) throws IOException {
+    private static DaemonWrapper[] readConfigurations(final Logger logger, final InputStream in) throws IOException {
         // Read in the JSON array of configurations
         JsonReader jr = new JsonReader(in);
         try {
@@ -67,28 +68,31 @@ public abstract class AbstractDaemonWrapper implements DaemonWrapper, Daemon.Lis
             // Copy array and check for presence of template (only first is used)
             AbstractDaemonWrapper template = null;
             AbstractDaemonWrapper[] configs = new AbstractDaemonWrapper[objects.length];
-            for(int i=0;i<objects.length;i++) { 
+            for (int i = 0; i < objects.length; i++) { 
                 configs[i] = (AbstractDaemonWrapper)objects[i];
-                if(template==null && configs[i].template) { template = configs[i]; }
+                if (template == null && configs[i].template) { 
+                    template = configs[i]; 
+                }
             }
             
             // Shift to final array and fill in from template
-            for(AbstractDaemonWrapper d : configs) {
+            for (AbstractDaemonWrapper d : configs) {
                 // Replace any fields that are null with fields from the template
-                if(template!=null) {
+                if (template != null) {
                     Field[] fields = d.getClass().getFields();
-                    for(Field f : fields) {
-                        if(f.get(d)==null)
+                    for (Field f : fields) {
+                        if (f.get(d) == null) {
                             f.set(d, f.get(template));
+                        }
                     }
                 }
             }
             return configs;
-        } catch(IOException e) {
+        } catch (IOException e) {
             logger.error("Configuration information could not be fully read");
             jr.close();
             throw e;
-        } catch(IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
             logger.error("Configuration specified inaccessible field");
             throw new IOException();
         }
@@ -96,20 +100,22 @@ public abstract class AbstractDaemonWrapper implements DaemonWrapper, Daemon.Lis
     }
 
     @Override
-    public void daemonUpdated(Daemon d) {
+    public void daemonUpdated(final Daemon d) {
         notifyListeners();
     }
     public interface Listener {
-        public void daemonUpdated(AbstractDaemonWrapper d);
+        void daemonUpdated(AbstractDaemonWrapper d);
     }
     ArrayList<Listener> listeners = new ArrayList<>();
-    public void addListener(Listener listener) {
+    public void addListener(final Listener listener) {
         listeners.add(listener);
     }
-    public void removeListener(Listener listener) {
+    public void removeListener(final Listener listener) {
         listeners.remove(listener);
     }
     private void notifyListeners() {
-        for(Listener l : listeners) { l.daemonUpdated(this); }
+        for (Listener l : listeners) { 
+            l.daemonUpdated(this); 
+        }
     }
 }

@@ -22,7 +22,7 @@ public class LocalDaemon extends AbstractDaemonWrapper {
     private Daemon daemon = null;
     private Monitorable client; // needs to be configured elsewhere
     /**
-     * The testPortOffset field is used for shifting ports to avoid OS-level conflicts during rapid batch testing
+     * The testPortOffset field is used for shifting ports to avoid OS-level conflicts during rapid batch testing.
      * It is intended to be set by the JUnit test and accessed by any clients that care
      */
     public static int testPortOffset = 0;
@@ -35,7 +35,7 @@ public class LocalDaemon extends AbstractDaemonWrapper {
     }
 
     @Override
-    public void initialize(Scenario scenario) throws UnknownHostException {
+    public void initialize(final Scenario scenario) throws UnknownHostException {
         // Start the client
         client.init();
         
@@ -45,19 +45,22 @@ public class LocalDaemon extends AbstractDaemonWrapper {
 
         // Initialize the environment
         // ... from environment buttons (this also allows a scenario to tell if it's got a UI)
-        for(String var : scenario.environmentButtons) {
+        for (String var : scenario.environmentButtons) {
             daemon.getExecutionEnvironment().put(var, false);
         }
         // ... from JSON'ed array spec
-        for(Object[] epair : environment) {
-            if(epair.length!=2 || !(epair[0] instanceof String)) {
-                scenario.logger.warn("Ignoring bad enviroment element: "+epair); continue;
+        for (Object[] epair : environment) {
+            if (epair.length != 2 || !(epair[0] instanceof String)) {
+                scenario.logger.warn("Ignoring bad enviroment element: " + epair); 
+                continue;
             }
             String key = (String)epair[0];
             Object value = epair[1];
-            if(value instanceof Object[]) {
+            if (value instanceof Object[]) {
                 List<Object> l = new ArrayList<>();
-                for(Object v : (Object[])value) { l.add(v); }
+                for (Object v : (Object[])value) { 
+                    l.add(v); 
+                }
                 value = new ArrayTupleImpl(l);
             }
             daemon.getExecutionEnvironment().put(key, value);
@@ -65,7 +68,7 @@ public class LocalDaemon extends AbstractDaemonWrapper {
 
         // Run the daemon
         Thread daemonThread = new Thread(() -> daemon.run());
-        daemonThread.setName("Daemon-"+alias);
+        daemonThread.setName("Daemon-" + alias);
         daemonThread.start();
 
         status = ProcessStatus.run;
@@ -73,7 +76,7 @@ public class LocalDaemon extends AbstractDaemonWrapper {
 
     @Override
     public ProcessStatus getDaemonStatus() {
-        if(status==ProcessStatus.run) {
+        if (status == ProcessStatus.run) {
             ProcessStatus daemonStatus = daemon.getStatus();
             switch(daemonStatus) {
             case hung:
@@ -104,7 +107,7 @@ public class LocalDaemon extends AbstractDaemonWrapper {
     }
 
     @Override
-    public void signalProcess(ProcessStatus init) {
+    public void signalProcess(final ProcessStatus init) {
         // TODO Auto-generated method stub
         
     }
@@ -125,9 +128,11 @@ public class LocalDaemon extends AbstractDaemonWrapper {
         try {
             Tuple ln = (Tuple)daemon.getExecutionEnvironment().get("logicalNeighbors");
             return (Set)StreamSupport.stream(ln.spliterator(), false)
-                    .map((id) -> { return new LongDeviceUID(((Number)id).longValue()); })
+                    .map((id) -> { 
+                        return new LongDeviceUID(((Number)id).longValue()); 
+                    })
                     .collect(Collectors.toSet());
-        } catch(Exception e) {
+        } catch (Exception e) {
             return null;
         }
     }

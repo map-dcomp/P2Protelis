@@ -11,30 +11,30 @@ import com.bbn.protelis.processmanagement.testbed.Scenario;
 
 public interface DaemonWrapper {
     /**
-     * Every DaemonWrapper should be instantiable with a no-argument constructor from a JSON object; initialize then move from that initial state into an live, executing daemon
+     * Every DaemonWrapper should be instantiable with a no-argument constructor from a JSON object; initialize then move from that initial state into an live, executing daemon.
      * @throws IOException 
      */
-    public void initialize(Scenario scenario) throws IOException;
+    void initialize(Scenario scenario) throws IOException;
     
     /**
      * @return Status of the daemon
      */
-    public ProcessStatus getDaemonStatus();
+    ProcessStatus getDaemonStatus();
     /**
      * @return Status of the process being managed by the daemon
      */
-    public ProcessStatus getProcessStatus();
+    ProcessStatus getProcessStatus();
     
     /**
-     * Calling shutdown signals the wrapped daemon to stop executing and shut down
+     * Calling shutdown signals the wrapped daemon to stop executing and shut down.
      */
-    public void shutdown();
+    void shutdown();
     
-    public Object getValue();
-    public int getRound();
-    public ExecutionEnvironment getEnvironment();
-    public long getUID();
-    public void signalProcess(ProcessStatus init);
-    public Set<DeviceUID> getPhysicalNeighbors();
-    public Set<DeviceUID> getLogicalNeighbors();
+    Object getValue();
+    int getRound();
+    ExecutionEnvironment getEnvironment();
+    long getUID();
+    void signalProcess(ProcessStatus init);
+    Set<DeviceUID> getPhysicalNeighbors();
+    Set<DeviceUID> getLogicalNeighbors();
 }
