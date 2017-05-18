@@ -17,17 +17,17 @@ public class Scenario {
      */
     public boolean visualize = true;
     /**
-     * Name of scenario, to put into log files and visualization window name
+     * Name of scenario, to put into log files and visualization window name.
      */
     public String scenario_name = "Unnamed Scenario";
 
     /**
-     * Structure of the network to run, including Protelis program for each device
+     * Structure of the network to run, including Protelis program for each device.
      */
     public DaemonWrapper[] network = new DaemonWrapper[0];
 
     /**
-     * Set of boolean buttons to be toggled in the visualizer
+     * Set of boolean buttons to be toggled in the visualizer.
      */
     public String[] environmentButtons = new String[0];
 
@@ -38,15 +38,15 @@ public class Scenario {
     public TerminationCondition<DaemonWrapper[]> termination = null;
     
     /**
-     * Milliseconds between checks for termination
+     * Milliseconds between checks for termination.
      */
     public long terminationPollFrequency = 100;
     
     /**
-     * Constructor for creating a scenario with default conditions
+     * Constructor for creating a scenario with default conditions.
      * @param logger
      */
-    public Scenario(Logger logger) {
+    public Scenario(final Logger logger) {
         this.logger = logger;
     }
 
