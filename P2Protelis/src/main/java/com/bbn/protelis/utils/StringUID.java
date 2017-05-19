@@ -2,21 +2,41 @@ package com.bbn.protelis.utils;
 
 import org.protelis.lang.datatype.DeviceUID;
 
-/** Simple string UIDs */
+/** Simple string UIDs. */
 public class StringUID implements DeviceUID {
     private static final long serialVersionUID = 1L;
     private final String uid;
 
+    /**
+     * @param uid
+     *            the string to use as the UID
+     */
     public StringUID(final String uid) {
         this.uid = uid;
     }
 
+    /**
+     * 
+     * @return the underlying string
+     */
     public String getUID() {
         return uid;
     }
 
-    public boolean equals(final StringUID alt) {
-        return this.uid == alt.uid;
+    @Override
+    public boolean equals(final Object alt) {
+        if (this == alt) {
+            return true;
+        } else if (alt instanceof StringUID) {
+            return this.uid == ((StringUID) alt).uid;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return this.uid.hashCode();
     }
 
     @Override
