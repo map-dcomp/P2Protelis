@@ -27,8 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  */
 public class Daemon extends AbstractExecutionContext implements DeviceUID, Serializable {
-    // UID for Serializable
-    private static final long serialVersionUID = -7958084653258675854L;
     
     // Management of execution and networking
     private final long uid; // uid for self vs. neighbor

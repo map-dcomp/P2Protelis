@@ -210,9 +210,9 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
         @Override
         public int compareTo(final Event o) {
             if (time == o.time) {
-                return ((Integer)index).compareTo(o.index);
+                return Integer.compare(index,  o.index);
             } else {
-                return ((Long)time).compareTo(o.time);
+                return Long.compare(time,  o.time);
             }
         }
         

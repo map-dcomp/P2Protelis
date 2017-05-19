@@ -32,7 +32,14 @@ public class Node extends AbstractExecutionContext {
      */
     public static final long DEFAULT_SLEEP_TIME_MS = 2 * 1000;
 
-    private volatile long executionCount = 0;
+    private long executionCount = 0;
+    private final Object executionCountLock = new Object();
+
+    private void incrementExecutionCount() {
+        synchronized (executionCountLock) {
+            ++executionCount;
+        }
+    }
 
     /**
      * The number of times this node has executed.
@@ -41,7 +48,9 @@ public class Node extends AbstractExecutionContext {
      *         program.
      */
     public final long getExecutionCount() {
-        return executionCount;
+        synchronized (executionCountLock) {
+            return executionCount;
+        }
     }
 
     private long sleepTime = DEFAULT_SLEEP_TIME_MS;
@@ -174,8 +183,8 @@ public class Node extends AbstractExecutionContext {
         while (!Thread.interrupted()) {
             try {
                 getVM().runCycle(); // execute the Protelis program
-                ++executionCount;
-
+                incrementExecutionCount();
+                
                 gatherResourceInformation();
 
                 Thread.sleep(sleepTime);

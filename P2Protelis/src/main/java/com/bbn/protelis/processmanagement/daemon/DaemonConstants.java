@@ -8,8 +8,8 @@ package com.bbn.protelis.processmanagement.daemon;
  */
 public final class DaemonConstants {
     
-    public static int DEFAULT_PORT = 21999;
-    public static long SLEEP_TIME = 500; // 500;
-    public static long NBR_TIMEOUT = 10000; // drop neighbors not interacting within 10 seconds
-    public static int DAEMON_PORT_OFFSET = 10000;   // For multiple processes per host, base the port on the Monitorable.
+    public static final int DEFAULT_PORT = 21999;
+    public static final long SLEEP_TIME = 500; // 500;
+    public static final long NBR_TIMEOUT = 10000; // drop neighbors not interacting within 10 seconds
+    public static final int DAEMON_PORT_OFFSET = 10000;   // For multiple processes per host, base the port on the Monitorable.
 }
