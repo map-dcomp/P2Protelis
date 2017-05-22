@@ -1,16 +1,5 @@
 package com.bbn.protelis.processmanagement.testbed.client;
 
-import org.protelis.lang.datatype.Tuple;
-import org.protelis.lang.datatype.Tuples;
-import org.protelis.lang.datatype.impl.ArrayTupleImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
-import com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon;
-
-import cern.colt.Arrays;
-
 import java.io.IOException;
 import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
@@ -31,6 +20,18 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
+
+import org.protelis.lang.datatype.Tuple;
+import org.protelis.lang.datatype.Tuples;
+import org.protelis.lang.datatype.impl.ArrayTupleImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
+import com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon;
+
+import cern.colt.Arrays;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class QueryResponseNode extends CrumpleZoneMonitorable {
     private Logger logger = LoggerFactory.getLogger("QueryResponseNode");
@@ -272,6 +273,8 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
         public int hashCode() { 
             return q.hashCode();
         }
+        
+        @SuppressFBWarnings(value="EQ_CHECK_FOR_OPERAND_NOT_COMPATIBLE_WITH_THIS", justification="Checking against a sub-object, probalby OK, but kind of dodgy")
         public boolean equals(final Object o) {
             if (o instanceof ScheduledResponse) {
                 return q.equals(((ScheduledResponse) o).q);

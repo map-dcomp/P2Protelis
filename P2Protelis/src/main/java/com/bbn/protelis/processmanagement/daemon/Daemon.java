@@ -3,17 +3,6 @@
  */
 package com.bbn.protelis.processmanagement.daemon;
 
-import org.apache.commons.math3.random.BitsStreamGenerator;
-import org.apache.commons.math3.random.MersenneTwister;
-import org.protelis.lang.datatype.DeviceUID;
-import org.protelis.vm.impl.AbstractExecutionContext;
-import org.protelis.vm.impl.SimpleExecutionEnvironment;
-import org.protelis.vm.ProtelisProgram;
-import org.protelis.vm.ProtelisVM;
-
-import org.slf4j.Logger;
-
-import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Map;
@@ -21,15 +10,27 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.math3.random.BitsStreamGenerator;
+import org.apache.commons.math3.random.MersenneTwister;
+import org.protelis.lang.datatype.DeviceUID;
+import org.protelis.vm.ProtelisProgram;
+import org.protelis.vm.ProtelisVM;
+import org.protelis.vm.impl.AbstractExecutionContext;
+import org.protelis.vm.impl.SimpleExecutionEnvironment;
+import org.slf4j.Logger;
+
+import com.bbn.protelis.utils.LongUID;
+
 /**
  * @author Danilo Pianini
  * @author Jacob Beal
  *
  */
-public class Daemon extends AbstractExecutionContext implements DeviceUID, Serializable {
+public class Daemon extends AbstractExecutionContext {
     
     // Management of execution and networking
     private final long uid; // uid for self vs. neighbor
+    private final LongUID deviceUID;
     private final ProtelisVM program;
     private final DaemonNetworkManager network;
     private final Monitorable client;
@@ -56,6 +57,7 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
         logger = log;
         
         this.uid = (specifiedUID ? uid : UUID.randomUUID().hashCode());
+        this.deviceUID = new LongUID(this.uid);
         
         this.program = new ProtelisVM(program, this);
     }
@@ -188,7 +190,7 @@ public class Daemon extends AbstractExecutionContext implements DeviceUID, Seria
 
     @Override
     public DeviceUID getDeviceUID() {
-        return this;
+        return this.deviceUID;
     }
 
     /* ********* Unimplemented ********* */
