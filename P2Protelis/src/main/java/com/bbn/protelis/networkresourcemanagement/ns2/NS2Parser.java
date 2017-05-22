@@ -36,6 +36,9 @@ public final class NS2Parser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NS2Parser.class);
 
+    private static final long BYTES_IN_KILOBYTE = 1024;
+    private static final long BYTES_IN_MEGABYTE = BYTES_IN_KILOBYTE * 1024;
+    
     private NS2Parser() {
     }
 
@@ -68,6 +71,7 @@ public final class NS2Parser {
             // final Pattern setRegExp = Pattern.compile("set (\\s+)
             // \\[([^]]+)\\]");
             final Pattern setRegExp = Pattern.compile("^set\\s+(\\S+)\\s+\\[([^]]+)\\]$");
+            final Pattern bandwidthExp = Pattern.compile("^(\\d+\\.?\\d*)(\\S+)$");
 
             String line;
             while (null != (line = bufReader.readLine())) {
@@ -127,12 +131,32 @@ public final class NS2Parser {
                                     throw new NS2FormatException("Unknown node " + rightNodeName + " on line: " + line);
                                 }
 
+                                final String bandwidthStr = tokens[4];
+                                final Matcher bandwidthMatch = bandwidthExp.matcher(bandwidthStr);
+                                if (!bandwidthMatch.matches()) {
+                                    throw new NS2FormatException(
+                                            "Bandwidth spec doesn't match expected format: '" + bandwidthStr + "'");
+                                }
+                                final double bandwidth = Double.parseDouble(bandwidthMatch.group(1));
+                                final String bandwidthUnits = bandwidthMatch.group(2);
+                                final double bandwidthMultiplier;
+                                if ("mb".equalsIgnoreCase(bandwidthUnits)) {
+                                    bandwidthMultiplier = BYTES_IN_MEGABYTE;
+                                } else if ("kb".equalsIgnoreCase(bandwidthUnits)) {
+                                    bandwidthMultiplier = BYTES_IN_KILOBYTE;
+                                } else {
+                                    throw new NS2FormatException("Unknown bandwidth units: " + bandwidthUnits);
+                                }
+
+                                // final String delayStr = tokens[5];
+                                // final String queueBehavior = tokens[6];
+
                                 final Node leftNode = nodesByName.get(leftNodeName);
                                 final Node rightNode = nodesByName.get(rightNodeName);
                                 leftNode.addNeighbor(rightNode);
                                 rightNode.addNeighbor(leftNode);
 
-                                final Link link = new Link(name, leftNode, rightNode);
+                                final Link link = new Link(name, leftNode, rightNode, bandwidth * bandwidthMultiplier);
                                 links.add(link);
                             } else {
                                 throw new NS2FormatException(
