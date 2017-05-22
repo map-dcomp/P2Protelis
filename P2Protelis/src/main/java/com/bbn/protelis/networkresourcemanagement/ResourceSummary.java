@@ -8,28 +8,28 @@ import java.util.Map;
  */
 public interface ResourceSummary {
 
-	/**
-	 * @return resource name -> resource value. Not null.
-	 * @see ResourceReport#getState()
-	 */
-	public Map<String, Object> getState();
+    /**
+     * @return resource name -> resource value. Not null.
+     * @see ResourceReport#getState()
+     */
+    Map<String, Object> getState();
 
-	/**
-	 * Merge an existing summary with this one. Creates a new object.
-	 * 
-	 * @param other
-	 *            the summary to merge. Not null.
-	 * @return a newly created summary. Not null.
-	 */
-	public ResourceSummary merge(final ResourceSummary other);
+    /**
+     * Merge an existing summary with this one. Creates a new object.
+     * 
+     * @param other
+     *            the summary to merge. Not null.
+     * @return a newly created summary. Not null.
+     */
+    ResourceSummary merge(ResourceSummary other);
 
-	/**
-	 * Merge a {@link ResourceReport} with this one. Creates a new object.
-	 * 
-	 * @param report
-	 *            the report to merge. Not null.
-	 * @return a newly created summary. Not null.
-	 */
-	public ResourceSummary merge(final ResourceReport report);
+    /**
+     * Merge a {@link ResourceReport} with this one. Creates a new object.
+     * 
+     * @param report
+     *            the report to merge. Not null.
+     * @return a newly created summary. Not null.
+     */
+    ResourceSummary merge(ResourceReport report);
 
 }
