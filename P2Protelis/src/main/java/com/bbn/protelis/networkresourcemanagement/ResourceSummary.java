@@ -12,6 +12,6 @@ public interface ResourceSummary {
      * @return resource name -> resource value. Not null.
      * @see ResourceReport#getState()
      */
-    public Map<String, Object> getState();
+    Map<String, Object> getState();
 
 }

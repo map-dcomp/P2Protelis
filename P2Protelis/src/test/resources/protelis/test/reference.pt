@@ -1,0 +1,8 @@
+module protelis:test:reference
+import protelis:test:reference2
+
+public def testFun() {
+	2+testFun2();
+}
+
+testFun();

@@ -19,40 +19,43 @@ import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
  */
 public class LocalNodeLookupService implements NodeLookupService {
 
-	private final int basePort;
-	private int nextAvailablePort;
-	private final Object lock = new Object();
-	private final Map<DeviceUID, InetSocketAddress> mapping = new HashMap<>();
+    private final int basePort;
+    private int nextAvailablePort;
+    private final Object lock = new Object();
+    private final Map<DeviceUID, InetSocketAddress> mapping = new HashMap<>();
 
-	/**
-	 * The base port to use for all Node connections.
-	 * 
-	 * @param basePort
-	 *            a valid network port.
-	 */
-	public LocalNodeLookupService(final int basePort) {
-		if (basePort <= 0 || basePort > 65535) {
-			throw new IllegalArgumentException("Port must be between 0 and 65535");
-		}
-		this.basePort = basePort;
-		nextAvailablePort = this.basePort;
-	}
+    private static final int MIN_NETWORK_PORT = 0;
+    private static final int MAX_NETWORK_PORT = 65535;
 
-	@Override
-	public InetSocketAddress getInetAddressForNode(final DeviceUID uid) {
-		synchronized (lock) {
-			if (mapping.containsKey(uid)) {
-				return mapping.get(uid);
-			} else {
-				final int port = nextAvailablePort;
-				final InetSocketAddress addr = new InetSocketAddress(InetAddress.getLoopbackAddress(), port);
-				mapping.put(uid, addr);
+    /**
+     * The base port to use for all Node connections.
+     * 
+     * @param basePort
+     *            a valid network port.
+     */
+    public LocalNodeLookupService(final int basePort) {
+        if (basePort <= MIN_NETWORK_PORT || basePort > MAX_NETWORK_PORT) {
+            throw new IllegalArgumentException("Port must be between " + MIN_NETWORK_PORT + " and " + MAX_NETWORK_PORT);
+        }
+        this.basePort = basePort;
+        nextAvailablePort = this.basePort;
+    }
 
-				++nextAvailablePort;
+    @Override
+    public InetSocketAddress getInetAddressForNode(final DeviceUID uid) {
+        synchronized (lock) {
+            if (mapping.containsKey(uid)) {
+                return mapping.get(uid);
+            } else {
+                final int port = nextAvailablePort;
+                final InetSocketAddress addr = new InetSocketAddress(InetAddress.getLoopbackAddress(), port);
+                mapping.put(uid, addr);
 
-				return addr;
-			}
-		}
-	}
+                ++nextAvailablePort;
+
+                return addr;
+            }
+        }
+    }
 
 }

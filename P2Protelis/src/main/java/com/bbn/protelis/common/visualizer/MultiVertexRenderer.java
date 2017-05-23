@@ -30,12 +30,19 @@ import edu.uci.ics.jung.visualization.transform.MutableTransformer;
 import edu.uci.ics.jung.visualization.transform.MutableTransformerDecorator;
 import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
 
+/**
+ * This class is heavily based on BasicVertexRenderer from JUNG.
+ *
+ * @param <V> vertex type
+ * @param <E> edge type
+ */
+//CHECKSTYLE:OFF - Mostly code from JUNG 
 public class MultiVertexRenderer<V,E> implements Renderer.Vertex<V,E> {
 
     public void paintVertex(RenderContext<V,E> rc, Layout<V,E> layout, V v) {
-    	Graph<V,E> graph = layout.getGraph();
+        Graph<V,E> graph = layout.getGraph();
         if (rc.getVertexIncludePredicate().evaluate(Context.<Graph<V,E>,V>getInstance(graph,v))) {
-        	paintIconForVertex(rc, v, layout);
+            paintIconForVertex(rc, v, layout);
         }
     }
     
@@ -62,15 +69,15 @@ public class MultiVertexRenderer<V,E> implements Renderer.Vertex<V,E> {
             //rc.getViewTransformer().transform(shape).intersects(deviceRectangle);
 
         if (vertexHit) {
-        	// Always paint shape too
-        	if(rc.getVertexIconTransformer() != null) {
-        		Icon icon = rc.getVertexIconTransformer().transform(v);
-        		if(icon != null) {
-           			g.draw(icon, rc.getScreenDevice(), shape, (int)x, (int)y);
+            // Always paint shape too
+            if(rc.getVertexIconTransformer() != null) {
+                Icon icon = rc.getVertexIconTransformer().transform(v);
+                if(icon != null) {
+                    g.draw(icon, rc.getScreenDevice(), shape, (int)x, (int)y);
 
-        		}
-        	}
-			paintShapeForVertex(rc, v, shape);
+                }
+            }
+            paintShapeForVertex(rc, v, shape);
         }
     }
     
@@ -85,7 +92,7 @@ public class MultiVertexRenderer<V,E> implements Renderer.Vertex<V,E> {
         }
         MutableTransformer vt = rc.getMultiLayerTransformer().getTransformer(Layer.VIEW);
         if(vt instanceof MutableTransformerDecorator) {
-        	vt = ((MutableTransformerDecorator)vt).getDelegate();
+            vt = ((MutableTransformerDecorator)vt).getDelegate();
         }
         return vt.transform(s).intersects(deviceRectangle);
     }
@@ -101,15 +108,15 @@ public class MultiVertexRenderer<V,E> implements Renderer.Vertex<V,E> {
         }
         Paint drawPaint = rc.getVertexDrawPaintTransformer().transform(v);
         if(drawPaint != null) {
-        	g.setPaint(drawPaint);
-        	Stroke oldStroke = g.getStroke();
-        	Stroke stroke = rc.getVertexStrokeTransformer().transform(v);
-        	if(stroke != null) {
-        		g.setStroke(stroke);
-        	}
-        	g.draw(shape);
-        	g.setPaint(oldPaint);
-        	g.setStroke(oldStroke);
+            g.setPaint(drawPaint);
+            Stroke oldStroke = g.getStroke();
+            Stroke stroke = rc.getVertexStrokeTransformer().transform(v);
+            if(stroke != null) {
+                g.setStroke(stroke);
+            }
+            g.draw(shape);
+            g.setPaint(oldPaint);
+            g.setStroke(oldStroke);
         }
     }
 }

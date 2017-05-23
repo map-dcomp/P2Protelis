@@ -4,6 +4,9 @@
 	<groupId>com.bbn</groupId>
 	<artifactId>com.bbn.protelis.process-management-testbed</artifactId>
 	<name>Protelis Testbed</name>
+	<version>0.1</version>
+
+
 	<dependencies>
 		<dependency>
 		  <groupId>com.cedarsoftware</groupId>
@@ -69,16 +72,15 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.25</version>
-			<scope>test</scope>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.12</version>
-			<scope>test</scope>
+			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
-	<version>0.0</version>
 	<properties>
 		<JDK-VERSION>1.8</JDK-VERSION>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -105,5 +107,20 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>3.0.5-SNAPSHOT</version>
+				<configuration>
+					<xmlOutput>true</xmlOutput>
+					<!-- Optional directory to put findbugs xdoc xml report -->
+					<xmlOutputDirectory>target/site</xmlOutputDirectory>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
   
 </project>

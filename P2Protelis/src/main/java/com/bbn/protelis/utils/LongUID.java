@@ -2,10 +2,10 @@ package com.bbn.protelis.utils;
 
 import org.protelis.lang.datatype.DeviceUID;
 
-/** Simple integer UIDs. */
-public class IntegerUID implements DeviceUID {
+/** Simple long UIDs. */
+public class LongUID implements DeviceUID {
     private static final long serialVersionUID = 1L;
-    private final int uid;
+    private final long uid;
 
     /**
      * Create {@link DeviceUID} from an integer.
@@ -13,14 +13,14 @@ public class IntegerUID implements DeviceUID {
      * @param uid
      *            the value
      */
-    public IntegerUID(final int uid) {
+    public LongUID(final long uid) {
         this.uid = uid;
     }
 
     /**
-     * @return the underlying integer
+     * @return the underlying long
      */
-    public int getUID() {
+    public long getUID() {
         return uid;
     }
 
@@ -28,8 +28,8 @@ public class IntegerUID implements DeviceUID {
     public boolean equals(final Object o) {
         if (this == o) {
             return true;
-        } else if (o instanceof IntegerUID) {
-            return this.uid == ((IntegerUID) o).uid;
+        } else if (o instanceof LongUID) {
+            return this.uid == ((LongUID) o).uid;
         } else {
             return false;
         }
@@ -37,11 +37,11 @@ public class IntegerUID implements DeviceUID {
 
     @Override
     public int hashCode() {
-        return uid;
+        return Long.hashCode(uid);
     }
 
     @Override
     public String toString() {
-        return Integer.toString(uid);
+        return Long.toString(uid);
     }
 }

@@ -10,14 +10,14 @@ import org.protelis.lang.datatype.DeviceUID;
  */
 public interface NodeLookupService {
 
-	/**
-	 * Get the network connection information for a node. This is used to create
-	 * a socket to connect to the node for sharing information.
-	 * 
-	 * @param uid
-	 *            the UID of the node to find
-	 * @return the hostname and port.
-	 */
-	public InetSocketAddress getInetAddressForNode(final DeviceUID uid);
+    /**
+     * Get the network connection information for a node. This is used to create
+     * a socket to connect to the node for sharing information.
+     * 
+     * @param uid
+     *            the UID of the node to find
+     * @return the hostname and port.
+     */
+    InetSocketAddress getInetAddressForNode(DeviceUID uid);
 
 }
