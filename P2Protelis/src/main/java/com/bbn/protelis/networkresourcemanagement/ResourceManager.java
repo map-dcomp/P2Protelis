@@ -7,13 +7,13 @@ package com.bbn.protelis.networkresourcemanagement;
  */
 public interface ResourceManager {
 
-	/**
-	 * @return The current state of the device being managed. Not null.
-	 */
-	public ResourceReport getCurrentResourceReport();
+    /**
+     * @return The current state of the device being managed. Not null.
+     */
+    public ResourceReport getCurrentResourceReport();
 
-	// control methods for starting/stopping a service
-	// may need migration commands here
-	// Need to keep the interface generic
+    // control methods for starting/stopping a service
+    // may need migration commands here
+    // Need to keep the interface generic
 
 }

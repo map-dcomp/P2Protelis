@@ -8,10 +8,10 @@ import java.util.Map;
  */
 public interface ResourceSummary {
 
-	/**
-	 * @return resource name -> resource value. Not null.
-	 * @see ResourceReport#getState()
-	 */
-	public Map<String, Object> getState();
+    /**
+     * @return resource name -> resource value. Not null.
+     * @see ResourceReport#getState()
+     */
+    public Map<String, Object> getState();
 
 }
