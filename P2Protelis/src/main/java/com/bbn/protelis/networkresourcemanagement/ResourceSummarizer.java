@@ -6,26 +6,32 @@ package com.bbn.protelis.networkresourcemanagement;
  */
 public interface ResourceSummarizer {
 
-        /**
-         * Merge an two summaries.
-         * 
-         * @return a newly created summary. Not null.
-         */
-        public ResourceSummary merge(final ResourceSummary one, final ResourceSummary two);
+    /**
+     * Merge an two summaries.
+     * 
+     * @param one
+     *            the first summary to merge. Not null.
+     * @param two
+     *            the second summary to merge. Not null.
+     * @return a newly created summary. Not null, but may be the result of
+     *         {@link #nullSummary()}.
+     */
+    ResourceSummary merge(ResourceSummary one, ResourceSummary two);
 
-        /**
-         * Merge a {@link ResourceReport} with a summary.
-         * 
-         * @param summary the summary to merge with the report. Not null.
-         * @param report
-         *            the report to merge. Not null.
-         * @return a newly created summary. Not null.
-         */
-        public ResourceSummary merge(final ResourceSummary summary, final ResourceReport report);
+    /**
+     * Merge a {@link ResourceReport} with a summary.
+     * 
+     * @param summary
+     *            the summary to merge with the report. Not null.
+     * @param report
+     *            the report to merge. Not null.
+     * @return a newly created summary. Not null.
+     */
+    ResourceSummary merge(ResourceSummary summary, ResourceReport report);
 
-        /**
-         * Produce the empty/null {@link ResourceSummary}.
-         */
-        public ResourceSummary nullSummary();
-        
+    /**
+     * @return the empty/null {@link ResourceSummary}.
+     */
+    ResourceSummary nullSummary();
+
 }

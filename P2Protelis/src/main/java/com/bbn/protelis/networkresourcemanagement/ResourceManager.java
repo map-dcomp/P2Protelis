@@ -1,9 +1,9 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 /**
- * This is the interface with the device the {@link Node} is collecting
- * information on. This interface is used to retrieve {@link ResourceReport}s
- * and to make changes to the device.
+ * This is the interface the {@link Node} is using to collect information from.
+ * This interface is used to retrieve {@link ResourceReport}s and to make
+ * changes to the {@link Node}.
  */
 public interface ResourceManager {
 

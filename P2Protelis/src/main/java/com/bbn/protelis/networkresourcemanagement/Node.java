@@ -171,7 +171,7 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
     }
 
     /**
-     * >>>>>>> master Execute the protolis program
+     * Execute the protolis program
      */
     private void run() {
         while (!Thread.interrupted()) {
