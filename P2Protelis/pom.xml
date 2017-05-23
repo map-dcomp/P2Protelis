@@ -4,6 +4,9 @@
 	<groupId>com.bbn</groupId>
 	<artifactId>com.bbn.protelis.process-management-testbed</artifactId>
 	<name>Protelis Testbed</name>
+	<version>0.1</version>
+
+
 	<dependencies>
 		<dependency>
 		  <groupId>com.cedarsoftware</groupId>
@@ -78,7 +81,6 @@
 			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
-	<version>0.0</version>
 	<properties>
 		<JDK-VERSION>1.8</JDK-VERSION>
 		<maven.compiler.target>1.8</maven.compiler.target>
