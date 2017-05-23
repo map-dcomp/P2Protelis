@@ -3,7 +3,7 @@ package com.bbn.protelis.networkresourcemanagement;
 import java.util.Map;
 
 /**
- * Summary state over some number of devices for some time.
+ * Summary state over some number of {@link Nodes} for some time.
  * 
  */
 public interface ResourceSummary {
@@ -13,23 +13,5 @@ public interface ResourceSummary {
      * @see ResourceReport#getState()
      */
     Map<String, Object> getState();
-
-    /**
-     * Merge an existing summary with this one. Creates a new object.
-     * 
-     * @param other
-     *            the summary to merge. Not null.
-     * @return a newly created summary. Not null.
-     */
-    ResourceSummary merge(ResourceSummary other);
-
-    /**
-     * Merge a {@link ResourceReport} with this one. Creates a new object.
-     * 
-     * @param report
-     *            the report to merge. Not null.
-     * @return a newly created summary. Not null.
-     */
-    ResourceSummary merge(ResourceReport report);
 
 }
