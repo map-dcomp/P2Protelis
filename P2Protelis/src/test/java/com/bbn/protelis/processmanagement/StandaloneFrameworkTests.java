@@ -29,7 +29,7 @@ public class StandaloneFrameworkTests extends JSONFrameworkTest {
     
     @Test
     public void colorTest() {
-        String[] extraArgs = {"-v","true"};
+        String[] extraArgs = {"-v","false"}; //Change to true when testing locally
         runTest("let x = rep(n <- 0) { 1-n }; self.putEnvironmentVariable(\"blue\",x); self.getId()==1;",false,"networks/mini.json",100,"tests/idTest.json",extraArgs);
     }
     
