@@ -28,6 +28,12 @@ public class StandaloneFrameworkTests extends JSONFrameworkTest {
     }
     
     @Test
+    public void colorTest() {
+        String[] extraArgs = {"-v","true"};
+        runTest("self.putEnvironmentVariable(\"blue\",1); self.getId()==1;",false,"networks/mini.json",1,"tests/idTest.json",extraArgs);
+    }
+    
+    @Test
     public void networkTest() {
         String[] extraArgs = {"-v","false"};
         runTest("self.putEnvironmentVariable(\"logicalNeighbors\",[1]); minHood PlusSelf(nbr(self.getId()))",false,"networks/mini.json",3,"tests/networkTest.json",extraArgs);
