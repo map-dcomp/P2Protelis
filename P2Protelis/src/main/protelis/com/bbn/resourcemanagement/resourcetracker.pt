@@ -1,0 +1,17 @@
+module com:bbn:resourcemanagement:resourcetracker
+
+import protelis:coord:accumulation
+import protelis:coord:spreading
+import protelis:lang:utils
+import protelis:coord:nonselfstabilizing:accumulation
+
+def once(v) {
+    rep(x <- v) { x };
+}
+
+def countNodes() {
+    let leader = gossip(once(self.nextRandomDouble()), min);
+    countDevices(distanceTo(leader))
+}
+
+countNodes();
