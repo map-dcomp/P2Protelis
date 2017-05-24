@@ -37,6 +37,8 @@ import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.SparseMultigraph;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
+import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
+import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
 import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
 
 /**
@@ -219,6 +221,11 @@ public class ScenarioVisualizer extends JApplet {
             }
         });
 
+        // Create a graph mouse and add it to the visualization component
+        final DefaultModalGraphMouse<DisplayNode, DisplayEdge> gm = new DefaultModalGraphMouse<>();
+        gm.setMode(ModalGraphMouse.Mode.TRANSFORMING);
+        vv.setGraphMouse(gm);
+        
         // vv.addGraphMouseListener(new GraphMouseListener<DisplayNode>() {
         // @Override
         // public void graphClicked(DisplayNode v, MouseEvent me) {
