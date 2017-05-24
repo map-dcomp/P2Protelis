@@ -51,10 +51,9 @@ public class NS2ParserTest {
 
                 final long maxExecutions = 5;
 
-                scenario.setVisualize(false);
                 scenario.setTerminationCondition(new ExecutionCountTermination(maxExecutions));
 
-                final ScenarioRunner<Node, Link> emulation = new ScenarioRunner<>(scenario);
+                final ScenarioRunner<Node, Link> emulation = new ScenarioRunner<>(scenario, null);
                 emulation.run();
 
                 for (final Map.Entry<DeviceUID, Node> entry : scenario.getNodes().entrySet()) {

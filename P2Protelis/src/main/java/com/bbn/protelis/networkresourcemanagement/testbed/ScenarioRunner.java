@@ -2,6 +2,8 @@ package com.bbn.protelis.networkresourcemanagement.testbed;
 
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import org.protelis.lang.datatype.DeviceUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,16 +25,26 @@ public class ScenarioRunner<N extends Node, L extends Link> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioRunner.class);
 
     private final Scenario<N, L> scenario;
-    private ScenarioVisualizer<N, L> visualizer;
+    private ScenarioVisualizer<?, ?, N, L> visualizer;
 
     /**
      * 
      * @param scenario
      *            the scenario to run
+     * @param visualizer
+     *            the visualizer to use, may be null. The scenario in this
+     *            visualizer must match the scenario argument
      */
-    public ScenarioRunner(final Scenario<N, L> scenario) {
-        LOGGER.info("Initializing scenario");
+    public ScenarioRunner(@Nonnull final Scenario<N, L> scenario, final ScenarioVisualizer<?, ?, N, L> visualizer) {
+        if (null != visualizer && scenario != visualizer.getScenario()) {
+            throw new IllegalArgumentException("The visualizer is using a different scenario");
+        }
+
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Initializing scenario");
+        }
         this.scenario = scenario;
+        this.visualizer = visualizer;
     }
 
     /**
@@ -47,9 +59,9 @@ public class ScenarioRunner<N extends Node, L extends Link> {
         }
 
         // Launch the visualizer, if desired
-        LOGGER.debug(scenario.getVisualize() ? "Launching visualizer" : "Running headless");
-        if (scenario.getVisualize()) {
-            visualizer = new ScenarioVisualizer<N, L>(scenario);
+        LOGGER.debug(null == visualizer ? "Launching visualizer" : "Running headless");
+        if (null != visualizer) {
+            visualizer.start();
         }
 
         LOGGER.info("Waiting while scenario runs");

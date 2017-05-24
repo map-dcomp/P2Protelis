@@ -29,6 +29,10 @@ import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
+import com.bbn.protelis.networkresourcemanagement.visualizer.BasicNetworkVisualizerFactory;
+import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayEdge;
+import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayNode;
+import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
 import com.bbn.protelis.utils.StringUID;
 
 /**
@@ -240,10 +244,13 @@ public final class NS2Parser {
                 final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, program);
                 final Scenario<Node, Link> scenario = NS2Parser.parse(filename, reader, factory);
 
-                scenario.setVisualize(true);
                 scenario.setTerminationCondition(new NeverTerminate<>());
 
-                final ScenarioRunner<Node, Link> emulation = new ScenarioRunner<>(scenario);
+                final BasicNetworkVisualizerFactory visFactory = new BasicNetworkVisualizerFactory();
+                final ScenarioVisualizer<DisplayNode, DisplayEdge, Node, Link> visualizer = new ScenarioVisualizer<>(
+                        scenario, visFactory);
+
+                final ScenarioRunner<Node, Link> emulation = new ScenarioRunner<>(scenario, visualizer);
                 emulation.run();
 
             } // reader

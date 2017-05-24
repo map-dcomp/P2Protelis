@@ -21,26 +21,6 @@ import com.bbn.protelis.networkresourcemanagement.Node;
  *            the link type
  */
 public class Scenario<N extends Node, L extends Link> {
-    private boolean visualize = false;
-
-    /**
-     * Should the system run with visualization, or headless?
-     * 
-     * @param v
-     *            true if the scenario should be displayed
-     */
-    public void setVisualize(final boolean v) {
-        this.visualize = v;
-    }
-
-    /**
-     * 
-     * @return should the scenario be displayed?
-     * @see #setVisualize(boolean)
-     */
-    public boolean getVisualize() {
-        return this.visualize;
-    }
 
     private TerminationCondition<Map<DeviceUID, N>> terminationCondition;
 

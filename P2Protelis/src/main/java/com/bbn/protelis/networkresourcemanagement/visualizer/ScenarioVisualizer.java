@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.JApplet;
@@ -42,12 +43,20 @@ import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
 import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
 
 /**
- * Visualizer for a {@link Scenario}.
+ * Visualizer for a {@link Scenario}. Call {@link #start()} to open the
+ * visualization.
  *
- * @param <N> the node type
- * @param <L> the link type
+ * @param <N>
+ *            the node type
+ * @param <L>
+ *            the link type
+ * @param <DN>
+ *            the node display type
+ * @param <DL>
+ *            the link display type
  */
-public class ScenarioVisualizer<N extends Node, L extends Link> extends JApplet {
+public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, N extends Node, L extends Link>
+        extends JApplet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioVisualizer.class);
 
     // Serialization inherited from JApplet
@@ -60,31 +69,45 @@ public class ScenarioVisualizer<N extends Node, L extends Link> extends JApplet 
     private static final int REFRESH_RATE = 100;// 500
     private final Object closeLock = new Object();
     private volatile boolean frameOpen = false;
+    private final NetworkVisualizerFactory<DN, DL, N, L> visFactory;
 
+    private JFrame frame;
+    private VisualizationViewer<DN, DL> vv;
     private Timer refresher;
 
-    private final Graph<DisplayNode, DisplayEdge> g = new SparseMultigraph<DisplayNode, DisplayEdge>();
+    private final Graph<DN, DL> g = new SparseMultigraph<>();
 
     // Graph contents
-    private Map<DeviceUID, DisplayNode> nodes = new HashMap<>();
-    private Set<DisplayEdge> edges = new HashSet<DisplayEdge>();
+    private Map<DeviceUID, DN> nodes = new HashMap<>();
+    private Set<DL> edges = new HashSet<>();
     private final Scenario<N, L> scenario;
+
+    /**
+     * @return the scenario that is being visualized
+     */
+    @Nonnull
+    public final Scenario<N, L> getScenario() {
+        return scenario;
+    }
 
     /**
      * Create a visualization.
      * 
      * @param scenario
      *            the scenario to visualize
+     * @param visFactory
+     *            the factory for creating display objects
      */
-    public ScenarioVisualizer(final Scenario<N, L> scenario) {
+    public ScenarioVisualizer(final Scenario<N, L> scenario, final NetworkVisualizerFactory<DN, DL, N, L> visFactory) {
+        this.visFactory = visFactory;
         this.scenario = scenario;
 
         // Add the nodes and edges
         createGraphFromNetwork();
         // Configure the rendering environment
-        final VisualizationViewer<DisplayNode, DisplayEdge> vv = configureGraphRendering();
+        configureGraphRendering();
         // set up Swing components
-        initializeSwingComponents(vv);
+        initializeSwingComponents();
     }
 
     private void createGraphFromNetwork() {
@@ -95,8 +118,8 @@ public class ScenarioVisualizer<N extends Node, L extends Link> extends JApplet 
         refreshEdges();
     }
 
-    private DisplayNode addNode(final Node node) {
-        final DisplayNode n = new DisplayNode(node);
+    private DN addNode(final N node) {
+        final DN n = visFactory.createDisplayNode(node);
         g.addVertex(n);
         nodes.put(n.getUID(), n);
         return n;
@@ -104,37 +127,35 @@ public class ScenarioVisualizer<N extends Node, L extends Link> extends JApplet 
 
     private void refreshEdges() {
         // First, discard all current edges
-        for (final DisplayEdge e : edges) {
+        for (final DL e : edges) {
             g.removeEdge(e);
         }
         edges.clear();
 
         // Next, add all edges
         for (final L l : scenario.getLinks()) {
-            DisplayNode leftNode = nodes.get(l.getLeft().getDeviceUID());
+            final DN leftNode = nodes.get(l.getLeft().getDeviceUID());
             if (null == leftNode) {
-                LOGGER.warn("Link " + l.getName() + " refers to node " + l.getLeft().getName()
-                        + " that isn't in the graph, adding.");
-                leftNode = addNode(l.getLeft());
+                throw new RuntimeException("Link " + l.getName() + " refers to node " + l.getLeft().getName()
+                        + " that isn't in the graph.");
             }
-            DisplayNode rightNode = nodes.get(l.getRight().getDeviceUID());
+            final DN rightNode = nodes.get(l.getRight().getDeviceUID());
             if (null == rightNode) {
-                LOGGER.warn("Link " + l.getName() + " refers to node " + l.getRight().getName()
-                        + " that isn't in the graph, adding.");
-                rightNode = addNode(l.getRight());
+                throw new RuntimeException("Link " + l.getName() + " refers to node " + l.getRight().getName()
+                        + " that isn't in the graph.");
             }
 
-            final DisplayEdge edge = new DisplayEdge(l, leftNode, rightNode);
+            final DL edge = visFactory.createDisplayLink(l, leftNode, rightNode);
             g.addEdge(edge, leftNode, rightNode);
             edges.add(edge);
         }
 
     }
 
-    private VisualizationViewer<DisplayNode, DisplayEdge> configureGraphRendering() {
+    private void configureGraphRendering() {
         // Layout<DisplayNode,DisplayEdge> layout = new KKLayout<DisplayNode,
         // DisplayEdge>(g);
-        Layout<DisplayNode, DisplayEdge> layout = new ISOMLayout<DisplayNode, DisplayEdge>(g);
+        final Layout<DN, DL> layout = new ISOMLayout<DN, DL>(g);
         layout.setSize(new Dimension(LAYOUT_WIDTH, LAYOUT_HEIGHT)); // sets
                                                                     // the
                                                                     // initial
@@ -142,44 +163,44 @@ public class ScenarioVisualizer<N extends Node, L extends Link> extends JApplet 
                                                                     // of
                                                                     // the
                                                                     // space
-        VisualizationViewer<DisplayNode, DisplayEdge> vv = new VisualizationViewer<DisplayNode, DisplayEdge>(layout);
+        vv = new VisualizationViewer<DN, DL>(layout);
         vv.setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 
-        vv.getRenderer().setVertexRenderer(new MultiVertexRenderer<DisplayNode, DisplayEdge>());
-        vv.getRenderContext().setVertexLabelTransformer(new Transformer<DisplayNode, String>() {
+        vv.getRenderer().setVertexRenderer(new MultiVertexRenderer<DN, DL>());
+        vv.getRenderContext().setVertexLabelTransformer(new Transformer<DN, String>() {
             @Override
-            public String transform(final DisplayNode dn) {
+            public String transform(final DN dn) {
                 return dn.getVertexLabel();
             }
         });
         // Place labels at bottom center
         vv.getRenderer().getVertexLabelRenderer().setPosition(Position.S);
 
-        vv.getRenderContext().setVertexFillPaintTransformer(new Transformer<DisplayNode, Paint>() {
+        vv.getRenderContext().setVertexFillPaintTransformer(new Transformer<DN, Paint>() {
             @Override
-            public Paint transform(final DisplayNode dn) {
+            public Paint transform(final DN dn) {
                 return null;
             }
         });
 
-        vv.getRenderContext().setVertexDrawPaintTransformer(new Transformer<DisplayNode, Paint>() {
+        vv.getRenderContext().setVertexDrawPaintTransformer(new Transformer<DN, Paint>() {
             @Override
-            public Paint transform(final DisplayNode dn) {
+            public Paint transform(final DN dn) {
                 return dn.getVertexColor();
 
             }
         });
 
-        vv.getRenderContext().setVertexStrokeTransformer(new Transformer<DisplayNode, Stroke>() {
+        vv.getRenderContext().setVertexStrokeTransformer(new Transformer<DN, Stroke>() {
             @Override
-            public Stroke transform(final DisplayNode dn) {
+            public Stroke transform(final DN dn) {
                 return new BasicStroke(3);
             }
         });
 
-        Transformer<DisplayEdge, Paint> arrowPaint = new Transformer<DisplayEdge, Paint>() {
+        final Transformer<DL, Paint> arrowPaint = new Transformer<DL, Paint>() {
             @Override
-            public Paint transform(final DisplayEdge e) {
+            public Paint transform(final DL e) {
                 return e.getEdgeColor();
             }
         };
@@ -187,9 +208,9 @@ public class ScenarioVisualizer<N extends Node, L extends Link> extends JApplet 
         vv.getRenderContext().setArrowDrawPaintTransformer(arrowPaint);
         vv.getRenderContext().setArrowFillPaintTransformer(arrowPaint);
 
-        vv.getRenderContext().setVertexShapeTransformer(new Transformer<DisplayNode, Shape>() {
+        vv.getRenderContext().setVertexShapeTransformer(new Transformer<DN, Shape>() {
             @Override
-            public Shape transform(final DisplayNode dn) {
+            public Shape transform(final DN dn) {
                 // The first 2 arguments here had better be half of the height
                 // and width respectively or it
                 // screws up Jung's attempt to draw the arrows on directed
@@ -203,31 +224,31 @@ public class ScenarioVisualizer<N extends Node, L extends Link> extends JApplet 
                 final int rectangleX = -1 * rectangleWidth / 2;
                 final int rectangleY = -1 * rectangleHeight / 2;
                 return new Rectangle(rectangleX, rectangleY, rectangleWidth, rectangleHeight); // slightly
-                                                                             // bigger
-                                                                             // than
+                // bigger
+                // than
                 // icon
             }
         });
 
-        vv.getRenderContext().setVertexIconTransformer(new Transformer<DisplayNode, Icon>() {
+        vv.getRenderContext().setVertexIconTransformer(new Transformer<DN, Icon>() {
             @Override
-            public Icon transform(final DisplayNode dn) {
+            public Icon transform(final DN dn) {
                 return dn.getIcon();
             }
         });
 
-        vv.getRenderContext().setEdgeLabelTransformer(new Transformer<DisplayEdge, String>() {
+        vv.getRenderContext().setEdgeLabelTransformer(new Transformer<DL, String>() {
             @Override
-            public String transform(final DisplayEdge e) {
+            public String transform(final DL e) {
                 return e.getLink().getName();
             }
         });
 
         // Create a graph mouse and add it to the visualization component
-        final DefaultModalGraphMouse<DisplayNode, DisplayEdge> gm = new DefaultModalGraphMouse<>();
+        final DefaultModalGraphMouse<DN, DL> gm = new DefaultModalGraphMouse<>();
         gm.setMode(ModalGraphMouse.Mode.TRANSFORMING);
         vv.setGraphMouse(gm);
-        
+
         // vv.addGraphMouseListener(new GraphMouseListener<DisplayNode>() {
         // @Override
         // public void graphClicked(DisplayNode v, MouseEvent me) {
@@ -246,8 +267,6 @@ public class ScenarioVisualizer<N extends Node, L extends Link> extends JApplet 
         // public void graphReleased(DisplayNode v, MouseEvent me) {
         // }
         // });
-
-        return vv;
     }
 
     /**
@@ -265,8 +284,8 @@ public class ScenarioVisualizer<N extends Node, L extends Link> extends JApplet 
         }
     }
 
-    private void initializeSwingComponents(final VisualizationViewer<DisplayNode, DisplayEdge> vv) {
-        final JFrame frame = new JFrame("Graph View: " + scenario.getName());
+    private void initializeSwingComponents() {
+        frame = new JFrame("Graph View: " + scenario.getName());
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // The the display that it should kill the remote nodes on window close.
@@ -315,6 +334,12 @@ public class ScenarioVisualizer<N extends Node, L extends Link> extends JApplet 
         // masterPanel.add(envPanel);
 
         frame.add(masterPanel);
+    }
+
+    @Override
+    public void start() {
+        super.start();
+
         frame.pack();
         frame.setVisible(true);
         frameOpen = true;
