@@ -14,6 +14,7 @@ import org.protelis.lang.ProtelisLoader;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 
+import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.networkresourcemanagement.ns2.NS2Parser;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
@@ -51,7 +52,9 @@ public class NS2ParserTest {
 
                 final long maxExecutions = 5;
 
-                scenario.setTerminationCondition(new ExecutionCountTermination(maxExecutions));
+                final TerminationCondition<Map<DeviceUID, Node>> condition = new ExecutionCountTermination<Node>(
+                        maxExecutions);
+                scenario.setTerminationCondition(condition);
 
                 final ScenarioRunner<Node, Link> emulation = new ScenarioRunner<>(scenario, null);
                 emulation.run();

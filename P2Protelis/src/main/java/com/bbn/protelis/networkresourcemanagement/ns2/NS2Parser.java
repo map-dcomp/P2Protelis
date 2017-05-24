@@ -246,7 +246,7 @@ public final class NS2Parser {
 
                 scenario.setTerminationCondition(new NeverTerminate<>());
 
-                final BasicNetworkVisualizerFactory visFactory = new BasicNetworkVisualizerFactory();
+                final BasicNetworkVisualizerFactory<Node, Link> visFactory = new BasicNetworkVisualizerFactory<>();
                 final ScenarioVisualizer<DisplayNode, DisplayEdge, Node, Link> visualizer = new ScenarioVisualizer<>(
                         scenario, visFactory);
 
