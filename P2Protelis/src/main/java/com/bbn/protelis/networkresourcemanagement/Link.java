@@ -3,10 +3,8 @@ package com.bbn.protelis.networkresourcemanagement;
 /**
  * A network link.
  * 
- * @author jschewe
- *
  */
-public final class Link {
+public class Link {
 
     private final String name;
 

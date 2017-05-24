@@ -44,8 +44,10 @@ import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
 /**
  * Visualizer for a {@link Scenario}.
  *
+ * @param <N> the node type
+ * @param <L> the link type
  */
-public class ScenarioVisualizer extends JApplet {
+public class ScenarioVisualizer<N extends Node, L extends Link> extends JApplet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioVisualizer.class);
 
     // Serialization inherited from JApplet
@@ -66,7 +68,7 @@ public class ScenarioVisualizer extends JApplet {
     // Graph contents
     private Map<DeviceUID, DisplayNode> nodes = new HashMap<>();
     private Set<DisplayEdge> edges = new HashSet<DisplayEdge>();
-    private final Scenario scenario;
+    private final Scenario<N, L> scenario;
 
     /**
      * Create a visualization.
@@ -74,7 +76,7 @@ public class ScenarioVisualizer extends JApplet {
      * @param scenario
      *            the scenario to visualize
      */
-    public ScenarioVisualizer(final Scenario scenario) {
+    public ScenarioVisualizer(final Scenario<N, L> scenario) {
         this.scenario = scenario;
 
         // Add the nodes and edges
@@ -87,7 +89,7 @@ public class ScenarioVisualizer extends JApplet {
 
     private void createGraphFromNetwork() {
         // First add nodes to collection, so they'll be there for edge addition
-        for (final Map.Entry<DeviceUID, Node> entry : scenario.getNodes().entrySet()) {
+        for (final Map.Entry<DeviceUID, N> entry : scenario.getNodes().entrySet()) {
             addNode(entry.getValue());
         }
         refreshEdges();
@@ -108,7 +110,7 @@ public class ScenarioVisualizer extends JApplet {
         edges.clear();
 
         // Next, add all edges
-        for (final Link l : scenario.getLinks()) {
+        for (final L l : scenario.getLinks()) {
             DisplayNode leftNode = nodes.get(l.getLeft().getDeviceUID());
             if (null == leftNode) {
                 LOGGER.warn("Link " + l.getName() + " refers to node " + l.getLeft().getName()
