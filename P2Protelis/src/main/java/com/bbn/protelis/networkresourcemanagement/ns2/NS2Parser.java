@@ -38,7 +38,7 @@ public final class NS2Parser {
 
     private static final long BYTES_IN_KILOBYTE = 1024;
     private static final long BYTES_IN_MEGABYTE = BYTES_IN_KILOBYTE * 1024;
-    
+
     private NS2Parser() {
     }
 
@@ -183,7 +183,9 @@ public final class NS2Parser {
                     // node.operatingSystem = tokens[2];
 
                 } else {
-                    LOGGER.error("Ignoring unknown line '" + line + "'");
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info("Ignoring unknown line '" + line + "'");
+                    }
                 }
             }
 
