@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
@@ -171,15 +170,31 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
     }
 
     /**
-     * Execute the protolis program
+     * Executed before {@link ProtelisVM#runCycle()}.
+     */
+    protected void preRunCycle() {
+    }
+
+    /**
+     * Executed after {@link ProtelisVM#runCycle()}.
+     */
+    protected void postRunCycle() {
+    }
+
+    /**
+     * Execute the protolis program.
      */
     private void run() {
         while (!Thread.interrupted()) {
             try {
+                preRunCycle();
+
+                gatherResourceInformation();
+
                 getVM().runCycle(); // execute the Protelis program
                 incrementExecutionCount();
 
-                gatherResourceInformation();
+                postRunCycle();
 
                 Thread.sleep(sleepTime);
             } catch (final InterruptedException e) {
@@ -218,10 +233,18 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
     }
 
     /**
+     * Called at the top of {@link #stopExecuting()}.
+     */
+    protected void preStopExecuting() {
+    }
+
+    /**
      * Stop the node executing and wait for the stop.
      */
     public final void stopExecuting() {
         if (null != executeThread) {
+            preStopExecuting();
+
             executeThread.interrupt();
             try {
                 executeThread.join(); // may want to have a timeout here
@@ -235,7 +258,9 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
     // -------- ResourceSummaryProvider
     @Override
     public ResourceSummary getLatestState() {
-        throw new NotImplementedException("Currently unimplemented");
+        // throw new NotImplementedException("Currently unimplemented");
+//        LOGGER.warn("getting state from Node is currently not implemented, returning null");
+        return null;
     }
 
     // -------- end ResourceSummaryProvider

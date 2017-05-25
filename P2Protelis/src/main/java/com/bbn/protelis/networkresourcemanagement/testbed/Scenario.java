@@ -15,36 +15,19 @@ import com.bbn.protelis.networkresourcemanagement.Node;
 /**
  * A test scenario.
  * 
- * @author jschewe
+ * @param <N>
+ *            the node type
+ * @param <L>
+ *            the link type
  */
-public class Scenario {
-    private boolean visualize = false;
+public class Scenario<N extends Node, L extends Link> {
 
-    /**
-     * Should the system run with visualization, or headless?
-     * 
-     * @param v
-     *            true if the scenario should be displayed
-     */
-    public void setVisualize(final boolean v) {
-        this.visualize = v;
-    }
-
-    /**
-     * 
-     * @return should the scenario be displayed?
-     * @see #setVisualize(boolean)
-     */
-    public boolean getVisualize() {
-        return this.visualize;
-    }
-
-    private TerminationCondition<Map<DeviceUID, Node>> terminationCondition;
+    private TerminationCondition<Map<DeviceUID, N>> terminationCondition;
 
     /**
      * @return may be null
      */
-    public final TerminationCondition<Map<DeviceUID, Node>> getTerminationCondition() {
+    public final TerminationCondition<Map<DeviceUID, N>> getTerminationCondition() {
         return terminationCondition;
     }
 
@@ -71,7 +54,7 @@ public class Scenario {
      * @param v
      *            the new value, may be null
      */
-    public final void setTerminationCondition(final TerminationCondition<Map<DeviceUID, Node>> v) {
+    public final void setTerminationCondition(final TerminationCondition<Map<DeviceUID, N>> v) {
         terminationCondition = v;
     }
 
@@ -92,22 +75,22 @@ public class Scenario {
      * 
      * @return unmodifiable map of the nodes, key is the UID
      */
-    public Map<DeviceUID, Node> getNodes() {
+    public Map<DeviceUID, N> getNodes() {
         return Collections.unmodifiableMap(this.nodes);
     }
 
-    private final Map<DeviceUID, Node> nodes = new HashMap<>();
+    private final Map<DeviceUID, N> nodes = new HashMap<>();
 
     /**
      * Links in the network.
      * 
      * @return unmodifiable list of the links
      */
-    public Set<Link> getLinks() {
+    public Set<L> getLinks() {
         return Collections.unmodifiableSet(this.links);
     }
 
-    private final Set<Link> links = new HashSet<>();
+    private final Set<L> links = new HashSet<>();
 
     /**
      * Constructor for creating a scenario with default conditions.
@@ -119,7 +102,7 @@ public class Scenario {
      * @param links
      *            the links in the scenario
      */
-    public Scenario(final String name, final Map<DeviceUID, Node> nodes, final Set<Link> links) {
+    public Scenario(final String name, final Map<DeviceUID, N> nodes, final Set<L> links) {
         this.name = name;
         this.nodes.putAll(nodes);
         this.links.addAll(links);

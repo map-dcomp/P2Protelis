@@ -21,12 +21,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.common.testbed.termination.NeverTerminate;
+import com.bbn.protelis.networkresourcemanagement.BasicNetworkFactory;
 import com.bbn.protelis.networkresourcemanagement.Link;
+import com.bbn.protelis.networkresourcemanagement.NetworkFactory;
 import com.bbn.protelis.networkresourcemanagement.Node;
 import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
+import com.bbn.protelis.networkresourcemanagement.visualizer.BasicNetworkVisualizerFactory;
+import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayEdge;
+import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayNode;
+import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
 import com.bbn.protelis.utils.StringUID;
 
 /**
@@ -38,7 +44,7 @@ public final class NS2Parser {
 
     private static final long BYTES_IN_KILOBYTE = 1024;
     private static final long BYTES_IN_MEGABYTE = BYTES_IN_KILOBYTE * 1024;
-    
+
     private NS2Parser() {
     }
 
@@ -49,20 +55,21 @@ public final class NS2Parser {
      *            name of the scenario to create
      * @param reader
      *            where to read the data from
-     * @param program
-     *            the program to run on all of the nodes
-     * @param lookupService
-     *            how to connect to nodes
+     * @param factory
+     *            how to create {@link Node}s and {@link Link}s
+     * @param <N>
+     *            the {@link Node} type created
+     * @param <L>
+     *            the {@link Link} type created
      * @return the network scenario
      * @throws IOException
      *             if there is an error reading from the reader
      */
-    public static Scenario parse(final String scenarioName,
+    public static <N extends Node, L extends Link> Scenario<N, L> parse(final String scenarioName,
             final Reader reader,
-            final ProtelisProgram program,
-            final NodeLookupService lookupService) throws IOException {
-        final Map<String, Node> nodesByName = new HashMap<>();
-        final Set<Link> links = new HashSet<>();
+            final NetworkFactory<N, L> factory) throws IOException {
+        final Map<String, N> nodesByName = new HashMap<>();
+        final Set<L> links = new HashSet<>();
 
         String simulator = null;
 
@@ -112,7 +119,7 @@ public final class NS2Parser {
 
                             final String objectType = tokens[1];
                             if ("node".equals(objectType)) {
-                                final Node node = new Node(lookupService, program, name);
+                                final N node = factory.createNode(name);
                                 nodesByName.put(name, node);
                             } else if ("duplex-link".equals(objectType)) {
                                 if (!tokens[2].startsWith("$") || !tokens[3].startsWith("$")) {
@@ -151,12 +158,13 @@ public final class NS2Parser {
                                 // final String delayStr = tokens[5];
                                 // final String queueBehavior = tokens[6];
 
-                                final Node leftNode = nodesByName.get(leftNodeName);
-                                final Node rightNode = nodesByName.get(rightNodeName);
+                                final N leftNode = nodesByName.get(leftNodeName);
+                                final N rightNode = nodesByName.get(rightNodeName);
                                 leftNode.addNeighbor(rightNode);
                                 rightNode.addNeighbor(leftNode);
 
-                                final Link link = new Link(name, leftNode, rightNode, bandwidth * bandwidthMultiplier);
+                                final L link = factory.createLink(name, leftNode, rightNode,
+                                        bandwidth * bandwidthMultiplier);
                                 links.add(link);
                             } else {
                                 throw new NS2FormatException(
@@ -183,15 +191,17 @@ public final class NS2Parser {
                     // node.operatingSystem = tokens[2];
 
                 } else {
-                    LOGGER.error("Ignoring unknown line '" + line + "'");
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info("Ignoring unknown line '" + line + "'");
+                    }
                 }
             }
 
         } // bufReader
 
-        final Map<DeviceUID, Node> nodes = nodesByName.entrySet().stream()
+        final Map<DeviceUID, N> nodes = nodesByName.entrySet().stream()
                 .collect(Collectors.toMap(e -> new StringUID(e.getKey()), Map.Entry::getValue));
-        final Scenario scenario = new Scenario(scenarioName, nodes, links);
+        final Scenario<N, L> scenario = new Scenario<>(scenarioName, nodes, links);
         return scenario;
     }
 
@@ -231,12 +241,16 @@ public final class NS2Parser {
 
             final String filename = "ns2/multinode.ns";
             try (Reader reader = new InputStreamReader(new FileInputStream(args[0]), StandardCharsets.UTF_8)) {
-                final Scenario scenario = NS2Parser.parse(filename, reader, program, lookupService);
+                final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, program);
+                final Scenario<Node, Link> scenario = NS2Parser.parse(filename, reader, factory);
 
-                scenario.setVisualize(true);
                 scenario.setTerminationCondition(new NeverTerminate<>());
 
-                final ScenarioRunner emulation = new ScenarioRunner(scenario);
+                final BasicNetworkVisualizerFactory<Node, Link> visFactory = new BasicNetworkVisualizerFactory<>();
+                final ScenarioVisualizer<DisplayNode, DisplayEdge, Node, Link> visualizer = new ScenarioVisualizer<>(
+                        scenario, visFactory);
+
+                final ScenarioRunner<Node, Link> emulation = new ScenarioRunner<>(scenario, visualizer);
                 emulation.run();
 
             } // reader

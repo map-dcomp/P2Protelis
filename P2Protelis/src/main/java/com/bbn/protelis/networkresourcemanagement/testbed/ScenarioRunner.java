@@ -2,31 +2,49 @@ package com.bbn.protelis.networkresourcemanagement.testbed;
 
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import org.protelis.lang.datatype.DeviceUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
+import com.bbn.protelis.networkresourcemanagement.Link;
 import com.bbn.protelis.networkresourcemanagement.Node;
 import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
 
 /**
  * Class to run a {@link Scenario}.
+ * 
+ * @param <N>
+ *            the node type
+ * @param <L>
+ *            the link type
  */
-public class ScenarioRunner {
+public class ScenarioRunner<N extends Node, L extends Link> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioRunner.class);
 
-    private final Scenario scenario;
-    private ScenarioVisualizer visualizer;
+    private final Scenario<N, L> scenario;
+    private ScenarioVisualizer<?, ?, N, L> visualizer;
 
     /**
      * 
      * @param scenario
      *            the scenario to run
+     * @param visualizer
+     *            the visualizer to use, may be null. The scenario in this
+     *            visualizer must match the scenario argument
      */
-    public ScenarioRunner(final Scenario scenario) {
-        LOGGER.info("Initializing scenario");
+    public ScenarioRunner(@Nonnull final Scenario<N, L> scenario, final ScenarioVisualizer<?, ?, N, L> visualizer) {
+        if (null != visualizer && scenario != visualizer.getScenario()) {
+            throw new IllegalArgumentException("The visualizer is using a different scenario");
+        }
+
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Initializing scenario");
+        }
         this.scenario = scenario;
+        this.visualizer = visualizer;
     }
 
     /**
@@ -36,14 +54,14 @@ public class ScenarioRunner {
     public void run() {
         // Initialize the daemons
         LOGGER.debug("Initializing daemons");
-        for (final Map.Entry<DeviceUID, Node> entry : scenario.getNodes().entrySet()) {
+        for (final Map.Entry<DeviceUID, ? extends Node> entry : scenario.getNodes().entrySet()) {
             entry.getValue().startExecuting();
         }
 
         // Launch the visualizer, if desired
-        LOGGER.debug(scenario.getVisualize() ? "Launching visualizer" : "Running headless");
-        if (scenario.getVisualize()) {
-            visualizer = new ScenarioVisualizer(scenario);
+        LOGGER.debug(null == visualizer ? "Launching visualizer" : "Running headless");
+        if (null != visualizer) {
+            visualizer.start();
         }
 
         LOGGER.info("Waiting while scenario runs");
@@ -55,13 +73,13 @@ public class ScenarioRunner {
     private void waitForTermination() {
         while (true) {
             // Check if we've been told to exit by user click
-            if (visualizer != null && visualizer.isVisible()) {
+            if (visualizer != null && !visualizer.isVisible()) {
                 LOGGER.debug("Termination signalled by user");
                 break;
             }
 
             // Otherwise, check if the scenario has naturally terminated
-            final TerminationCondition<Map<DeviceUID, Node>> termination = scenario.getTerminationCondition();
+            final TerminationCondition<Map<DeviceUID, N>> termination = scenario.getTerminationCondition();
             if (termination != null) {
                 if (termination.shouldTerminate(scenario.getNodes())) {
                     LOGGER.debug("Termination condition detected");
@@ -83,7 +101,7 @@ public class ScenarioRunner {
 
         // Cleanup and exit
         LOGGER.debug("Signalling termination to all processes");
-        for (final Map.Entry<DeviceUID, Node> entry : scenario.getNodes().entrySet()) {
+        for (final Map.Entry<DeviceUID, ? extends Node> entry : scenario.getNodes().entrySet()) {
             entry.getValue().stopExecuting();
         }
         if (visualizer != null) {
@@ -103,7 +121,7 @@ public class ScenarioRunner {
 
     private boolean daemonsQuiescent() {
         boolean alldead = true;
-        for (final Map.Entry<DeviceUID, Node> entry : scenario.getNodes().entrySet()) {
+        for (final Map.Entry<DeviceUID, ? extends Node> entry : scenario.getNodes().entrySet()) {
             if (entry.getValue().isExecuting()) {
                 alldead = false;
                 break;

@@ -9,8 +9,10 @@ import com.bbn.protelis.networkresourcemanagement.Node;
 
 /**
  * Terminate after a number of executions of a set of {@link Node}s.
+ * 
+ * @param <N> the node type to deal with
  */
-public class ExecutionCountTermination implements TerminationCondition<Map<DeviceUID, Node>> {
+public class ExecutionCountTermination<N extends Node> implements TerminationCondition<Map<DeviceUID, N>> {
     private final long round;
 
     /**
@@ -23,8 +25,8 @@ public class ExecutionCountTermination implements TerminationCondition<Map<Devic
     }
 
     @Override
-    public boolean shouldTerminate(final Map<DeviceUID, Node> nodes) {
-        for (final Map.Entry<DeviceUID, Node> entry : nodes.entrySet()) {
+    public boolean shouldTerminate(final Map<DeviceUID, N> nodes) {
+        for (final Map.Entry<DeviceUID, N> entry : nodes.entrySet()) {
             if (entry.getValue().getExecutionCount() < round) {
                 return false;
             }
