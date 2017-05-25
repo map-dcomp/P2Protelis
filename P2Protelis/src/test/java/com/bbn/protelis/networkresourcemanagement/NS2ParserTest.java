@@ -14,6 +14,7 @@ import org.protelis.lang.ProtelisLoader;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 
+import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.networkresourcemanagement.ns2.NS2Parser;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
@@ -30,7 +31,9 @@ public class NS2ParserTest {
      * Test that ns2/multinode.ns parses and check that the nodes die when they
      * should.
      * 
-     * @throws IOException if there is an error reading the resource that holds the scenario
+     * @throws IOException
+     *             if there is an error reading the resource that holds the
+     *             scenario
      */
     @Test
     public void testSimpleGraph() throws IOException {
@@ -43,15 +46,17 @@ public class NS2ParserTest {
             Assert.assertNotNull("Couldn't find ns2 file: " + filename, stream);
 
             try (Reader reader = new InputStreamReader(stream)) {
-                final Scenario scenario = NS2Parser.parse(filename, reader, program, lookupService);
+                final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, program);
+                final Scenario<Node, Link> scenario = NS2Parser.parse(filename, reader, factory);
                 Assert.assertNotNull("Parse didn't create a scenario", scenario);
 
                 final long maxExecutions = 5;
 
-                scenario.setVisualize(false);
-                scenario.setTerminationCondition(new ExecutionCountTermination(maxExecutions));
+                final TerminationCondition<Map<DeviceUID, Node>> condition = new ExecutionCountTermination<Node>(
+                        maxExecutions);
+                scenario.setTerminationCondition(condition);
 
-                final ScenarioRunner emulation = new ScenarioRunner(scenario);
+                final ScenarioRunner<Node, Link> emulation = new ScenarioRunner<>(scenario, null);
                 emulation.run();
 
                 for (final Map.Entry<DeviceUID, Node> entry : scenario.getNodes().entrySet()) {

@@ -5,6 +5,7 @@ import java.awt.Paint;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
@@ -25,6 +26,15 @@ public class DisplayNode {
     private static final Icon SERVER_RUN = new ImageIcon(DisplayNode.class.getResource("/server-small-green.png"));
 
     private final Node node;
+
+    /**
+     * @return the node
+     */
+    @Nonnull
+    protected final Node getNode() {
+        return node;
+    }
+
     private Set<DeviceUID> neighbors = new HashSet<>();
     private String vertexLabel;
 
@@ -33,7 +43,7 @@ public class DisplayNode {
      * @param n
      *            the node to be displayed
      */
-    public DisplayNode(final Node n) {
+    public DisplayNode(@Nonnull final Node n) {
         node = n;
         setVertexLabel(node.getName());
 
@@ -67,8 +77,7 @@ public class DisplayNode {
     }
 
     /**
-     * Reads properties "red", "green" and "blue" from the execution
-     * environment.
+     * Change color between red and white based on the execution count.
      * 
      * @return the color to draw the object
      */
@@ -95,7 +104,7 @@ public class DisplayNode {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("Color: " + c + " count: " + executionCount);
         }
-        
+
         return c;
     }
     //
