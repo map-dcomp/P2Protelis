@@ -3,6 +3,7 @@ package com.bbn.protelis.networkresourcemanagement.visualizer;
 import java.awt.Color;
 import java.awt.Paint;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -36,7 +37,6 @@ public class DisplayNode {
     }
 
     private Set<DeviceUID> neighbors = new HashSet<>();
-    private String vertexLabel;
 
     /**
      * 
@@ -45,7 +45,6 @@ public class DisplayNode {
      */
     public DisplayNode(@Nonnull final Node n) {
         node = n;
-        setVertexLabel(node.getName());
 
         for (final DeviceUID neighbor : node.getNeighbors()) {
             neighbors.add(neighbor);
@@ -64,16 +63,10 @@ public class DisplayNode {
      * @return the label for the object
      */
     public String getVertexLabel() {
-        return vertexLabel;
-    }
-
-    /**
-     * 
-     * @param label
-     *            the label for the object
-     */
-    public void setVertexLabel(final String label) {
-        vertexLabel = label;
+        // final String debugStr = debugString();
+        final String valueStr = Objects.toString(node.getVM().getCurrentValue());
+        final String label = "<html><b>" + node.getName() + "</b><br><hr>" + valueStr;
+        return label;
     }
 
     /**
