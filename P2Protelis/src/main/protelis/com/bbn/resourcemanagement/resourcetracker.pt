@@ -9,9 +9,13 @@ def once(v) {
     rep(x <- v) { x };
 }
 
+def hopDistanceTo(leader) {
+    rep(d <- 0) { mux(leader) { 0 } else { 1 + minHood(nbr(d)) } }
+}
+
 def countNodes() {
     let leader = gossip(once(self.nextRandomDouble()), min);
-    countDevices(distanceTo(leader))
+    countDevices(hopDistanceTo(leader))
 }
 
 countNodes();
