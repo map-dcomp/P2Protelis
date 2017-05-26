@@ -7,10 +7,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Map;
+import java.util.Random;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.protelis.lang.datatype.DeviceUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.networkresourcemanagement.ns2.NS2Parser;
@@ -24,6 +27,8 @@ import com.bbn.protelis.networkresourcemanagement.testbed.termination.ExecutionC
  *
  */
 public class NS2ParserTest {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(NS2ParserTest.class);
 
     /**
      * Test that ns2/multinode.ns parses and check that the nodes die when they
@@ -35,7 +40,12 @@ public class NS2ParserTest {
      */
     @Test
     public void testSimpleGraph() throws IOException {
-        final NodeLookupService lookupService = new LocalNodeLookupService(5000);
+        // pick a random port over 1024
+        final Random random = new Random();
+        final int port = random.nextInt(65535 - 1024) + 1024;
+        LOGGER.info("Using base port " + port);
+
+        final NodeLookupService lookupService = new LocalNodeLookupService(port);
 
         final String filename = "ns2/multinode.ns";
         try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename)) {
