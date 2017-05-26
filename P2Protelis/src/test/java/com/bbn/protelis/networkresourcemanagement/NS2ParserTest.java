@@ -10,9 +10,7 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.protelis.lang.ProtelisLoader;
 import org.protelis.lang.datatype.DeviceUID;
-import org.protelis.vm.ProtelisProgram;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.networkresourcemanagement.ns2.NS2Parser;

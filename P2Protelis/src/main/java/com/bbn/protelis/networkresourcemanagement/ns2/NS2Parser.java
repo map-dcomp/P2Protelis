@@ -14,9 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.protelis.lang.ProtelisLoader;
 import org.protelis.lang.datatype.DeviceUID;
-import org.protelis.vm.ProtelisProgram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -239,7 +237,7 @@ public final class NS2Parser {
 
             final String filename = "ns2/multinode.ns";
             try (Reader reader = new InputStreamReader(new FileInputStream(args[0]), StandardCharsets.UTF_8)) {
-                final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, "true", true);
+                final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, "/protelis/com/bbn/resourcemanagement/resourcetracker.pt", false);
                 final Scenario<Node, Link> scenario = NS2Parser.parse(filename, reader, factory);
 
                 scenario.setTerminationCondition(new NeverTerminate<>());

@@ -15,7 +15,6 @@ public class BasicNetworkFactory implements NetworkFactory<Node, Link> {
     private final String program;
     private final boolean anonymousProgram;
 
-
     /**
      * Create a basic factory.
      * 
@@ -24,7 +23,8 @@ public class BasicNetworkFactory implements NetworkFactory<Node, Link> {
      * @param program
      *            the program to put in all nodes
      * @param anonymous
-     *            if true, parse as main expression; if false, treat as a module reference
+     *            if true, parse as main expression; if false, treat as a module
+     *            reference
      */
     public BasicNetworkFactory(final NodeLookupService lookupService, final String program, final boolean anonymous) {
         this.lookupService = lookupService;
@@ -35,8 +35,8 @@ public class BasicNetworkFactory implements NetworkFactory<Node, Link> {
     @Override
     @Nonnull
     public Node createNode(final String name) {
-        ProtelisProgram instance;
-        if(anonymousProgram) {
+        final ProtelisProgram instance;
+        if (anonymousProgram) {
             instance = ProtelisLoader.parseAnonymousModule(program);
         } else {
             instance = ProtelisLoader.parse(program);
