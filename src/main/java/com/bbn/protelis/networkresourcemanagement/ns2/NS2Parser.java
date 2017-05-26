@@ -250,8 +250,11 @@ public final class NS2Parser {
                 emulation.run();
 
             } // reader
+            
+            System.exit(0);
         } catch (final IOException ioe) {
             LOGGER.error("Error reading the file " + args[0], ioe);
+            System.exit(1);
         }
 
     }

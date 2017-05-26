@@ -73,7 +73,7 @@ public class ScenarioRunner<N extends Node, L extends Link> {
     private void waitForTermination() {
         while (true) {
             // Check if we've been told to exit by user click
-            if (visualizer != null && !visualizer.isVisible()) {
+            if (visualizer != null && visualizer.isClosed()) {
                 LOGGER.debug("Termination signalled by user");
                 break;
             }

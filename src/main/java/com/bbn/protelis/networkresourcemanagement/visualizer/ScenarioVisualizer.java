@@ -77,6 +77,16 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
 
     private final Graph<DN, DL> g = new SparseMultigraph<>();
 
+    private boolean closed = false;
+
+    /**
+     * 
+     * @return true if the window has been closed
+     */
+    public boolean isClosed() {
+        return closed;
+    }
+
     // Graph contents
     private Map<DeviceUID, DN> nodes = new HashMap<>();
     private Set<DL> edges = new HashSet<>();
@@ -291,8 +301,9 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
         // The the display that it should kill the remote nodes on window close.
         frame.addWindowListener(new WindowAdapter() {
             @Override
-            public void windowClosing(final WindowEvent e) {
+            public void windowClosed(final WindowEvent e) {
                 // status = ProcessStatus.stop;
+                closed = true;
                 synchronized (closeLock) {
                     closeLock.notifyAll();
                 }
