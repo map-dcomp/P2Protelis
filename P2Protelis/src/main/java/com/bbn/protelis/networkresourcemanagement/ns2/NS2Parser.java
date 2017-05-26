@@ -235,13 +235,11 @@ public final class NS2Parser {
                 return;
             }
 
-            final ProtelisProgram program = ProtelisLoader.parseAnonymousModule("true");
-
             final NodeLookupService lookupService = new LocalNodeLookupService(5000);
 
             final String filename = "ns2/multinode.ns";
             try (Reader reader = new InputStreamReader(new FileInputStream(args[0]), StandardCharsets.UTF_8)) {
-                final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, program);
+                final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, "true", true);
                 final Scenario<Node, Link> scenario = NS2Parser.parse(filename, reader, factory);
 
                 scenario.setTerminationCondition(new NeverTerminate<>());
