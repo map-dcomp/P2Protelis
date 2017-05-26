@@ -1,5 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import javax.annotation.Nonnull;
+
 /**
  * The interface used by a consumer of {@link ResourceSummary} information.
  */
@@ -10,5 +12,6 @@ public interface ResourceSummaryProvider {
      * 
      * @return the most recent summary information. Not null.
      */
-    ResourceSummary getLatestState();
+    @Nonnull
+    ResourceSummary getResourceSummary();
 }

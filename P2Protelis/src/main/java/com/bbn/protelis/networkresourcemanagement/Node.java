@@ -3,6 +3,9 @@ package com.bbn.protelis.networkresourcemanagement;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.annotation.Nonnull;
 
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
@@ -32,13 +35,10 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
      */
     public static final long DEFAULT_SLEEP_TIME_MS = 2 * 1000;
 
-    private long executionCount = 0;
-    private final Object executionCountLock = new Object();
+    private AtomicLong executionCount = new AtomicLong(0);
 
     private void incrementExecutionCount() {
-        synchronized (executionCountLock) {
-            ++executionCount;
-        }
+        executionCount.incrementAndGet();
     }
 
     /**
@@ -48,9 +48,7 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
      *         program.
      */
     public final long getExecutionCount() {
-        synchronized (executionCountLock) {
-            return executionCount;
-        }
+        return executionCount.get();
     }
 
     private long sleepTime = DEFAULT_SLEEP_TIME_MS;
@@ -257,18 +255,42 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
 
     // -------- ResourceSummaryProvider
     @Override
-    public ResourceSummary getLatestState() {
-        // throw new NotImplementedException("Currently unimplemented");
-//        LOGGER.warn("getting state from Node is currently not implemented, returning null");
-        return null;
+    @Nonnull
+    public ResourceSummary getResourceSummary() {
+        return resourceSummary;
     }
 
     // -------- end ResourceSummaryProvider
+
+    private ResourceSummary resourceSummary = new ResourceSummary();
+
+    /**
+     * @param summary
+     *            the new resource summary for area that this node is in
+     */
+    public void setResourceSummary(@Nonnull final ResourceSummary summary) {
+        this.resourceSummary = summary;
+    }
+
+    private ResourceReport latestResourceReport = new ResourceReport();
+
+    /**
+     * Get the latest resource report. This method should be called once per
+     * cycle and then used to make decisions. This method may call directly to
+     * the {@link ResourceManager} to provide gather the information.
+     * 
+     * @return the latest resource report
+     */
+    @Nonnull
+    public ResourceReport getResourceReport() {
+        return this.latestResourceReport;
+    }
+
     /**
      * Gather information about the resources used on this node.
      */
     protected void gatherResourceInformation() {
-        // FIXME implement
+        // FIXME implement to populate latestResourceReport
     }
 
 }
