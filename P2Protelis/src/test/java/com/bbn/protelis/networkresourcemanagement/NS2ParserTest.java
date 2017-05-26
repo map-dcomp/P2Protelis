@@ -37,8 +37,6 @@ public class NS2ParserTest {
      */
     @Test
     public void testSimpleGraph() throws IOException {
-        final ProtelisProgram program = ProtelisLoader.parseAnonymousModule("true");
-
         final NodeLookupService lookupService = new LocalNodeLookupService(5000);
 
         final String filename = "ns2/multinode.ns";
@@ -46,7 +44,12 @@ public class NS2ParserTest {
             Assert.assertNotNull("Couldn't find ns2 file: " + filename, stream);
 
             try (Reader reader = new InputStreamReader(stream)) {
-                final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, program);
+                //String program = "true";
+                //boolean anonymous = true;
+                String program = "/protelis/com/bbn/resourcemanagement/resourcetracker.pt";
+                boolean anonymous = false;
+                
+                final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, program, anonymous);
                 final Scenario<Node, Link> scenario = NS2Parser.parse(filename, reader, factory);
                 Assert.assertNotNull("Parse didn't create a scenario", scenario);
 
