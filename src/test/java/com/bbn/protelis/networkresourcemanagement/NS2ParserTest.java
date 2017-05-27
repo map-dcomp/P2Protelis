@@ -21,6 +21,10 @@ import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
 import com.bbn.protelis.networkresourcemanagement.testbed.termination.ExecutionCountTermination;
+import com.bbn.protelis.networkresourcemanagement.visualizer.BasicNetworkVisualizerFactory;
+import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayEdge;
+import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayNode;
+import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
 
 /**
  * Tests for {@link NS2Parser}.
@@ -61,12 +65,14 @@ public class NS2ParserTest {
                 final Scenario<Node, Link> scenario = NS2Parser.parse(filename, reader, factory);
                 Assert.assertNotNull("Parse didn't create a scenario", scenario);
 
-                final long maxExecutions = 5;
+                final long maxExecutions = 50;//5;
 
                 final TerminationCondition<Map<DeviceUID, Node>> condition = new ExecutionCountTermination<Node>(
                         maxExecutions);
                 scenario.setTerminationCondition(condition);
 
+                //final BasicNetworkVisualizerFactory<Node, Link> visFactory = new BasicNetworkVisualizerFactory<>();
+                //final ScenarioVisualizer<DisplayNode, DisplayEdge, Node, Link> visualizer = new ScenarioVisualizer<>(scenario, visFactory);
                 final ScenarioRunner<Node, Link> emulation = new ScenarioRunner<>(scenario, null);
                 emulation.run();
 

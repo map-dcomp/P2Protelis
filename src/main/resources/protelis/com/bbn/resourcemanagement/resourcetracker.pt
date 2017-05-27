@@ -10,12 +10,38 @@ def once(v) {
 }
 
 def hopDistanceTo(leader) {
-    rep(d <- 0) { mux(leader) { 0 } else { 1 + minHood(nbr(d)) } }
+    rep(d <- Infinity) { mux(leader) { 0 } else { 1 + minHood(nbr(d)) } }
+}
+
+public def countDevices(potential) {
+    C(potential, sum, 1, 0)
+}
+public def C(potential, reduce, local, null) {
+    let nonce = once(self.nextRandomDouble());
+    rep (v <- local) {
+        reduce.apply(local,
+            /*
+             * TODO: switch to accumulateHood
+             */
+            hood(
+                (a, b) -> { reduce.apply(a, b) },
+                // expression that will be evaluated if the field is empty
+                null,
+                mux (nbr(getParent(potential, (v) -> { nonce })) == nonce) { 
+                    nbr(v)
+                } else { null }
+            )
+        )
+    }
 }
 
 def countNodes() {
-    let leader = gossip(once(self.nextRandomDouble()), min);
-    countDevices(hopDistanceTo(leader))
+    let nonce = once(self.nextRandomDouble());
+    let leader = nonce == gossip(nonce, min);
+    //self.putEnvironmentVariable("blue",leader);
+    let d = hopDistanceTo(leader);
+    [leader, countDevices(d)];
+
 }
 
 countNodes();
