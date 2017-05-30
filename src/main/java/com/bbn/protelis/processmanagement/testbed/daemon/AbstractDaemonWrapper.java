@@ -88,10 +88,6 @@ public abstract class AbstractDaemonWrapper implements DaemonWrapper, Daemon.Lis
                 }
             }
             return configs;
-        } catch (IOException e) {
-            logger.error("Configuration information could not be fully read");
-            jr.close();
-            throw e;
         } catch (IllegalAccessException e) {
             logger.error("Configuration specified inaccessible field");
             throw new IOException();
