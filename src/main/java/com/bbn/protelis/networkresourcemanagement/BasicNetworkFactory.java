@@ -18,12 +18,6 @@ public class BasicNetworkFactory implements NetworkFactory<Node, Link> {
     private final boolean anonymousProgram;
 
     /**
-     * The key into extra data passed to {@link #createNode(String, Map)} that
-     * specifies the region for a node.
-     */
-    public static final String EXTRA_DATA_REGION_KEY = "region";
-
-    /**
      * Create a basic factory.
      * 
      * @param lookupService
@@ -51,11 +45,8 @@ public class BasicNetworkFactory implements NetworkFactory<Node, Link> {
         }
         final Node node = new Node(lookupService, instance, name);
 
-        final String region = extraData.get(EXTRA_DATA_REGION_KEY);
-        if (null != region) {
-            node.setRegionName(region);
-        }
-        
+        node.processExtraData(extraData);
+
         return node;
     }
 
