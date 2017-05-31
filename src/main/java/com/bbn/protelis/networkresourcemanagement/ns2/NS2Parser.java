@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -128,7 +129,7 @@ public final class NS2Parser {
 
         String simulator = null;
 
-        try (Reader reader = new InputStreamReader(stream)) {
+        try (Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
             try (BufferedReader bufReader = new BufferedReader(reader)) {
 
                 // final Pattern setRegExp = Pattern.compile("set (\\s+)
