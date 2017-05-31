@@ -2,6 +2,7 @@ package com.bbn.protelis.networkresourcemanagement;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -34,6 +35,12 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
      * Default time to sleep between executions. Specified in milliseconds.
      */
     public static final long DEFAULT_SLEEP_TIME_MS = 2 * 1000;
+
+    /**
+     * The key into extra data passed to {@link #processExtraData(Map)} that
+     * specifies the region for a node.
+     */
+    public static final String EXTRA_DATA_REGION_KEY = "region";
 
     private AtomicLong executionCount = new AtomicLong(0);
 
@@ -111,14 +118,11 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
      *            the name of the node (must be unique)
      * @param lookupService
      *            How to find other nodes
-     * @param regionName
-     *            the region that this node belongs to
      */
-    public Node(final NodeLookupService lookupService, final ProtelisProgram program, final String name//,
-            /*final String regionName*/) {
+    public Node(final NodeLookupService lookupService, final ProtelisProgram program, final String name) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringUID(name);
-//        this.regionName = regionName;
+        this.regionName = null;
 
         // Finish making the new device and add it to our collection
         vm = new ProtelisVM(program, this);
@@ -309,10 +313,24 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
     }
 
     /**
-     * 
-     * @return the name of the region that this node currently belongs to
+     * @return the name of the region that this node currently belongs to, may
+     *         be null
      */
     public String getRegionName() {
         return this.regionName;
+    }
+
+    /**
+     * Process the extra data that was found when creating the node.
+     * 
+     * @param extraData
+     *            key/value pairs
+     * @see NetworkFactory#createNode(String, java.util.Map)
+     */
+    public void processExtraData(@Nonnull final Map<String, String> extraData) {
+        final String region = extraData.get(EXTRA_DATA_REGION_KEY);
+        if (null != region) {
+            this.setRegionName(region);
+        }
     }
 }
