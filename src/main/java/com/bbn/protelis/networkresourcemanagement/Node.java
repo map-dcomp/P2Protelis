@@ -111,10 +111,14 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
      *            the name of the node (must be unique)
      * @param lookupService
      *            How to find other nodes
+     * @param regionName
+     *            the region that this node belongs to
      */
-    public Node(final NodeLookupService lookupService, final ProtelisProgram program, final String name) {
+    public Node(final NodeLookupService lookupService, final ProtelisProgram program, final String name//,
+            /*final String regionName*/) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringUID(name);
+//        this.regionName = regionName;
 
         // Finish making the new device and add it to our collection
         vm = new ProtelisVM(program, this);
@@ -148,7 +152,7 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
     }
 
     @Override
-    public final DeviceUID getDeviceUID() {
+    public final StringUID getDeviceUID() {
         return uid;
     }
 
@@ -293,4 +297,22 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
         // FIXME implement to populate latestResourceReport
     }
 
+    private String regionName;
+
+    /**
+     * 
+     * @param region
+     *            the new region that this node belongs to
+     */
+    public void setRegionName(final String region) {
+        this.regionName = region;
+    }
+
+    /**
+     * 
+     * @return the name of the region that this node currently belongs to
+     */
+    public String getRegionName() {
+        return this.regionName;
+    }
 }

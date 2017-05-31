@@ -1,5 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.util.Map;
+
 import javax.annotation.Nonnull;
 
 import org.protelis.lang.ProtelisLoader;
@@ -14,6 +16,12 @@ public class BasicNetworkFactory implements NetworkFactory<Node, Link> {
     private final NodeLookupService lookupService;
     private final String program;
     private final boolean anonymousProgram;
+
+    /**
+     * The key into extra data passed to {@link #createNode(String, Map)} that
+     * specifies the region for a node.
+     */
+    public static final String EXTRA_DATA_REGION_KEY = "region";
 
     /**
      * Create a basic factory.
@@ -34,14 +42,21 @@ public class BasicNetworkFactory implements NetworkFactory<Node, Link> {
 
     @Override
     @Nonnull
-    public Node createNode(final String name) {
+    public Node createNode(final String name, final Map<String, String> extraData) {
         final ProtelisProgram instance;
         if (anonymousProgram) {
             instance = ProtelisLoader.parseAnonymousModule(program);
         } else {
             instance = ProtelisLoader.parse(program);
         }
-        return new Node(lookupService, instance, name);
+        final Node node = new Node(lookupService, instance, name);
+
+        final String region = extraData.get(EXTRA_DATA_REGION_KEY);
+        if (null != region) {
+            node.setRegionName(region);
+        }
+        
+        return node;
     }
 
     @Override
