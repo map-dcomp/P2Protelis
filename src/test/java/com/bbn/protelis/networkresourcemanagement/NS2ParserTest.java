@@ -44,14 +44,13 @@ public class NS2ParserTest {
 
         final NodeLookupService lookupService = new LocalNodeLookupService(port);
 
-        final String filename = "ns2/multinode.ns";
-        // String program = "true";
-        // boolean anonymous = true;
-        String program = "/protelis/com/bbn/resourcemanagement/resourcetracker.pt";
-        boolean anonymous = false;
+        // final String program = "true";
+        // final boolean anonymous = true;
+        final String program = "/protelis/com/bbn/resourcemanagement/resourcetracker.pt";
+        final boolean anonymous = false;
 
         final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, program, anonymous);
-        final Scenario<Node, Link> scenario = NS2Parser.parseFromResource(filename, "ns2/multinode", factory);
+        final Scenario<Node, Link> scenario = NS2Parser.parseFromResource("multinode", "ns2/multinode", factory);
         Assert.assertNotNull("Parse didn't create a scenario", scenario);
 
         final long maxExecutions = 50;// 5;
