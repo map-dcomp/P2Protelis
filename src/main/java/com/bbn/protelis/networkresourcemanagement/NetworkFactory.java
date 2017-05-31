@@ -1,5 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.util.Map;
+
 import javax.annotation.Nonnull;
 
 /**
@@ -17,18 +19,25 @@ public interface NetworkFactory<N extends Node, L extends Link> {
      * 
      * @param name
      *            the name of the node.
+     * @param extraData
+     *            any extra information that was read in about the the node.
+     *            This can be used for setting additional properties.
      * @return the node. Not null.
      */
     @Nonnull
-    N createNode(String name);
+    N createNode(String name, Map<String, String> extraData);
 
     /**
      * Create a link.
      * 
-     * @param name name of the link
-     * @param left the left node
-     * @param right the right  node
-     * @param bandwidth the bandwidth for the link
+     * @param name
+     *            name of the link
+     * @param left
+     *            the left node
+     * @param right
+     *            the right node
+     * @param bandwidth
+     *            the bandwidth for the link
      * @return the link. Not null.
      */
     @Nonnull
