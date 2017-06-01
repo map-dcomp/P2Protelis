@@ -2,7 +2,6 @@ module com:bbn:resourcemanagement:resourcetracker
 
 import protelis:coord:accumulation
 import protelis:coord:spreading
-import protelis:coord:meta
 import protelis:lang:utils
 import protelis:coord:nonselfstabilizing:accumulation
 
@@ -17,16 +16,6 @@ def hopDistanceTo(leader) {
 public def countDevices(potential) {
     C(potential, sum, 1, 0)
 }
-
-// TODO: check if I can just do this as Tuple.union
-public def union(a, b) {
-    a.union(b);
-}
-
-public def regionSet(potential) {
-	C(potential, union, unionHood(nbr([self.getRegionName()])), []);
-}
-
 public def C(potential, reduce, local, null) {
     let nonce = once(self.nextRandomDouble());
     rep (v <- local) {
@@ -52,19 +41,7 @@ def countNodes() {
     //self.putEnvironmentVariable("blue",leader);
     let d = hopDistanceTo(leader);
     [leader, countDevices(d)];
+
 }
 
-def nbrRegions() {
-    let nonce = once(self.nextRandomDouble());
-    let leader = nonce == gossip(nonce, min);
-    //self.putEnvironmentVariable("blue",leader);
-    let d = hopDistanceTo(leader);
-    [leader, countDevices(d), regionSet(d)];
-}
-
-nbrRegions();
-
-//let rgn = self.getRegionName();
-//multiRegion(rgn,(n) -> { rgn == n },nbrRegions,[]);
-//multiRegion(rgn,(n) -> { rgn == n },() -> { rgn },[]);
-//multiRegion(2,(n) -> { 2 == n },() -> { 2 },NaN);
+countNodes();
