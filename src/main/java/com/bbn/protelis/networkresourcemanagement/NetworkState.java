@@ -1,15 +1,11 @@
 package com.bbn.protelis.networkresourcemanagement;
 
-import java.io.Serializable;
-
 import javax.annotation.Nonnull;
 
 /**
  * Contains the network information known to an individual {@link Node}.
  */
-public class NetworkState implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class NetworkState {
 
     /**
      * Create an object with no known network state.
