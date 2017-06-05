@@ -8,7 +8,6 @@ import javax.annotation.Nonnull;
 
 /**
  * Information about a node at a particular point in time.
- *
  */
 public class ResourceReport {
 

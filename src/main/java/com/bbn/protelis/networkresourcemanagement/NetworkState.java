@@ -15,8 +15,8 @@ public class NetworkState {
      */
     public NetworkState(@Nonnull final Node node) {
         this.node = node;
-        this.regionSummary = RegionSummary.getNullSummary(node.getName());
-        this.regionPlan = RegionPlan.getNullPlan(node.getName());
+        this.regionSummary = ResourceSummary.getNullSummary(node.getRegionName());
+        this.regionPlan = RegionPlan.getNullPlan(node.getRegionName());
     }
 
     private final Node node;
@@ -29,14 +29,14 @@ public class NetworkState {
         return node;
     }
 
-    private RegionSummary regionSummary;
+    private ResourceSummary regionSummary;
 
     /**
      * 
      * @return the summary for the region.
      */
     @Nonnull
-    public RegionSummary getRegionSummary() {
+    public ResourceSummary getRegionSummary() {
         return this.regionSummary;
     }
 
@@ -49,7 +49,7 @@ public class NetworkState {
      * @throws IllegalArgumentException
      *             if the summary is for a different region than the node
      */
-    public void setRegionSummary(@Nonnull final RegionSummary summary) {
+    public void setRegionSummary(@Nonnull final ResourceSummary summary) {
         if (!summary.getRegionName().equals(getNode().getRegionName())) {
             throw new IllegalArgumentException(
                     "Region summary must be for the same region as the network state object");
