@@ -47,7 +47,7 @@ public class RegionPlan implements Serializable {
      * @return name of the region
      */
     @Nonnull
-    public String getName() {
+    public String getRegionName() {
         return regionName;
     }
 

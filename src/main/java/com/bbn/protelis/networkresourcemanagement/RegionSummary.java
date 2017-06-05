@@ -47,7 +47,7 @@ public class RegionSummary implements Serializable {
     /**
      * @return the name of the region
      */
-    public final String getName() {
+    public final String getRegionName() {
         return name;
     }
 

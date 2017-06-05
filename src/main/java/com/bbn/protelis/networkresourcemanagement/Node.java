@@ -123,6 +123,7 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringUID(name);
         this.regionName = null;
+        this.networkState = new NetworkState(this);
 
         // Finish making the new device and add it to our collection
         vm = new ProtelisVM(program, this);
@@ -332,5 +333,18 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
         if (null != region) {
             this.setRegionName(region);
         }
+    }
+
+    private final NetworkState networkState;
+
+    /**
+     * All of the information that this node knows about the state of the
+     * network.
+     * 
+     * @return the network state
+     */
+    @Nonnull
+    public NetworkState getNetworkState() {
+        return networkState;
     }
 }
