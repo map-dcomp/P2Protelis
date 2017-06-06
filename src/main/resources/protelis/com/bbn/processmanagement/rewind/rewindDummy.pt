@@ -2,7 +2,7 @@ module com:bbn:processmanagement:rewindDummy
 
 import java.lang.Math.min
 
-import org:protelis:time
+import protelis:state:nonselfstabilizing:time
 
 def findIncomingMatches(record,nbrBad) {
 	let nbrUIDs = nbrBad.filter(self, (m) -> { !m.isIncoming(); })
@@ -96,7 +96,7 @@ if(!clean) {
 self.putEnvironmentVariable("red",contaminated.size()>0);
 self.putEnvironmentVariable("green",badness.size()==0);
 
-self.putEnvironmentVariable("timer",timer());
+self.putEnvironmentVariable("timer",timeSinceStart());
 self.putEnvironmentVariable("rounds",counter());
 
 
