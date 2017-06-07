@@ -40,8 +40,6 @@ import com.bbn.protelis.utils.StringUID;
 import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 
-import java8.util.Objects;
-
 /**
  * Read NS2 files in and create a network for protelis.
  */
@@ -229,11 +227,13 @@ public final class NS2Parser {
 
                                     final N leftNode = nodesByName.get(leftNodeName);
                                     final N rightNode = nodesByName.get(rightNodeName);
-                                    leftNode.addNeighbor(rightNode);
-                                    rightNode.addNeighbor(leftNode);
 
                                     final L link = factory.createLink(name, leftNode, rightNode,
                                             bandwidth * bandwidthMultiplier);
+                                    
+                                    leftNode.addNeighbor(rightNode, link.getBandwidth());
+                                    rightNode.addNeighbor(leftNode, link.getBandwidth());
+
                                     links.add(link);
                                 } else {
                                     throw new NS2FormatException(

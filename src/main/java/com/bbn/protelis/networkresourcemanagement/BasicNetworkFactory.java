@@ -43,7 +43,10 @@ public class BasicNetworkFactory implements NetworkFactory<Node, Link> {
         } else {
             instance = ProtelisLoader.parse(program);
         }
-        final Node node = new Node(lookupService, instance, name);
+
+        final BasicResourceManager manager = new BasicResourceManager(name, extraData);
+        final Node node = new Node(lookupService, instance, name, manager);
+        manager.setNode(node);
 
         node.processExtraData(extraData);
 
