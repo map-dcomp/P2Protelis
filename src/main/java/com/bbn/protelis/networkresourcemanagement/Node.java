@@ -130,6 +130,7 @@ public class Node extends AbstractExecutionContext {
         this.uid = new StringUID(name);
         this.regionName = NULL_REGION_NAME;
         this.networkState = new NetworkState(this);
+        this.latestResourceReport = ResourceReport.getNullReport(getName());
 
         // Finish making the new device and add it to our collection
         vm = new ProtelisVM(program, this);
@@ -268,7 +269,7 @@ public class Node extends AbstractExecutionContext {
         }
     }
 
-    private ResourceReport latestResourceReport = new ResourceReport();
+    private ResourceReport latestResourceReport;
 
     /**
      * Get the latest resource report. This method should be called once per

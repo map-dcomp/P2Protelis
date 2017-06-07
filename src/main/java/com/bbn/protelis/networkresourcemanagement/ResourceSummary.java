@@ -118,7 +118,7 @@ public class ResourceSummary implements Serializable {
     }
 
     /**
-     * Merge an two summaries.
+     * Merge two summaries.
      * 
      * @param one
      *            the first summary to merge. Not null.
@@ -130,7 +130,7 @@ public class ResourceSummary implements Serializable {
      *             if the 2 summaries are not for the same region
      */
     @Nonnull
-    public ResourceSummary merge(@Nonnull final ResourceSummary one, @Nonnull final ResourceSummary two) {
+    public static ResourceSummary merge(@Nonnull final ResourceSummary one, @Nonnull final ResourceSummary two) {
         if (!one.getRegionName().equals(two.getRegionName())) {
             throw new IllegalArgumentException("Cannot merge resource summaries from different regions");
         }
@@ -145,7 +145,39 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = mergeStringAnyDoubleMapViaSum(
                 one.getNeighborLinkDemand(), two.getNeighborLinkDemand());
 
-        return new ResourceSummary(name, clientDemand, serverCapacity, neighborLinkCapacity, neighborLinkDemand);
+        return new ResourceSummary(one.getRegionName(), clientDemand, serverCapacity, neighborLinkCapacity,
+                neighborLinkDemand);
+    }
+
+    /**
+     * Merge a report and a summary.
+     * 
+     * @param report
+     *            the report to merge. Not null.
+     * @param summary
+     *            the summary to merge. Not null.
+     * @return a newly created summary. Not null, but may be the result of
+     *         {@link #getNullSummary()}.
+     */
+    @Nonnull
+    public static ResourceSummary merge(@Nonnull final ResourceReport report, @Nonnull final ResourceSummary summary) {
+
+        // TODO: do we need to check the region of the report?
+
+        final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
+                report.getClientDemand(), summary.getClientDemand());
+
+        final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeNodeDoubleMapViaSum(report.getServerCapacity(),
+                summary.getServerCapacity());
+
+        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = mergeStringAnyDoubleMapViaSum(
+                report.getNeighborLinkCapacity(), summary.getNeighborLinkCapacity());
+
+        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = mergeStringAnyDoubleMapViaSum(
+                report.getNeighborLinkDemand(), summary.getNeighborLinkDemand());
+
+        return new ResourceSummary(summary.getRegionName(), clientDemand, serverCapacity, neighborLinkCapacity,
+                neighborLinkDemand);
     }
 
     @Nonnull
