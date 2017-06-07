@@ -1,7 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.utils.StringUID;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * A node in the network.
@@ -85,35 +86,54 @@ public class Node extends AbstractExecutionContext {
     /**
      * The neighboring nodes.
      */
-    private final Set<DeviceUID> neighbors = new HashSet<>();
+    private final Map<StringUID, Double> neighbors = new HashMap<>();
 
     /**
      * The neighbors of this {@link Node}.
      * 
      * @return unmodifiable set
      */
-    public final Set<DeviceUID> getNeighbors() {
-        return Collections.unmodifiableSet(neighbors);
+    @Nonnull
+    public final Set<StringUID> getNeighbors() {
+        return Collections.unmodifiableSet(neighbors.keySet());
     }
 
     /**
-     * Add a neighbor.
+     * Add a neighbor. If the neighbor already exists, the bandwidth capacity
+     * for the neighbor is replaced with the new value.
      * 
      * @param v
      *            the UID of the neighbor
+     * @param bandwidth
+     *            capacity to the neighbor in bits per second. Infinity can be
+     *            used for unknown.
      */
-    public final void addNeighbor(final DeviceUID v) {
-        neighbors.add(v);
+    public final void addNeighbor(@Nonnull final StringUID v, final double bandwidth) {
+        neighbors.put(v, bandwidth);
     }
 
     /**
      * 
      * @param v
      *            the neighbor to add
-     * @see #addNeighbor(DeviceUID)
+     * @param bandwidth
+     *            to the neighbor in bits per second
+     * @see #addNeighbor(DeviceUID, double)
      */
-    public final void addNeighbor(final Node v) {
-        addNeighbor(v.getDeviceUID());
+    public final void addNeighbor(@Nonnull final Node v, final double bandwidth) {
+        addNeighbor(v.getDeviceUID(), bandwidth);
+    }
+
+    /**
+     * @return link capacity to neighbors
+     * @see #addNeighbor(DeviceUID, double)
+     * @see ResourceReport#getNeighborLinkCapacity()
+     */
+    @Nonnull
+    public ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
+        ImmutableMap.Builder<String, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
+        neighbors.forEach((k, v) -> builder.put(k.getUID(), ImmutableMap.of(LinkAttribute.DATARATE, v)));
+        return builder.build();
     }
 
     /**
@@ -123,14 +143,16 @@ public class Node extends AbstractExecutionContext {
      *            the name of the node (must be unique)
      * @param lookupService
      *            How to find other nodes
+     * @param resourceManager
+     *            where to get resource information from
      */
     public Node(@Nonnull final NodeLookupService lookupService, @Nonnull final ProtelisProgram program,
-            @Nonnull final String name) {
+            @Nonnull final String name, @Nonnull final ResourceManager resourceManager) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringUID(name);
         this.regionName = NULL_REGION_NAME;
         this.networkState = new NetworkState(this);
-        this.latestResourceReport = ResourceReport.getNullReport(getName());
+        this.resourceManager = resourceManager;
 
         // Finish making the new device and add it to our collection
         vm = new ProtelisVM(program, this);
@@ -203,8 +225,6 @@ public class Node extends AbstractExecutionContext {
             try {
                 preRunCycle();
 
-                gatherResourceInformation();
-
                 getVM().runCycle(); // execute the Protelis program
                 incrementExecutionCount();
 
@@ -269,7 +289,7 @@ public class Node extends AbstractExecutionContext {
         }
     }
 
-    private ResourceReport latestResourceReport;
+    private final ResourceManager resourceManager;
 
     /**
      * Get the latest resource report. This method should be called once per
@@ -280,14 +300,7 @@ public class Node extends AbstractExecutionContext {
      */
     @Nonnull
     public ResourceReport getResourceReport() {
-        return this.latestResourceReport;
-    }
-
-    /**
-     * Gather information about the resources used on this node.
-     */
-    protected void gatherResourceInformation() {
-        // FIXME implement to populate latestResourceReport
+        return resourceManager.getCurrentResourceReport();
     }
 
     private String regionName;
@@ -320,10 +333,10 @@ public class Node extends AbstractExecutionContext {
      *            key/value pairs
      * @see NetworkFactory#createNode(String, java.util.Map)
      */
-    public void processExtraData(@Nonnull final Map<String, String> extraData) {
-        final String region = extraData.get(EXTRA_DATA_REGION_KEY);
+    public void processExtraData(@Nonnull final Map<String, Object> extraData) {
+        final Object region = extraData.get(EXTRA_DATA_REGION_KEY);
         if (null != region) {
-            this.setRegionName(region);
+            this.setRegionName(region.toString());
         }
     }
 

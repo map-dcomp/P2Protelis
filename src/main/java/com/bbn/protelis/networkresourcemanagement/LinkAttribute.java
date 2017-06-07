@@ -8,7 +8,7 @@ package com.bbn.protelis.networkresourcemanagement;
 public enum LinkAttribute {
 
     /**
-     * Capacity or usage in bytes per second.
+     * Capacity or usage in bits per second.
      */
     DATARATE
 
