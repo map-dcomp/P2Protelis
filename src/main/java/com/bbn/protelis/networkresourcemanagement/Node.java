@@ -21,7 +21,12 @@ import com.bbn.protelis.utils.StringUID;
 /**
  * A node in the network.
  */
-public class Node extends AbstractExecutionContext implements ResourceSummaryProvider {
+public class Node extends AbstractExecutionContext {
+
+    /**
+     * Used when there is no region name.
+     */
+    public static final String NULL_REGION_NAME = "__null-region__";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Node.class);
 
@@ -119,10 +124,13 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
      * @param lookupService
      *            How to find other nodes
      */
-    public Node(final NodeLookupService lookupService, final ProtelisProgram program, final String name) {
+    public Node(@Nonnull final NodeLookupService lookupService, @Nonnull final ProtelisProgram program,
+            @Nonnull final String name) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringUID(name);
-        this.regionName = null;
+        this.regionName = NULL_REGION_NAME;
+        this.networkState = new NetworkState(this);
+        this.latestResourceReport = ResourceReport.getNullReport(getName());
 
         // Finish making the new device and add it to our collection
         vm = new ProtelisVM(program, this);
@@ -261,26 +269,7 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
         }
     }
 
-    // -------- ResourceSummaryProvider
-    @Override
-    @Nonnull
-    public ResourceSummary getResourceSummary() {
-        return resourceSummary;
-    }
-
-    // -------- end ResourceSummaryProvider
-
-    private ResourceSummary resourceSummary = new ResourceSummary();
-
-    /**
-     * @param summary
-     *            the new resource summary for area that this node is in
-     */
-    public void setResourceSummary(@Nonnull final ResourceSummary summary) {
-        this.resourceSummary = summary;
-    }
-
-    private ResourceReport latestResourceReport = new ResourceReport();
+    private ResourceReport latestResourceReport;
 
     /**
      * Get the latest resource report. This method should be called once per
@@ -304,12 +293,16 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
     private String regionName;
 
     /**
+     * Changing the region has the side effect of resetting the resource
+     * summary.
      * 
      * @param region
      *            the new region that this node belongs to
+     * @see NetworkState#getRegionSummary()
      */
     public void setRegionName(final String region) {
         this.regionName = region;
+        this.getNetworkState().setRegionSummary(ResourceSummary.getNullSummary(region));
     }
 
     /**
@@ -332,5 +325,18 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
         if (null != region) {
             this.setRegionName(region);
         }
+    }
+
+    private final NetworkState networkState;
+
+    /**
+     * All of the information that this node knows about the state of the
+     * network.
+     * 
+     * @return the network state
+     */
+    @Nonnull
+    public NetworkState getNetworkState() {
+        return networkState;
     }
 }
