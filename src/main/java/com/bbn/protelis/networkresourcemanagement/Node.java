@@ -320,10 +320,10 @@ public class Node extends AbstractExecutionContext {
      *            key/value pairs
      * @see NetworkFactory#createNode(String, java.util.Map)
      */
-    public void processExtraData(@Nonnull final Map<String, String> extraData) {
-        final String region = extraData.get(EXTRA_DATA_REGION_KEY);
+    public void processExtraData(@Nonnull final Map<String, Object> extraData) {
+        final Object region = extraData.get(EXTRA_DATA_REGION_KEY);
         if (null != region) {
-            this.setRegionName(region);
+            this.setRegionName(region.toString());
         }
     }
 

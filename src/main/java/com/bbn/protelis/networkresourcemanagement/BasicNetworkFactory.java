@@ -36,7 +36,7 @@ public class BasicNetworkFactory implements NetworkFactory<Node, Link> {
 
     @Override
     @Nonnull
-    public Node createNode(final String name, final Map<String, String> extraData) {
+    public Node createNode(final String name, final Map<String, Object> extraData) {
         final ProtelisProgram instance;
         if (anonymousProgram) {
             instance = ProtelisLoader.parseAnonymousModule(program);

@@ -177,7 +177,7 @@ public final class NS2Parser {
 
                                 final String objectType = tokens[1];
 
-                                final Map<String, String> extraData;
+                                final Map<String, Object> extraData;
                                 if (readingFromFile) {
                                     extraData = getNodeDataFromFile(baseDirectory, name);
                                 } else {
@@ -288,7 +288,7 @@ public final class NS2Parser {
      *             if there is an error reading from the file
      */
     @Nonnull
-    private static Map<String, String> getNodeDataFromResource(final String baseDirectory, final String nodeName)
+    private static Map<String, Object> getNodeDataFromResource(final String baseDirectory, final String nodeName)
             throws IOException {
 
         final String path = baseDirectory + "/" + nodeName + ".json";
@@ -312,7 +312,7 @@ public final class NS2Parser {
      *             if there is an error reading from the file
      */
     @Nonnull
-    private static Map<String, String> getNodeDataFromFile(final String baseDirectory, final String nodeName)
+    private static Map<String, Object> getNodeDataFromFile(final String baseDirectory, final String nodeName)
             throws IOException {
 
         final String path = baseDirectory + "/" + nodeName + ".json";
@@ -327,17 +327,15 @@ public final class NS2Parser {
 
     }
 
-    private static Map<String, String> getNodeDataFromStream(final InputStream stream) {
-        final Map<String, String> extraData = new HashMap<>();
+    private static Map<String, Object> getNodeDataFromStream(final InputStream stream) {
         if (null != stream) {
             @SuppressWarnings("unchecked")
             final JsonObject<String, Object> obj = (JsonObject<String, Object>) JsonReader.jsonToJava(stream,
                     Collections.singletonMap(JsonReader.USE_MAPS, true));
-            for (Map.Entry<String, Object> entry : obj.entrySet()) {
-                extraData.put(entry.getKey(), Objects.toString(entry.getValue()));
-            }
-        } // non-null stream
-        return extraData;
+            return obj;
+        } else {
+            return Collections.emptyMap();
+        }
     }
 
     /**

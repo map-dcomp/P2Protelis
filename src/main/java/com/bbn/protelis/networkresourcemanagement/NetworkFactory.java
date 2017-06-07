@@ -25,7 +25,7 @@ public interface NetworkFactory<N extends Node, L extends Link> {
      * @return the node. Not null.
      */
     @Nonnull
-    N createNode(String name, Map<String, String> extraData);
+    N createNode(String name, Map<String, Object> extraData);
 
     /**
      * Create a link.
