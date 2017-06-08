@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Detailed resource information for the nodes in a region.
  */
-public class RegionNodeState implements Serializable {
+public class RegionNodeState {
 
     private static final long serialVersionUID = 1L;
 
