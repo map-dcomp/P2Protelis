@@ -3,30 +3,30 @@ package com.bbn.protelis.networkresourcemanagement;
 import javax.annotation.Nonnull;
 
 /**
- * Contains the network information known to an individual {@link Node}.
+ * Contains the network information for a region.
  */
 public class NetworkState {
 
     /**
      * Create an object with no known network state.
      *
-     * @param node
-     *            the node that this state is attached to
+     * @param regionName
+     *            the region that this state is for
      */
-    public NetworkState(@Nonnull final Node node) {
-        this.node = node;
-        this.regionSummary = ResourceSummary.getNullSummary(node.getRegionName());
-        this.regionPlan = RegionPlan.getNullPlan(node.getRegionName());
+    public NetworkState(final String regionName) {
+        this.regionName = regionName;
+        this.regionSummary = ResourceSummary.getNullSummary(regionName);
+        this.regionPlan = RegionPlan.getNullPlan(regionName);
     }
 
-    private final Node node;
+    private final String regionName;
 
     /**
-     * @return the node that this network state is for
+     * @return the region that this network state is for
      */
     @Nonnull
-    public Node getNode() {
-        return node;
+    public String getRegionName() {
+        return regionName;
     }
 
     private ResourceSummary regionSummary;
@@ -50,7 +50,7 @@ public class NetworkState {
      *             if the summary is for a different region than the node
      */
     public void setRegionSummary(@Nonnull final ResourceSummary summary) {
-        if (!summary.getRegionName().equals(getNode().getRegionName())) {
+        if (!summary.getRegionName().equals(this.regionName)) {
             throw new IllegalArgumentException(
                     "Region summary must be for the same region as the network state object");
         }
@@ -76,7 +76,7 @@ public class NetworkState {
      *             if the plan is for a different region than the node
      */
     public void setRegionPlan(@Nonnull final RegionPlan plan) {
-        if (!plan.getRegionName().equals(getNode().getRegionName())) {
+        if (!plan.getRegionName().equals(this.regionName)) {
             throw new IllegalArgumentException(
                     "Region summary must be for the same region as the network state object");
         }

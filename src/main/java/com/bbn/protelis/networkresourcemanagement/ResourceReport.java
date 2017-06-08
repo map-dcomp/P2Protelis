@@ -1,5 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.io.Serializable;
+
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableMap;
@@ -7,7 +9,9 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Information about a node at a particular point in time.
  */
-public class ResourceReport {
+public class ResourceReport implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /**
      * 
