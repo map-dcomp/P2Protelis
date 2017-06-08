@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * A node in the network.
  */
-public class Node extends AbstractExecutionContext {
+public class Node extends AbstractExecutionContext implements NetworkStateProvider {
 
     /**
      * Used when there is no region name.
@@ -151,7 +151,7 @@ public class Node extends AbstractExecutionContext {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringUID(name);
         this.regionName = NULL_REGION_NAME;
-        this.networkState = new NetworkState(this);
+        this.networkState = new NetworkState(this.regionName);
         this.resourceManager = resourceManager;
 
         // Finish making the new device and add it to our collection
@@ -306,16 +306,15 @@ public class Node extends AbstractExecutionContext {
     private String regionName;
 
     /**
-     * Changing the region has the side effect of resetting the resource
-     * summary.
+     * Changing the region has the side effect of resetting the network state.
      * 
      * @param region
      *            the new region that this node belongs to
-     * @see NetworkState#getRegionSummary()
+     * @see #getNetworkState()
      */
     public void setRegionName(final String region) {
         this.regionName = region;
-        this.getNetworkState().setRegionSummary(ResourceSummary.getNullSummary(region));
+        this.networkState = new NetworkState(region);
     }
 
     /**
@@ -340,14 +339,9 @@ public class Node extends AbstractExecutionContext {
         }
     }
 
-    private final NetworkState networkState;
+    private NetworkState networkState;
 
-    /**
-     * All of the information that this node knows about the state of the
-     * network.
-     * 
-     * @return the network state
-     */
+    @Override
     @Nonnull
     public NetworkState getNetworkState() {
         return networkState;
