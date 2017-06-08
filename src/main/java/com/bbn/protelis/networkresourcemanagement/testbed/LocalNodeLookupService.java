@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.protelis.lang.datatype.DeviceUID;
 
-import com.bbn.protelis.networkresourcemanagement.Node;
 import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
 
 /**
