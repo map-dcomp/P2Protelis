@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * A node in the network.
  */
-public class Node extends AbstractExecutionContext implements NetworkStateProvider {
+public class Node extends AbstractExecutionContext implements NetworkStateProvider, RegionNodeStateProvider {
 
     /**
      * Used when there is no region name.
@@ -152,6 +152,7 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
         this.uid = new StringUID(name);
         this.regionName = NULL_REGION_NAME;
         this.networkState = new NetworkState(this.regionName);
+        this.regionNodeState = new RegionNodeState(this.regionName);
         this.resourceManager = resourceManager;
 
         // Finish making the new device and add it to our collection
@@ -306,7 +307,7 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
     private String regionName;
 
     /**
-     * Changing the region has the side effect of resetting the network state.
+     * Changing the region has the side effect of resetting the network state and the regional node state.
      * 
      * @param region
      *            the new region that this node belongs to
@@ -314,7 +315,8 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
      */
     public void setRegionName(final String region) {
         this.regionName = region;
-        this.networkState = new NetworkState(region);
+        this.networkState = new NetworkState(this.regionName);
+        this.regionNodeState = new RegionNodeState(this.regionName);
     }
 
     /**
@@ -339,6 +341,7 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
         }
     }
 
+    // ---- NetworkStateProvider
     private NetworkState networkState;
 
     @Override
@@ -346,4 +349,16 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
     public NetworkState getNetworkState() {
         return networkState;
     }
+    // ---- end NetworkStateProvider
+
+    // ---- RegionNodeStateProvider
+    private RegionNodeState regionNodeState;
+
+    @Override
+    @Nonnull
+    public RegionNodeState getRegionNodeState() {
+        return regionNodeState;
+    }
+    // ---- end RegionNodeStateProvider
+
 }
