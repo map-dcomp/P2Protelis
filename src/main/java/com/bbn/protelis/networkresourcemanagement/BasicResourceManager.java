@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Basic {@Link ResourceManager} that expects to get report values from the
+ * Basic {@link ResourceManager} that expects to get report values from the
  * extra data that was parsed when the node was created.
  */
 public class BasicResourceManager implements ResourceManager {

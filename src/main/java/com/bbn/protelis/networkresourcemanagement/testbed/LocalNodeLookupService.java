@@ -14,7 +14,7 @@ import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
  * Assume all nodes are running on localhost. A single instance must be used for
  * all lookups. Each node gets a port number starting at the base port and
  * counting up for each new node that is passed to
- * {@link #getInetAddressForNode(Node)}. This class is thread-safe.
+ * {@link #getInetAddressForNode(DeviceUID)}. This class is thread-safe.
  * 
  */
 public class LocalNodeLookupService implements NodeLookupService {

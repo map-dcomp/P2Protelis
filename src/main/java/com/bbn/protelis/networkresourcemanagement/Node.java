@@ -118,7 +118,7 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
      *            the neighbor to add
      * @param bandwidth
      *            to the neighbor in bits per second
-     * @see #addNeighbor(DeviceUID, double)
+     * @see #addNeighbor(StringUID, double)
      */
     public final void addNeighbor(@Nonnull final Node v, final double bandwidth) {
         addNeighbor(v.getDeviceUID(), bandwidth);
@@ -126,7 +126,7 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
 
     /**
      * @return link capacity to neighbors
-     * @see #addNeighbor(DeviceUID, double)
+     * @see #addNeighbor(StringUID, double)
      * @see ResourceReport#getNeighborLinkCapacity()
      */
     @Nonnull
