@@ -9,28 +9,28 @@
 
 	<dependencies>
 		<dependency>
-		  <groupId>com.cedarsoftware</groupId>
-		  <artifactId>json-io</artifactId>
-		  <version>4.9.12</version>
+			<groupId>com.cedarsoftware</groupId>
+			<artifactId>json-io</artifactId>
+			<version>4.9.12</version>
 		</dependency>
-<!-- Kludge until issue #121 fixed -->
-<dependency>
-    <groupId>com.google.guava</groupId>
-    <artifactId>guava</artifactId>
-    <version>22.0</version>
-</dependency>
- 	  	<dependency>
-  			<groupId>org.protelis</groupId>
-  			<artifactId>protelis</artifactId>
-	  		<version>10.5.0</version>
-<exclusions>
-    <!--  Kludge until issue #121 fixed -->
-    <exclusion>
-      <artifactId>guava</artifactId>
-      <groupId>com.google.guava</groupId>
-    </exclusion>
-  </exclusions> 
-   		</dependency>
+		<!-- Kludge until issue #121 fixed -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>22.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.protelis</groupId>
+			<artifactId>protelis</artifactId>
+			<version>10.5.0</version>
+			<exclusions>
+				<!-- Kludge until issue #121 fixed -->
+				<exclusion>
+					<artifactId>guava</artifactId>
+					<groupId>com.google.guava</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -113,7 +113,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>findbugs-maven-plugin</artifactId>
-				<version>3.0.5-SNAPSHOT</version>
+				<version>3.0.4</version>
 				<configuration>
 					<xmlOutput>true</xmlOutput>
 					<!-- Optional directory to put findbugs xdoc xml report -->
@@ -122,5 +122,5 @@
 			</plugin>
 		</plugins>
 	</reporting>
-  
+
 </project>
