@@ -11,8 +11,6 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import org.protelis.lang.datatype.DeviceUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.networkresourcemanagement.Node;
 
@@ -20,8 +18,6 @@ import com.bbn.protelis.networkresourcemanagement.Node;
  * An object for displaying a {@link Node}.
  */
 public class DisplayNode {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DisplayNode.class);
 
     // Image collection:
     private static final Icon SERVER_RUN = new ImageIcon(DisplayNode.class.getResource("/server-small-green.png"));

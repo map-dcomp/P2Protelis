@@ -1,14 +1,13 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nonnull;
 
-import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
 import org.protelis.vm.impl.AbstractExecutionContext;
@@ -17,11 +16,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.utils.StringUID;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * A node in the network.
  */
-public class Node extends AbstractExecutionContext implements ResourceSummaryProvider {
+public class Node extends AbstractExecutionContext implements NetworkStateProvider, RegionNodeStateProvider {
+
+    /**
+     * Used when there is no region name.
+     */
+    public static final String NULL_REGION_NAME = "__null-region__";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Node.class);
 
@@ -80,35 +85,54 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
     /**
      * The neighboring nodes.
      */
-    private final Set<DeviceUID> neighbors = new HashSet<>();
+    private final Map<StringUID, Double> neighbors = new HashMap<>();
 
     /**
      * The neighbors of this {@link Node}.
      * 
      * @return unmodifiable set
      */
-    public final Set<DeviceUID> getNeighbors() {
-        return Collections.unmodifiableSet(neighbors);
+    @Nonnull
+    public final Set<StringUID> getNeighbors() {
+        return Collections.unmodifiableSet(neighbors.keySet());
     }
 
     /**
-     * Add a neighbor.
+     * Add a neighbor. If the neighbor already exists, the bandwidth capacity
+     * for the neighbor is replaced with the new value.
      * 
      * @param v
      *            the UID of the neighbor
+     * @param bandwidth
+     *            capacity to the neighbor in bits per second. Infinity can be
+     *            used for unknown.
      */
-    public final void addNeighbor(final DeviceUID v) {
-        neighbors.add(v);
+    public final void addNeighbor(@Nonnull final StringUID v, final double bandwidth) {
+        neighbors.put(v, bandwidth);
     }
 
     /**
      * 
      * @param v
      *            the neighbor to add
-     * @see #addNeighbor(DeviceUID)
+     * @param bandwidth
+     *            to the neighbor in bits per second
+     * @see #addNeighbor(StringUID, double)
      */
-    public final void addNeighbor(final Node v) {
-        addNeighbor(v.getDeviceUID());
+    public final void addNeighbor(@Nonnull final Node v, final double bandwidth) {
+        addNeighbor(v.getDeviceUID(), bandwidth);
+    }
+
+    /**
+     * @return link capacity to neighbors
+     * @see #addNeighbor(StringUID, double)
+     * @see ResourceReport#getNeighborLinkCapacity()
+     */
+    @Nonnull
+    public ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
+        ImmutableMap.Builder<String, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
+        neighbors.forEach((k, v) -> builder.put(k.getUID(), ImmutableMap.of(LinkAttribute.DATARATE, v)));
+        return builder.build();
     }
 
     /**
@@ -118,11 +142,17 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
      *            the name of the node (must be unique)
      * @param lookupService
      *            How to find other nodes
+     * @param resourceManager
+     *            where to get resource information from
      */
-    public Node(final NodeLookupService lookupService, final ProtelisProgram program, final String name) {
+    public Node(@Nonnull final NodeLookupService lookupService, @Nonnull final ProtelisProgram program,
+            @Nonnull final String name, @Nonnull final ResourceManager resourceManager) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringUID(name);
-        this.regionName = null;
+        this.regionName = NULL_REGION_NAME;
+        this.networkState = new NetworkState(this.regionName);
+        this.regionNodeState = new RegionNodeState(this.regionName);
+        this.resourceManager = resourceManager;
 
         // Finish making the new device and add it to our collection
         vm = new ProtelisVM(program, this);
@@ -195,8 +225,6 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
             try {
                 preRunCycle();
 
-                gatherResourceInformation();
-
                 getVM().runCycle(); // execute the Protelis program
                 incrementExecutionCount();
 
@@ -261,26 +289,7 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
         }
     }
 
-    // -------- ResourceSummaryProvider
-    @Override
-    @Nonnull
-    public ResourceSummary getResourceSummary() {
-        return resourceSummary;
-    }
-
-    // -------- end ResourceSummaryProvider
-
-    private ResourceSummary resourceSummary = new ResourceSummary();
-
-    /**
-     * @param summary
-     *            the new resource summary for area that this node is in
-     */
-    public void setResourceSummary(@Nonnull final ResourceSummary summary) {
-        this.resourceSummary = summary;
-    }
-
-    private ResourceReport latestResourceReport = new ResourceReport();
+    private final ResourceManager resourceManager;
 
     /**
      * Get the latest resource report. This method should be called once per
@@ -291,25 +300,22 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
      */
     @Nonnull
     public ResourceReport getResourceReport() {
-        return this.latestResourceReport;
-    }
-
-    /**
-     * Gather information about the resources used on this node.
-     */
-    protected void gatherResourceInformation() {
-        // FIXME implement to populate latestResourceReport
+        return resourceManager.getCurrentResourceReport();
     }
 
     private String regionName;
 
     /**
+     * Changing the region has the side effect of resetting the network state and the regional node state.
      * 
      * @param region
      *            the new region that this node belongs to
+     * @see #getNetworkState()
      */
     public void setRegionName(final String region) {
         this.regionName = region;
+        this.networkState = new NetworkState(this.regionName);
+        this.regionNodeState = new RegionNodeState(this.regionName);
     }
 
     /**
@@ -327,10 +333,31 @@ public class Node extends AbstractExecutionContext implements ResourceSummaryPro
      *            key/value pairs
      * @see NetworkFactory#createNode(String, java.util.Map)
      */
-    public void processExtraData(@Nonnull final Map<String, String> extraData) {
-        final String region = extraData.get(EXTRA_DATA_REGION_KEY);
+    public void processExtraData(@Nonnull final Map<String, Object> extraData) {
+        final Object region = extraData.get(EXTRA_DATA_REGION_KEY);
         if (null != region) {
-            this.setRegionName(region);
+            this.setRegionName(region.toString());
         }
     }
+
+    // ---- NetworkStateProvider
+    private NetworkState networkState;
+
+    @Override
+    @Nonnull
+    public NetworkState getNetworkState() {
+        return networkState;
+    }
+    // ---- end NetworkStateProvider
+
+    // ---- RegionNodeStateProvider
+    private RegionNodeState regionNodeState;
+
+    @Override
+    @Nonnull
+    public RegionNodeState getRegionNodeState() {
+        return regionNodeState;
+    }
+    // ---- end RegionNodeStateProvider
+
 }
