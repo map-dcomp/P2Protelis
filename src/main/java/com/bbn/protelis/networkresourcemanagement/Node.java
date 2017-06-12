@@ -47,10 +47,31 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
      */
     public static final String EXTRA_DATA_REGION_KEY = "region";
 
+    /**
+     * Extra data key to specify if the node is a single server or a pool of
+     * servers.
+     */
+    public static final String EXTRA_DATA_POOL = "pool";
+
     private AtomicLong executionCount = new AtomicLong(0);
 
     private void incrementExecutionCount() {
         executionCount.incrementAndGet();
+    }
+
+    private boolean pool = false;
+
+    private void setPool(final boolean v) {
+        pool = v;
+    }
+
+    /**
+     * 
+     * @return true if this Node is a pool of resources
+     * @see #EXTRA_DATA_POOL
+     */
+    public boolean isPool() {
+        return pool;
     }
 
     /**
@@ -306,7 +327,8 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
     private String regionName;
 
     /**
-     * Changing the region has the side effect of resetting the network state and the regional node state.
+     * Changing the region has the side effect of resetting the network state
+     * and the regional node state.
      * 
      * @param region
      *            the new region that this node belongs to
@@ -337,6 +359,11 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
         final Object region = extraData.get(EXTRA_DATA_REGION_KEY);
         if (null != region) {
             this.setRegionName(region.toString());
+        }
+
+        final Object pool = extraData.get(EXTRA_DATA_POOL);
+        if (null != pool) {
+            this.setPool(Boolean.parseBoolean(pool.toString()));
         }
     }
 
