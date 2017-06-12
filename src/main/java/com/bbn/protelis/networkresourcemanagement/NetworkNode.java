@@ -54,7 +54,7 @@ public interface NetworkNode {
      *            the neighbor to add
      * @param bandwidth
      *            to the neighbor in bits per second
-     * @see #addNeighborNode(StringUID, double)
+     * @see #addNeighbor(StringUID, double)
      */
     void addNeighbor(@Nonnull NetworkNode v, double bandwidth);
 

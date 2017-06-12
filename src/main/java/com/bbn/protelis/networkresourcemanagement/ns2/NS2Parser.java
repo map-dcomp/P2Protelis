@@ -113,7 +113,7 @@ public final class NS2Parser {
      * @param <L>
      *            the {@link NetworkLink} type created
      * @param <C>
-     *            the {@link Client} type created
+     *            the {@link NetworkClient} type created
      * @return the network scenario
      * @throws IOException
      *             if there is an error reading from the reader
