@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nonnull;
 
-import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
 import org.protelis.vm.impl.AbstractExecutionContext;
@@ -198,9 +197,19 @@ public class NetworkServer extends AbstractExecutionContext
         return System.currentTimeMillis();
     }
 
+    /**
+     * Child context used for {@link NetworkServer#instance()}.
+     */
     public class ChildContext extends AbstractExecutionContext {
-        private Node parent;
-        public ChildContext(final Node parent) {
+        private NetworkServer parent;
+
+        /**
+         * Create a child context.
+         * 
+         * @param parent
+         *            the parent environment to get information from.
+         */
+        public ChildContext(final NetworkServer parent) {
             super(parent.getExecutionEnvironment(), parent.getNetworkManager());
             this.parent = parent;
         }
@@ -224,13 +233,15 @@ public class NetworkServer extends AbstractExecutionContext
         protected AbstractExecutionContext instance() {
             return new ChildContext(parent);
         }
-        
-        // Node-specific functions:
+
+        /**
+         * @return the region name of the parent
+         */
         public String getRegionName() {
             return parent.getRegionName();
         }
     }
-    
+
     @Override
     protected final AbstractExecutionContext instance() {
         return new ChildContext(this);

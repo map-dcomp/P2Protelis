@@ -40,7 +40,7 @@ import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayNode;
 import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
 import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
-import com.sun.security.ntlm.Client;
+
 
 /**
  * Read NS2 files in and create a network for protelis.
