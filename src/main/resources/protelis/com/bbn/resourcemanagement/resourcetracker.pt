@@ -6,6 +6,7 @@ import protelis:coord:meta
 import protelis:lang:utils
 import protelis:coord:nonselfstabilizing:accumulation
 
+// Deprecated --> will be replaced in a future Protelis release
 def once(v) {
     rep(x <- v) { x };
 }
@@ -27,25 +28,6 @@ public def regionSet(potential) {
 	C(potential, union, unionHood(nbr([self.getRegionName()])), []);
 }
 
-public def C(potential, reduce, local, null) {
-    let nonce = once(self.nextRandomDouble());
-    rep (v <- local) {
-        reduce.apply(local,
-            /*
-             * TODO: switch to accumulateHood
-             */
-            hood(
-                (a, b) -> { reduce.apply(a, b) },
-                // expression that will be evaluated if the field is empty
-                null,
-                mux (nbr(getParent(potential, (v) -> { nonce })) == nonce) { 
-                    nbr(v)
-                } else { null }
-            )
-        )
-    }
-}
-
 def countNodes() {
     let nonce = once(self.nextRandomDouble());
     let leader = nonce == gossip(nonce, min);
@@ -64,7 +46,7 @@ def nbrRegions() {
 
 nbrRegions();
 
-//let rgn = self.getRegionName();
+let rgn = self.getRegionName();
 //multiRegion(rgn,(n) -> { rgn == n },nbrRegions,[]);
 //multiRegion(rgn,(n) -> { rgn == n },() -> { rgn },[]);
 //multiRegion(2,(n) -> { 2 == n },() -> { 2 },NaN);

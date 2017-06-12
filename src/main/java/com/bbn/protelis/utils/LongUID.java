@@ -3,7 +3,7 @@ package com.bbn.protelis.utils;
 import org.protelis.lang.datatype.DeviceUID;
 
 /** Simple long UIDs. */
-public class LongUID implements DeviceUID {
+public class LongUID implements DeviceUID, Comparable<LongUID> {
     private static final long serialVersionUID = 1L;
     private final long uid;
 
@@ -43,5 +43,10 @@ public class LongUID implements DeviceUID {
     @Override
     public String toString() {
         return Long.toString(uid);
+    }
+    
+    @Override
+    public int compareTo(final LongUID other) {
+        return Long.compare(uid, other.uid);
     }
 }
