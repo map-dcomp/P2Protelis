@@ -6,9 +6,9 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 /**
- * This is the interface the {@link Node} is using to collect information from.
+ * This is the interface the {@link NetworkServer} is using to collect information from.
  * This interface is used to retrieve {@link ResourceReport}s and to make
- * changes to the {@link Node}.
+ * changes to the {@link NetworkServer}.
  */
 public interface ResourceManager {
 

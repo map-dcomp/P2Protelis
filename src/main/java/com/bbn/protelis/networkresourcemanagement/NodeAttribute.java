@@ -2,7 +2,7 @@ package com.bbn.protelis.networkresourcemanagement;
 
 /**
  * Used to specify the type of information being reported for capacity or usage
- * of a {@link Node}.
+ * of a {@link NetworkServer}.
  * 
  */
 public enum NodeAttribute {

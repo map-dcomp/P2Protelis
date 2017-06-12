@@ -29,8 +29,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.common.visualizer.MultiVertexRenderer;
-import com.bbn.protelis.networkresourcemanagement.Link;
-import com.bbn.protelis.networkresourcemanagement.Node;
+import com.bbn.protelis.networkresourcemanagement.NetworkClient;
+import com.bbn.protelis.networkresourcemanagement.NetworkLink;
+import com.bbn.protelis.networkresourcemanagement.NetworkNode;
+import com.bbn.protelis.networkresourcemanagement.NetworkServer;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
@@ -47,15 +49,17 @@ import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
  * visualization.
  *
  * @param <N>
- *            the node type
+ *            the server type
  * @param <L>
  *            the link type
  * @param <DN>
- *            the node display type
+ *            the server display type
  * @param <DL>
  *            the link display type
+ * @param <C>
+ *            the client type
  */
-public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, N extends Node, L extends Link>
+public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, L extends NetworkLink, N extends NetworkServer, C extends NetworkClient>
         extends JApplet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioVisualizer.class);
 
@@ -69,7 +73,7 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     private static final int REFRESH_RATE = 100;// 500
     private final Object closeLock = new Object();
     private volatile boolean frameOpen = false;
-    private final NetworkVisualizerFactory<DN, DL, N, L> visFactory;
+    private final NetworkVisualizerFactory<DN, DL> visFactory;
 
     private JFrame frame;
     private VisualizationViewer<DN, DL> vv;
@@ -90,13 +94,13 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     // Graph contents
     private Map<DeviceUID, DN> nodes = new HashMap<>();
     private Set<DL> edges = new HashSet<>();
-    private final Scenario<N, L> scenario;
+    private final Scenario<N, L, C> scenario;
 
     /**
      * @return the scenario that is being visualized
      */
     @Nonnull
-    public final Scenario<N, L> getScenario() {
+    public final Scenario<N, L, C> getScenario() {
         return scenario;
     }
 
@@ -108,7 +112,7 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
      * @param visFactory
      *            the factory for creating display objects
      */
-    public ScenarioVisualizer(final Scenario<N, L> scenario, final NetworkVisualizerFactory<DN, DL, N, L> visFactory) {
+    public ScenarioVisualizer(final Scenario<N, L, C> scenario, final NetworkVisualizerFactory<DN, DL> visFactory) {
         this.visFactory = visFactory;
         this.scenario = scenario;
 
@@ -122,13 +126,16 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
 
     private void createGraphFromNetwork() {
         // First add nodes to collection, so they'll be there for edge addition
-        for (final Map.Entry<DeviceUID, N> entry : scenario.getNodes().entrySet()) {
+        for (final Map.Entry<DeviceUID, N> entry : scenario.getServers().entrySet()) {
+            addNode(entry.getValue());
+        }
+        for (final Map.Entry<DeviceUID, C> entry : scenario.getClients().entrySet()) {
             addNode(entry.getValue());
         }
         refreshEdges();
     }
 
-    private DN addNode(final N node) {
+    private DN addNode(final NetworkNode node) {
         final DN n = visFactory.createDisplayNode(node);
         g.addVertex(n);
         nodes.put(n.getUID(), n);

@@ -16,7 +16,7 @@ public interface NodeLookupService {
      * 
      * @param uid
      *            the UID of the node to find
-     * @return the hostname and port.
+     * @return the hostname and port. Null is returned if no node can be found with the specified uid.
      */
     InetSocketAddress getInetAddressForNode(DeviceUID uid);
 

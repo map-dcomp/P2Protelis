@@ -3,10 +3,10 @@ package com.bbn.protelis.networkresourcemanagement.visualizer;
 import java.awt.Color;
 import java.awt.Paint;
 
-import com.bbn.protelis.networkresourcemanagement.Link;
+import com.bbn.protelis.networkresourcemanagement.NetworkLink;
 
 /**
- * Display object for a {@link Link}.
+ * Display object for a {@link NetworkLink}.
  */
 public class DisplayEdge {
     private final DisplayNode head;
@@ -28,24 +28,24 @@ public class DisplayEdge {
         return tail;
     }
 
-    private final Link link;
+    private final NetworkLink link;
 
     /**
      * 
      * @return the underlying link object
      */
-    public Link getLink() {
+    public NetworkLink getLink() {
         return link;
     }
 
     /**
-     * Construct a display object for a {@link Link}.
+     * Construct a display object for a {@link NetworkLink}.
      * 
      * @param link the link
      * @param head the display object for the head
      * @param tail the display object for the tail
      */
-    public DisplayEdge(final Link link, final DisplayNode head, final DisplayNode tail) {
+    public DisplayEdge(final NetworkLink link, final DisplayNode head, final DisplayNode tail) {
         this.link = link;
         this.head = head;
         this.tail = tail;

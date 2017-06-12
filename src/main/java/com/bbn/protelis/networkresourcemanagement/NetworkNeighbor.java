@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A network link between a {@link Node} and it's neighbor. Used to send and
+ * A network link between a {@link NetworkServer} and it's neighbor. Used to send and
  * receive data.
  */
 /* package */
@@ -25,7 +25,7 @@ final class NetworkNeighbor extends Thread {
     private Map<CodePath, Object> sharedValues = new HashMap<>();
 
     /**
-     * @return The data most recently shared from the remote {@link Node}. Not
+     * @return The data most recently shared from the remote {@link NetworkServer}. Not
      *         null.
      */
     public Map<CodePath, Object> getSharedValues() {

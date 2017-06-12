@@ -39,7 +39,7 @@ public class BasicResourceManager implements ResourceManager {
      * @param extraData
      *            the extra data for the node. This contains the information to
      *            return from the methods.
-     * @see Node#processExtraData(Map)
+     * @see NetworkServer#processExtraData(Map)
      */
     public BasicResourceManager(@Nonnull final String nodeName, @Nonnull final Map<String, Object> extraData) {
         this.nodeName = nodeName;
@@ -60,7 +60,7 @@ public class BasicResourceManager implements ResourceManager {
         }
     }
 
-    private Node node = null;
+    private NetworkServer node = null;
 
     /**
      * Set the node object that is being used. This is used to get the link
@@ -69,7 +69,7 @@ public class BasicResourceManager implements ResourceManager {
      * @param node
      *            the node
      */
-    public void setNode(@Nonnull final Node node) {
+    public void setNode(@Nonnull final NetworkServer node) {
         this.node = node;
     }
 

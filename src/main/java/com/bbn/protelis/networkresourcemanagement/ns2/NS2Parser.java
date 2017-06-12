@@ -25,9 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.common.testbed.termination.NeverTerminate;
 import com.bbn.protelis.networkresourcemanagement.BasicNetworkFactory;
-import com.bbn.protelis.networkresourcemanagement.Link;
+import com.bbn.protelis.networkresourcemanagement.NetworkClient;
 import com.bbn.protelis.networkresourcemanagement.NetworkFactory;
-import com.bbn.protelis.networkresourcemanagement.Node;
+import com.bbn.protelis.networkresourcemanagement.NetworkLink;
+import com.bbn.protelis.networkresourcemanagement.NetworkNode;
+import com.bbn.protelis.networkresourcemanagement.NetworkServer;
 import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
@@ -36,9 +38,9 @@ import com.bbn.protelis.networkresourcemanagement.visualizer.BasicNetworkVisuali
 import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayEdge;
 import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayNode;
 import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
-import com.bbn.protelis.utils.StringUID;
 import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
+import com.sun.security.ntlm.Client;
 
 /**
  * Read NS2 files in and create a network for protelis.
@@ -49,6 +51,12 @@ public final class NS2Parser {
 
     private static final long BYTES_IN_KILOBYTE = 1024;
     private static final long BYTES_IN_MEGABYTE = BYTES_IN_KILOBYTE * 1024;
+
+    /**
+     * Extra data key to specify if a client should be created or a node. If
+     * specified and set to true, then a client is created.
+     */
+    public static final String EXTRA_DATA_CLIENT = "client";
 
     /**
      * Name of the file that defines the network topology for a configuration.
@@ -68,18 +76,20 @@ public final class NS2Parser {
      * @param baseDirectory
      *            the directory that contains the data.
      * @param factory
-     *            how to create {@link Node}s and {@link Link}s
+     *            how to create {@link NetworkServer}s and {@link NetworkLink}s
      * @param <N>
-     *            the {@link Node} type created
+     *            the {@link NetworkServer} type created
      * @param <L>
-     *            the {@link Link} type created
+     *            the {@link NetworkLink} type created
+     * @param <C>
+     *            the {@link NetworkClient} type created
      * @return the network scenario
      * @throws IOException
      *             if there is an error reading from the reader
      */
-    public static <N extends Node, L extends Link> Scenario<N, L> parseFromResource(final String scenarioName,
-            final String baseDirectory,
-            final NetworkFactory<N, L> factory) throws IOException {
+    public static <N extends NetworkServer, L extends NetworkLink, C extends NetworkClient> Scenario<N, L, C> parseFromResource(
+            final String scenarioName, final String baseDirectory, final NetworkFactory<N, L, C> factory)
+            throws IOException {
 
         try (InputStream stream = Thread.currentThread().getContextClassLoader()
                 .getResourceAsStream(baseDirectory + "/" + TOPOLOGY_FILENAME)) {
@@ -97,18 +107,20 @@ public final class NS2Parser {
      * @param baseDirectory
      *            the directory that contains the data.
      * @param factory
-     *            how to create {@link Node}s and {@link Link}s
+     *            how to create {@link NetworkServer}s and {@link NetworkLink}s
      * @param <N>
-     *            the {@link Node} type created
+     *            the {@link NetworkServer} type created
      * @param <L>
-     *            the {@link Link} type created
+     *            the {@link NetworkLink} type created
+     * @param <C>
+     *            the {@link Client} type created
      * @return the network scenario
      * @throws IOException
      *             if there is an error reading from the reader
      */
-    public static <N extends Node, L extends Link> Scenario<N, L> parseFromFile(final String scenarioName,
-            final String baseDirectory,
-            final NetworkFactory<N, L> factory) throws IOException {
+    public static <N extends NetworkServer, L extends NetworkLink, C extends NetworkClient> Scenario<N, L, C> parseFromFile(
+            final String scenarioName, final String baseDirectory, final NetworkFactory<N, L, C> factory)
+            throws IOException {
 
         try (InputStream stream = new FileInputStream(baseDirectory + "/" + TOPOLOGY_FILENAME)) {
 
@@ -117,12 +129,14 @@ public final class NS2Parser {
         } // topology stream
     }
 
-    private static <L extends Link, N extends Node> Scenario<N, L> parseFromStream(final String scenarioName,
+    private static <L extends NetworkLink, N extends NetworkServer, C extends NetworkClient> Scenario<N, L, C> parseFromStream(
+            final String scenarioName,
             final String baseDirectory,
-            final NetworkFactory<N, L> factory,
+            final NetworkFactory<N, L, C> factory,
             final InputStream stream,
             final boolean readingFromFile) throws IOException {
-        final Map<String, N> nodesByName = new HashMap<>();
+        final Map<String, N> serversByName = new HashMap<>();
+        final Map<String, C> clientsByName = new HashMap<>();
         final Set<L> links = new HashSet<>();
 
         String simulator = null;
@@ -183,8 +197,15 @@ public final class NS2Parser {
                                 }
 
                                 if ("node".equals(objectType)) {
-                                    final N node = factory.createNode(name, extraData);
-                                    nodesByName.put(name, node);
+                                    final boolean isClient = checkIsClient(extraData);
+                                    if (isClient) {
+                                        final C client = factory.createClient(name, extraData);
+                                        clientsByName.put(name, client);
+
+                                    } else {
+                                        final N node = factory.createServer(name, extraData);
+                                        serversByName.put(name, node);
+                                    }
                                 } else if ("duplex-link".equals(objectType)) {
                                     if (!tokens[2].startsWith("$") || !tokens[3].startsWith("$")) {
                                         throw new NS2FormatException(
@@ -194,12 +215,14 @@ public final class NS2Parser {
                                     final String leftNodeName = tokens[2].substring(1);
                                     final String rightNodeName = tokens[3].substring(1);
 
-                                    if (!nodesByName.containsKey(leftNodeName)) {
+                                    if (!serversByName.containsKey(leftNodeName)
+                                            && !clientsByName.containsKey(leftNodeName)) {
                                         throw new NS2FormatException(
                                                 "Unknown node " + leftNodeName + " on line: " + line);
                                     }
 
-                                    if (!nodesByName.containsKey(rightNodeName)) {
+                                    if (!serversByName.containsKey(rightNodeName)
+                                            && !clientsByName.containsKey(rightNodeName)) {
                                         throw new NS2FormatException(
                                                 "Unknown node " + rightNodeName + " on line: " + line);
                                     }
@@ -210,7 +233,7 @@ public final class NS2Parser {
                                         throw new NS2FormatException(
                                                 "Bandwidth spec doesn't match expected format: '" + bandwidthStr + "'");
                                     }
-                                    final double bandwidth = Double.parseDouble(bandwidthMatch.group(1));
+                                    final double bandwidthValue = Double.parseDouble(bandwidthMatch.group(1));
                                     final String bandwidthUnits = bandwidthMatch.group(2);
                                     final double bandwidthMultiplier;
                                     if ("mb".equalsIgnoreCase(bandwidthUnits)) {
@@ -225,12 +248,22 @@ public final class NS2Parser {
                                     // final String queueBehavior =
                                     // tokens[6];
 
-                                    final N leftNode = nodesByName.get(leftNodeName);
-                                    final N rightNode = nodesByName.get(rightNodeName);
+                                    final NetworkNode leftNode;
+                                    if (serversByName.containsKey(leftNodeName)) {
+                                        leftNode = serversByName.get(leftNodeName);
+                                    } else {
+                                        leftNode = clientsByName.get(leftNodeName);
+                                    }
+                                    final NetworkNode rightNode;
+                                    if (serversByName.containsKey(rightNodeName)) {
+                                        rightNode = serversByName.get(rightNodeName);
+                                    } else {
+                                        rightNode = clientsByName.get(rightNodeName);
+                                    }
 
-                                    final L link = factory.createLink(name, leftNode, rightNode,
-                                            bandwidth * bandwidthMultiplier);
-                                    
+                                    final double bandwidth = bandwidthValue * bandwidthMultiplier;
+                                    final L link = factory.createLink(name, leftNode, rightNode, bandwidth);
+
                                     leftNode.addNeighbor(rightNode, link.getBandwidth());
                                     rightNode.addNeighbor(leftNode, link.getBandwidth());
 
@@ -252,7 +285,7 @@ public final class NS2Parser {
                         }
                         final String nodeName = tokens[1].substring(1);
 
-                        if (!nodesByName.containsKey(nodeName)) {
+                        if (!serversByName.containsKey(nodeName) && !clientsByName.containsKey(nodeName)) {
                             throw new NS2FormatException("Unknown node " + nodeName + " on line: " + line);
                         }
 
@@ -269,10 +302,21 @@ public final class NS2Parser {
             } // bufReader
         } // input stream reader
 
-        final Map<DeviceUID, N> nodes = nodesByName.entrySet().stream()
-                .collect(Collectors.toMap(e -> new StringUID(e.getKey()), Map.Entry::getValue));
-        final Scenario<N, L> scenario = new Scenario<>(scenarioName, nodes, links);
+        final Map<DeviceUID, N> servers = serversByName.entrySet().stream()
+                .collect(Collectors.toMap(e -> e.getValue().getDeviceUID(), Map.Entry::getValue));
+        final Map<DeviceUID, C> clients = clientsByName.entrySet().stream()
+                .collect(Collectors.toMap(e -> e.getValue().getDeviceUID(), Map.Entry::getValue));
+        final Scenario<N, L, C> scenario = new Scenario<>(scenarioName, servers, clients, links);
         return scenario;
+    }
+
+    private static boolean checkIsClient(@Nonnull final Map<String, Object> extraData) {
+        final Object client = extraData.get(EXTRA_DATA_CLIENT);
+        if (null != client) {
+            return Boolean.parseBoolean(client.toString());
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -372,15 +416,17 @@ public final class NS2Parser {
 
             final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService,
                     "/protelis/com/bbn/resourcemanagement/resourcetracker.pt", false);
-            final Scenario<Node, Link> scenario = NS2Parser.parseFromFile(args[0], args[0], factory);
+            final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parseFromFile(args[0],
+                    args[0], factory);
 
             scenario.setTerminationCondition(new NeverTerminate<>());
 
-            final BasicNetworkVisualizerFactory<Node, Link> visFactory = new BasicNetworkVisualizerFactory<>();
-            final ScenarioVisualizer<DisplayNode, DisplayEdge, Node, Link> visualizer = new ScenarioVisualizer<>(
+            final BasicNetworkVisualizerFactory visFactory = new BasicNetworkVisualizerFactory();
+            final ScenarioVisualizer<DisplayNode, DisplayEdge, NetworkLink, NetworkServer, NetworkClient> visualizer = new ScenarioVisualizer<>(
                     scenario, visFactory);
 
-            final ScenarioRunner<Node, Link> emulation = new ScenarioRunner<>(scenario, visualizer);
+            final ScenarioRunner<NetworkServer, NetworkLink, NetworkClient> emulation = new ScenarioRunner<>(scenario,
+                    visualizer);
             emulation.run();
 
             System.exit(0);

@@ -5,14 +5,14 @@ import java.util.Map;
 import org.protelis.lang.datatype.DeviceUID;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
-import com.bbn.protelis.networkresourcemanagement.Node;
+import com.bbn.protelis.networkresourcemanagement.NetworkServer;
 
 /**
- * Terminate after a number of executions of a set of {@link Node}s.
+ * Terminate after a number of executions of a set of {@link NetworkServer}s.
  * 
  * @param <N> the node type to deal with
  */
-public class ExecutionCountTermination<N extends Node> implements TerminationCondition<Map<DeviceUID, N>> {
+public class ExecutionCountTermination<N extends NetworkServer> implements TerminationCondition<Map<DeviceUID, N>> {
     private final long round;
 
     /**

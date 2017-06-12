@@ -1,10 +1,10 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 /**
- * A network link.
+ * A link between two {@link NetworkNode}s.
  * 
  */
-public class Link {
+public class NetworkLink {
 
     private final String name;
 
@@ -16,23 +16,23 @@ public class Link {
         return this.name;
     }
 
-    private final Node left;
+    private final NetworkNode left;
 
     /**
      * 
      * @return left side of the link
      */
-    public Node getLeft() {
+    public NetworkNode getLeft() {
         return this.left;
     }
 
-    private final Node right;
+    private final NetworkNode right;
 
     /**
      * 
      * @return right side of the link
      */
-    public Node getRight() {
+    public NetworkNode getRight() {
         return this.right;
     }
 
@@ -58,10 +58,11 @@ public class Link {
      * @param bandwidth
      *            in bits per second
      */
-    public Link(final String name, final Node left, final Node right, final double bandwidth) {
+    public NetworkLink(final String name, final NetworkNode left, final NetworkNode right, final double bandwidth) {
         this.name = name;
         this.left = left;
         this.right = right;
         this.bandwidth = bandwidth;
     }
+
 }

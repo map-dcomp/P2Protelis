@@ -19,16 +19,17 @@ import com.bbn.protelis.utils.StringUID;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * A node in the network.
+ * A server in the network.
  */
-public class Node extends AbstractExecutionContext implements NetworkStateProvider, RegionNodeStateProvider {
+public class NetworkServer extends AbstractExecutionContext
+        implements NetworkStateProvider, RegionNodeStateProvider, NetworkNode {
 
     /**
      * Used when there is no region name.
      */
     public static final String NULL_REGION_NAME = "__null-region__";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Node.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkServer.class);
 
     /** Device numerical identifier */
     private final StringUID uid;
@@ -77,8 +78,8 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
     /**
      * The number of times this node has executed.
      * 
-     * @return the number of times that this {@link Node} has executed the
-     *         program.
+     * @return the number of times that this {@link NetworkServer} has executed
+     *         the program.
      */
     public final long getExecutionCount() {
         return executionCount.get();
@@ -108,39 +109,19 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
      */
     private final Map<StringUID, Double> neighbors = new HashMap<>();
 
-    /**
-     * The neighbors of this {@link Node}.
-     * 
-     * @return unmodifiable set
-     */
+    @Override
     @Nonnull
     public final Set<StringUID> getNeighbors() {
         return Collections.unmodifiableSet(neighbors.keySet());
     }
 
-    /**
-     * Add a neighbor. If the neighbor already exists, the bandwidth capacity
-     * for the neighbor is replaced with the new value.
-     * 
-     * @param v
-     *            the UID of the neighbor
-     * @param bandwidth
-     *            capacity to the neighbor in bits per second. Infinity can be
-     *            used for unknown.
-     */
+    @Override
     public final void addNeighbor(@Nonnull final StringUID v, final double bandwidth) {
         neighbors.put(v, bandwidth);
     }
 
-    /**
-     * 
-     * @param v
-     *            the neighbor to add
-     * @param bandwidth
-     *            to the neighbor in bits per second
-     * @see #addNeighbor(StringUID, double)
-     */
-    public final void addNeighbor(@Nonnull final Node v, final double bandwidth) {
+    @Override
+    public final void addNeighbor(@Nonnull final NetworkNode v, final double bandwidth) {
         addNeighbor(v.getDeviceUID(), bandwidth);
     }
 
@@ -166,7 +147,7 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
      * @param resourceManager
      *            where to get resource information from
      */
-    public Node(@Nonnull final NodeLookupService lookupService, @Nonnull final ProtelisProgram program,
+    public NetworkServer(@Nonnull final NodeLookupService lookupService, @Nonnull final ProtelisProgram program,
             @Nonnull final String name, @Nonnull final ResourceManager resourceManager) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringUID(name);
@@ -348,13 +329,7 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
         return this.regionName;
     }
 
-    /**
-     * Process the extra data that was found when creating the node.
-     * 
-     * @param extraData
-     *            key/value pairs
-     * @see NetworkFactory#createNode(String, java.util.Map)
-     */
+    @Override
     public void processExtraData(@Nonnull final Map<String, Object> extraData) {
         final Object region = extraData.get(EXTRA_DATA_REGION_KEY);
         if (null != region) {

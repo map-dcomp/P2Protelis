@@ -50,19 +50,22 @@ public class NS2ParserTest {
         final boolean anonymous = false;
 
         final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, program, anonymous);
-        final Scenario<Node, Link> scenario = NS2Parser.parseFromResource("multinode", "ns2/multinode", factory);
+        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parseFromResource("multinode",
+                "ns2/multinode", factory);
         Assert.assertNotNull("Parse didn't create a scenario", scenario);
 
         final long maxExecutions = 50;// 5;
 
-        final TerminationCondition<Map<DeviceUID, Node>> condition = new ExecutionCountTermination<Node>(maxExecutions);
+        final TerminationCondition<Map<DeviceUID, NetworkServer>> condition = new ExecutionCountTermination<NetworkServer>(
+                maxExecutions);
         scenario.setTerminationCondition(condition);
 
-        final ScenarioRunner<Node, Link> emulation = new ScenarioRunner<>(scenario, null);
+        final ScenarioRunner<NetworkServer, NetworkLink, NetworkClient> emulation = new ScenarioRunner<>(scenario,
+                null);
         emulation.run();
 
-        for (final Map.Entry<DeviceUID, Node> entry : scenario.getNodes().entrySet()) {
-            final Node node = entry.getValue();
+        for (final Map.Entry<DeviceUID, NetworkServer> entry : scenario.getServers().entrySet()) {
+            final NetworkServer node = entry.getValue();
             Assert.assertFalse("Node: " + node.getName() + " isn't dead", node.isExecuting());
 
             Assert.assertThat(node.getExecutionCount(), greaterThanOrEqualTo(maxExecutions));
