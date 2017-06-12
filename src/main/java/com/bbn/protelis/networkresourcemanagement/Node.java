@@ -209,7 +209,7 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
         }
 
         @Override
-        public DeviceUID getDeviceUID() {
+        public StringUID getDeviceUID() {
             return parent.getDeviceUID();
         }
 
@@ -223,7 +223,7 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
             return new ChildContext(parent);
         }
         
-        // Specific functions:
+        // Node-specific functions:
         public String getRegionName() {
             return parent.getRegionName();
         }
