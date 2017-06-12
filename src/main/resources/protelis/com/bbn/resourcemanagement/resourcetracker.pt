@@ -6,6 +6,7 @@ import protelis:coord:meta
 import protelis:lang:utils
 import protelis:coord:nonselfstabilizing:accumulation
 
+// Deprecated --> will be replaced in a future Protelis release
 def once(v) {
     rep(x <- v) { x };
 }
@@ -21,10 +22,6 @@ public def countDevices(potential) {
 // TODO: check if I can just do this as Tuple.union
 public def union(a, b) {
     a.union(b);
-}
-
-public def regionSet(potential) {
-	C(potential, union, unionHood(nbr([self.getRegionName()])), []);
 }
 
 public def C(potential, reduce, local, null) {
@@ -46,6 +43,10 @@ public def C(potential, reduce, local, null) {
     }
 }
 
+public def regionSet(potential) {
+	C(potential, union, unionHood(nbr([self.getRegionName()])), []);
+}
+
 def countNodes() {
     let nonce = once(self.nextRandomDouble());
     let leader = nonce == gossip(nonce, min);
@@ -62,9 +63,11 @@ def nbrRegions() {
     [leader, countDevices(d), regionSet(d)];
 }
 
-nbrRegions();
+//countNodes();
+//minHood(nbr(self.getDeviceUID()))
+//nbrRegions();
 
-//let rgn = self.getRegionName();
+let rgn = self.getRegionName();
+multiRegion(rgn,(n) -> { rgn == n },countNodes,[]);
 //multiRegion(rgn,(n) -> { rgn == n },nbrRegions,[]);
-//multiRegion(rgn,(n) -> { rgn == n },() -> { rgn },[]);
-//multiRegion(2,(n) -> { 2 == n },() -> { 2 },NaN);
+//multiRegion(rgn,(n) -> { rgn == n },() -> { [rgn, self.getDeviceUID()] },[]);

@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nonnull;
 
+import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
 import org.protelis.vm.impl.AbstractExecutionContext;
@@ -197,9 +198,42 @@ public class NetworkServer extends AbstractExecutionContext
         return System.currentTimeMillis();
     }
 
+    public class ChildContext extends AbstractExecutionContext {
+        private Node parent;
+        public ChildContext(final Node parent) {
+            super(parent.getExecutionEnvironment(), parent.getNetworkManager());
+            this.parent = parent;
+        }
+
+        @Override
+        public Number getCurrentTime() {
+            return parent.getCurrentTime();
+        }
+
+        @Override
+        public StringUID getDeviceUID() {
+            return parent.getDeviceUID();
+        }
+
+        @Override
+        public double nextRandomDouble() {
+            return parent.nextRandomDouble();
+        }
+
+        @Override
+        protected AbstractExecutionContext instance() {
+            return new ChildContext(parent);
+        }
+        
+        // Node-specific functions:
+        public String getRegionName() {
+            return parent.getRegionName();
+        }
+    }
+    
     @Override
     protected final AbstractExecutionContext instance() {
-        throw new UnsupportedOperationException();
+        return new ChildContext(this);
     }
 
     @Override

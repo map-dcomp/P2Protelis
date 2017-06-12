@@ -3,7 +3,7 @@ package com.bbn.protelis.utils;
 import org.protelis.lang.datatype.DeviceUID;
 
 /** Simple string UIDs. */
-public class StringUID implements DeviceUID {
+public class StringUID implements DeviceUID, Comparable<StringUID> {
     private static final long serialVersionUID = 1L;
     private final String uid;
 
@@ -42,5 +42,10 @@ public class StringUID implements DeviceUID {
     @Override
     public String toString() {
         return uid;
+    }
+
+    @Override
+    public int compareTo(final StringUID other) {
+        return uid.compareTo(other.uid);
     }
 }
