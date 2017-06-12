@@ -15,6 +15,25 @@ def hopDistanceTo(leader) {
     rep(d <- Infinity) { mux(leader) { 0 } else { 1 + minHood(nbr(d)) } }
 }
 
+public def C(potential, reduce, local, null) {
+    let nonce = once(self.nextRandomDouble());
+    rep (v <- local) {
+        reduce.apply(local,
+            /*
+             * TODO: switch to accumulateHood
+             */
+            hood(
+                (a, b) -> { reduce.apply(a, b) },
+                // expression that will be evaluated if the field is empty
+                null,
+                mux (nbr(getParent(potential, (v) -> { nonce })) == nonce) { 
+                    nbr(v)
+                } else { null }
+            )
+        )
+    }
+}
+
 public def countDevices(potential) {
     C(potential, sum, 1, 0)
 }
@@ -47,6 +66,6 @@ def nbrRegions() {
 nbrRegions();
 
 let rgn = self.getRegionName();
+multiRegion(rgn,(n) -> { rgn == n },countNodes,[]);
 //multiRegion(rgn,(n) -> { rgn == n },nbrRegions,[]);
-//multiRegion(rgn,(n) -> { rgn == n },() -> { rgn },[]);
-//multiRegion(2,(n) -> { 2 == n },() -> { 2 },NaN);
+//multiRegion(rgn,(n) -> { rgn == n },() -> { [rgn, self.getDeviceUID()] },[]);
