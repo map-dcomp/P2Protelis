@@ -234,16 +234,20 @@ public class NetworkServer extends AbstractExecutionContext
             return new ChildContext(parent);
         }
 
+        // TODO: need to better fix the whole ChildContext architecture
         /**
          * @return the region name of the parent
          */
         public String getRegionName() {
             return parent.getRegionName();
         }
+        
+        public NetworkState getNetworkState() { return parent.getNetworkState(); }
+        public RegionNodeState getRegionNodeState() { return parent.getRegionNodeState(); }
     }
 
     @Override
-    protected final AbstractExecutionContext instance() {
+    protected AbstractExecutionContext instance() {
         return new ChildContext(this);
     }
 
