@@ -9,8 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
-import com.bbn.protelis.networkresourcemanagement.Link;
-import com.bbn.protelis.networkresourcemanagement.Node;
+import com.bbn.protelis.networkresourcemanagement.NetworkClient;
+import com.bbn.protelis.networkresourcemanagement.NetworkLink;
+import com.bbn.protelis.networkresourcemanagement.NetworkServer;
 import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
 
 /**
@@ -20,12 +21,14 @@ import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
  *            the node type
  * @param <L>
  *            the link type
+ * @param <C>
+ *            the client type
  */
-public class ScenarioRunner<N extends Node, L extends Link> {
+public class ScenarioRunner<N extends NetworkServer, L extends NetworkLink, C extends NetworkClient> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioRunner.class);
 
-    private final Scenario<N, L> scenario;
-    private ScenarioVisualizer<?, ?, N, L> visualizer;
+    private final Scenario<N, L, C> scenario;
+    private ScenarioVisualizer<?, ?, L, N, C> visualizer;
 
     /**
      * 
@@ -35,7 +38,8 @@ public class ScenarioRunner<N extends Node, L extends Link> {
      *            the visualizer to use, may be null. The scenario in this
      *            visualizer must match the scenario argument
      */
-    public ScenarioRunner(@Nonnull final Scenario<N, L> scenario, final ScenarioVisualizer<?, ?, N, L> visualizer) {
+    public ScenarioRunner(@Nonnull final Scenario<N, L, C> scenario,
+            final ScenarioVisualizer<?, ?, L, N, C> visualizer) {
         if (null != visualizer && scenario != visualizer.getScenario()) {
             throw new IllegalArgumentException("The visualizer is using a different scenario");
         }
@@ -54,7 +58,7 @@ public class ScenarioRunner<N extends Node, L extends Link> {
     public void run() {
         // Initialize the daemons
         LOGGER.debug("Initializing daemons");
-        for (final Map.Entry<DeviceUID, ? extends Node> entry : scenario.getNodes().entrySet()) {
+        for (final Map.Entry<DeviceUID, ? extends NetworkServer> entry : scenario.getServers().entrySet()) {
             entry.getValue().startExecuting();
         }
 
@@ -81,7 +85,7 @@ public class ScenarioRunner<N extends Node, L extends Link> {
             // Otherwise, check if the scenario has naturally terminated
             final TerminationCondition<Map<DeviceUID, N>> termination = scenario.getTerminationCondition();
             if (termination != null) {
-                if (termination.shouldTerminate(scenario.getNodes())) {
+                if (termination.shouldTerminate(scenario.getServers())) {
                     LOGGER.debug("Termination condition detected");
                     break;
                 }
@@ -101,7 +105,7 @@ public class ScenarioRunner<N extends Node, L extends Link> {
 
         // Cleanup and exit
         LOGGER.debug("Signalling termination to all processes");
-        for (final Map.Entry<DeviceUID, ? extends Node> entry : scenario.getNodes().entrySet()) {
+        for (final Map.Entry<DeviceUID, ? extends NetworkServer> entry : scenario.getServers().entrySet()) {
             entry.getValue().stopExecuting();
         }
         if (visualizer != null) {
@@ -121,7 +125,7 @@ public class ScenarioRunner<N extends Node, L extends Link> {
 
     private boolean daemonsQuiescent() {
         boolean alldead = true;
-        for (final Map.Entry<DeviceUID, ? extends Node> entry : scenario.getNodes().entrySet()) {
+        for (final Map.Entry<DeviceUID, ? extends NetworkServer> entry : scenario.getServers().entrySet()) {
             if (entry.getValue().isExecuting()) {
                 alldead = false;
                 break;

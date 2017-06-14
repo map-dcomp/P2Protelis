@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Network manager for a {@link Node}.
+ * Network manager for a {@link NetworkServer}.
  */
 public class NodeNetworkManager implements NetworkManager {
 
@@ -28,7 +28,7 @@ public class NodeNetworkManager implements NetworkManager {
     private final NodeLookupService lookupService;
     private final Object lock = new Object();
 
-    private Node node;
+    private NetworkServer node;
 
     /**
      * 
@@ -89,7 +89,7 @@ public class NodeNetworkManager implements NetworkManager {
      * @throws IllegalStateException
      *             if the network manager is already running
      */
-    public void start(final Node node) {
+    public void start(final NetworkServer node) {
         synchronized (lock) {
             if (null != threadGroup) {
                 throw new IllegalStateException(
@@ -228,6 +228,12 @@ public class NodeNetworkManager implements NetworkManager {
      */
     private void connectToNeighbor(final DeviceUID neighborUID) {
         final InetSocketAddress addr = lookupService.getInetAddressForNode(neighborUID);
+        if (null == addr) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(neighborUID + " is not found in the lookup service, assuming this is a client");
+            }
+            return;
+        }
 
         try {
             // Try to link

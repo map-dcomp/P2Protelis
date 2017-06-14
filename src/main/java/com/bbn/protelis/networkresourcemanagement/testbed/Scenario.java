@@ -9,8 +9,9 @@ import java.util.Set;
 import org.protelis.lang.datatype.DeviceUID;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
-import com.bbn.protelis.networkresourcemanagement.Link;
-import com.bbn.protelis.networkresourcemanagement.Node;
+import com.bbn.protelis.networkresourcemanagement.NetworkClient;
+import com.bbn.protelis.networkresourcemanagement.NetworkLink;
+import com.bbn.protelis.networkresourcemanagement.NetworkServer;
 
 /**
  * A test scenario.
@@ -19,8 +20,10 @@ import com.bbn.protelis.networkresourcemanagement.Node;
  *            the node type
  * @param <L>
  *            the link type
+ * @param <C>
+ *            the client type
  */
-public class Scenario<N extends Node, L extends Link> {
+public class Scenario<N extends NetworkServer, L extends NetworkLink, C extends NetworkClient> {
 
     private TerminationCondition<Map<DeviceUID, N>> terminationCondition;
 
@@ -71,15 +74,27 @@ public class Scenario<N extends Node, L extends Link> {
     }
 
     /**
-     * Nodes in the network to run, including Protelis program for each device.
+     * Servers in the network to run, including Protelis program for each
+     * device.
      * 
      * @return unmodifiable map of the nodes, key is the UID
      */
-    public Map<DeviceUID, N> getNodes() {
-        return Collections.unmodifiableMap(this.nodes);
+    public Map<DeviceUID, N> getServers() {
+        return Collections.unmodifiableMap(this.servers);
     }
 
-    private final Map<DeviceUID, N> nodes = new HashMap<>();
+    private final Map<DeviceUID, N> servers = new HashMap<>();
+
+    /**
+     * Clients in the network to run.
+     * 
+     * @return unmodifiable map of the clients, key is the UID
+     */
+    public Map<DeviceUID, C> getClients() {
+        return Collections.unmodifiableMap(this.clients);
+    }
+
+    private final Map<DeviceUID, C> clients = new HashMap<>();
 
     /**
      * Links in the network.
@@ -98,13 +113,17 @@ public class Scenario<N extends Node, L extends Link> {
      * @param name
      *            the name of the scenario
      * @param nodes
-     *            the nodes in the scenario
+     *            the servers in the scenario
      * @param links
      *            the links in the scenario
+     * @param clients
+     *            the clients in the scenario
      */
-    public Scenario(final String name, final Map<DeviceUID, N> nodes, final Set<L> links) {
+    public Scenario(final String name, final Map<DeviceUID, N> nodes, final Map<DeviceUID, C> clients,
+            final Set<L> links) {
         this.name = name;
-        this.nodes.putAll(nodes);
+        this.servers.putAll(nodes);
+        this.clients.putAll(clients);
         this.links.addAll(links);
     }
 

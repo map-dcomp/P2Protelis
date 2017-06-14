@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nonnull;
 
-import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
 import org.protelis.vm.impl.AbstractExecutionContext;
@@ -20,16 +19,17 @@ import com.bbn.protelis.utils.StringUID;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * A node in the network.
+ * A server in the network.
  */
-public class Node extends AbstractExecutionContext implements NetworkStateProvider, RegionNodeStateProvider {
+public class NetworkServer extends AbstractExecutionContext
+        implements NetworkStateProvider, RegionNodeStateProvider, NetworkNode {
 
     /**
      * Used when there is no region name.
      */
     public static final String NULL_REGION_NAME = "__null-region__";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Node.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkServer.class);
 
     /** Device numerical identifier */
     private final StringUID uid;
@@ -48,17 +48,38 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
      */
     public static final String EXTRA_DATA_REGION_KEY = "region";
 
+    /**
+     * Extra data key to specify if the node is a single server or a pool of
+     * servers.
+     */
+    public static final String EXTRA_DATA_POOL = "pool";
+
     private AtomicLong executionCount = new AtomicLong(0);
 
     private void incrementExecutionCount() {
         executionCount.incrementAndGet();
     }
 
+    private boolean pool = false;
+
+    private void setPool(final boolean v) {
+        pool = v;
+    }
+
+    /**
+     * 
+     * @return true if this Node is a pool of resources
+     * @see #EXTRA_DATA_POOL
+     */
+    public boolean isPool() {
+        return pool;
+    }
+
     /**
      * The number of times this node has executed.
      * 
-     * @return the number of times that this {@link Node} has executed the
-     *         program.
+     * @return the number of times that this {@link NetworkServer} has executed
+     *         the program.
      */
     public final long getExecutionCount() {
         return executionCount.get();
@@ -88,39 +109,19 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
      */
     private final Map<StringUID, Double> neighbors = new HashMap<>();
 
-    /**
-     * The neighbors of this {@link Node}.
-     * 
-     * @return unmodifiable set
-     */
+    @Override
     @Nonnull
     public final Set<StringUID> getNeighbors() {
         return Collections.unmodifiableSet(neighbors.keySet());
     }
 
-    /**
-     * Add a neighbor. If the neighbor already exists, the bandwidth capacity
-     * for the neighbor is replaced with the new value.
-     * 
-     * @param v
-     *            the UID of the neighbor
-     * @param bandwidth
-     *            capacity to the neighbor in bits per second. Infinity can be
-     *            used for unknown.
-     */
+    @Override
     public final void addNeighbor(@Nonnull final StringUID v, final double bandwidth) {
         neighbors.put(v, bandwidth);
     }
 
-    /**
-     * 
-     * @param v
-     *            the neighbor to add
-     * @param bandwidth
-     *            to the neighbor in bits per second
-     * @see #addNeighbor(StringUID, double)
-     */
-    public final void addNeighbor(@Nonnull final Node v, final double bandwidth) {
+    @Override
+    public final void addNeighbor(@Nonnull final NetworkNode v, final double bandwidth) {
         addNeighbor(v.getDeviceUID(), bandwidth);
     }
 
@@ -146,7 +147,7 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
      * @param resourceManager
      *            where to get resource information from
      */
-    public Node(@Nonnull final NodeLookupService lookupService, @Nonnull final ProtelisProgram program,
+    public NetworkServer(@Nonnull final NodeLookupService lookupService, @Nonnull final ProtelisProgram program,
             @Nonnull final String name, @Nonnull final ResourceManager resourceManager) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringUID(name);
@@ -196,9 +197,19 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
         return System.currentTimeMillis();
     }
 
+    /**
+     * Child context used for {@link NetworkServer#instance()}.
+     */
     public class ChildContext extends AbstractExecutionContext {
-        private Node parent;
-        public ChildContext(final Node parent) {
+        private NetworkServer parent;
+
+        /**
+         * Create a child context.
+         * 
+         * @param parent
+         *            the parent environment to get information from.
+         */
+        public ChildContext(final NetworkServer parent) {
             super(parent.getExecutionEnvironment(), parent.getNetworkManager());
             this.parent = parent;
         }
@@ -222,13 +233,15 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
         protected AbstractExecutionContext instance() {
             return new ChildContext(parent);
         }
-        
-        // Node-specific functions:
+
+        /**
+         * @return the region name of the parent
+         */
         public String getRegionName() {
             return parent.getRegionName();
         }
     }
-    
+
     @Override
     protected final AbstractExecutionContext instance() {
         return new ChildContext(this);
@@ -340,7 +353,8 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
     private String regionName;
 
     /**
-     * Changing the region has the side effect of resetting the network state and the regional node state.
+     * Changing the region has the side effect of resetting the network state
+     * and the regional node state.
      * 
      * @param region
      *            the new region that this node belongs to
@@ -360,17 +374,16 @@ public class Node extends AbstractExecutionContext implements NetworkStateProvid
         return this.regionName;
     }
 
-    /**
-     * Process the extra data that was found when creating the node.
-     * 
-     * @param extraData
-     *            key/value pairs
-     * @see NetworkFactory#createNode(String, java.util.Map)
-     */
+    @Override
     public void processExtraData(@Nonnull final Map<String, Object> extraData) {
         final Object region = extraData.get(EXTRA_DATA_REGION_KEY);
         if (null != region) {
             this.setRegionName(region.toString());
+        }
+
+        final Object pool = extraData.get(EXTRA_DATA_POOL);
+        if (null != pool) {
+            this.setPool(Boolean.parseBoolean(pool.toString()));
         }
     }
 

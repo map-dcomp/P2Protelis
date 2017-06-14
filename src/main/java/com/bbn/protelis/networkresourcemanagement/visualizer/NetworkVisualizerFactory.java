@@ -2,8 +2,8 @@ package com.bbn.protelis.networkresourcemanagement.visualizer;
 
 import javax.annotation.Nonnull;
 
-import com.bbn.protelis.networkresourcemanagement.Link;
-import com.bbn.protelis.networkresourcemanagement.Node;
+import com.bbn.protelis.networkresourcemanagement.NetworkLink;
+import com.bbn.protelis.networkresourcemanagement.NetworkNode;
 
 /**
  * Factory interface for creating visualization objects for
@@ -13,12 +13,8 @@ import com.bbn.protelis.networkresourcemanagement.Node;
  *            the {@link DisplayNode} type
  * @param <DL>
  *            the {@link DisplayEdge} type
- * @param <N>
- *            the {@link Node} type
- * @param <L>
- *            the {@link Link} type
  */
-public interface NetworkVisualizerFactory<DN extends DisplayNode, DL extends DisplayEdge, N extends Node, L extends Link> {
+public interface NetworkVisualizerFactory<DN extends DisplayNode, DL extends DisplayEdge> {
 
     /**
      * Create a visualization for a node.
@@ -28,7 +24,7 @@ public interface NetworkVisualizerFactory<DN extends DisplayNode, DL extends Dis
      * @return the display object. Not null.
      */
     @Nonnull
-    DN createDisplayNode(N node);
+    DN createDisplayNode(NetworkNode node);
 
     /**
      * Create the visualization for a link.
@@ -42,5 +38,5 @@ public interface NetworkVisualizerFactory<DN extends DisplayNode, DL extends Dis
      * @return the display object. Not null.
      */
     @Nonnull
-    DL createDisplayLink(L link, DN head, DN tail);
+    DL createDisplayLink(NetworkLink link, DN head, DN tail);
 }

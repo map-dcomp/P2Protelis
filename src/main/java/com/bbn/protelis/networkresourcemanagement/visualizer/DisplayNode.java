@@ -2,9 +2,7 @@ package com.bbn.protelis.networkresourcemanagement.visualizer;
 
 import java.awt.Color;
 import java.awt.Paint;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.swing.Icon;
@@ -12,39 +10,36 @@ import javax.swing.ImageIcon;
 
 import org.protelis.lang.datatype.DeviceUID;
 
-import com.bbn.protelis.networkresourcemanagement.Node;
+import com.bbn.protelis.networkresourcemanagement.NetworkNode;
+import com.bbn.protelis.networkresourcemanagement.NetworkServer;
 
 /**
- * An object for displaying a {@link Node}.
+ * An object for displaying a {@link NetworkNode}.
  */
 public class DisplayNode {
 
     // Image collection:
-    private static final Icon SERVER_RUN = new ImageIcon(DisplayNode.class.getResource("/server-small-green.png"));
+    private static final Icon SERVER_SINGLE = new ImageIcon(DisplayNode.class.getResource("/server-small-green.png"));
+    private static final Icon SERVER_POOL = new ImageIcon(DisplayNode.class.getResource("/server-small-yellow.png"));
+    private static final Icon CLIENT = new ImageIcon(DisplayNode.class.getResource("/server-small-blue.png"));
 
-    private final Node node;
+    private final NetworkNode node;
 
     /**
      * @return the node
      */
     @Nonnull
-    protected final Node getNode() {
+    protected final NetworkNode getNode() {
         return node;
     }
-
-    private Set<DeviceUID> neighbors = new HashSet<>();
 
     /**
      * 
      * @param n
      *            the node to be displayed
      */
-    public DisplayNode(@Nonnull final Node n) {
+    public DisplayNode(@Nonnull final NetworkNode n) {
         node = n;
-
-        for (final DeviceUID neighbor : node.getNeighbors()) {
-            neighbors.add(neighbor);
-        }
     }
 
     /**
@@ -60,36 +55,37 @@ public class DisplayNode {
      */
     public String getVertexLabel() {
         // final String debugStr = debugString();
-        final String valueStr = Objects.toString(node.getVM().getCurrentValue());
-        final String label = "<html><b>" + node.getName() + "</b><br><hr>" + valueStr;
-        return label;
+        final StringBuilder builder = new StringBuilder();
+        builder.append("<html>");
+
+        builder.append("<b>" + node.getName() + "</b>");
+        if (node instanceof NetworkServer) {
+            final NetworkServer server = (NetworkServer) node;
+            final String valueStr = Objects.toString(server.getVM().getCurrentValue());
+            builder.append("<br><hr>" + valueStr);
+        }
+
+        return builder.toString();
     }
 
     /**
-     * Change color between red and white based on the execution count.
-     * 
      * @return the color to draw the object
      */
     public Paint getVertexColor() {
-        final float r = objectToColorComponent(node.getExecutionEnvironment().get("red"));
-        final float g = objectToColorComponent(node.getExecutionEnvironment().get("green"));
-        final float b = objectToColorComponent(node.getExecutionEnvironment().get("blue"));
-        if (r == 0 && g == 0 && b == 0) {
-            return null;
-        }
-        final Color c = new Color(r, g, b);
+        final Color c;
+        if (node instanceof NetworkServer) {
+            final NetworkServer server = (NetworkServer) node;
 
-        // final long executionCount = node.getExecutionCount();
-        // final Color c;
-        // if (executionCount % 2 == 0) {
-        // c = Color.RED;
-        // } else {
-        // c = Color.WHITE;
-        // }
-        //
-        // if (LOGGER.isTraceEnabled()) {
-        // LOGGER.trace("Color: " + c + " count: " + executionCount);
-        // }
+            final float r = objectToColorComponent(server.getExecutionEnvironment().get("red"));
+            final float g = objectToColorComponent(server.getExecutionEnvironment().get("green"));
+            final float b = objectToColorComponent(server.getExecutionEnvironment().get("blue"));
+            if (r == 0 && g == 0 && b == 0) {
+                return null;
+            }
+            c = new Color(r, g, b);
+        } else {
+            c = Color.BLACK;
+        }
 
         return c;
     }
@@ -116,7 +112,16 @@ public class DisplayNode {
      * @return the icon to use for the object
      */
     public Icon getIcon() {
-        return SERVER_RUN;
+        if (node instanceof NetworkServer) {
+            final NetworkServer server = (NetworkServer) node;
+            if (server.isPool()) {
+                return SERVER_POOL;
+            } else {
+                return SERVER_SINGLE;
+            }
+        } else {
+            return CLIENT;
+        }
     }
 
 }

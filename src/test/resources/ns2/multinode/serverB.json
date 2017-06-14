@@ -1,5 +1,6 @@
 {
 	"region": "B",
+	"pool": true,
 	"resource-report": {
 		"clientDemand": {
 			"service1": {
