@@ -113,7 +113,7 @@ public final class NS2Parser {
      * @param <L>
      *            the {@link NetworkLink} type created
      * @param <C>
-     *            the {@link Client} type created
+     *            the {@link NetworkClient} type created
      * @return the network scenario
      * @throws IOException
      *             if there is an error reading from the reader
@@ -406,18 +406,21 @@ public final class NS2Parser {
      *            the arguments
      */
     public static void main(final String[] args) {
+        String scenarioFile = "./src/test/resources/ns2/multinode/";
         try {
             if (args.length < 1) {
-                LOGGER.error("You need to spcify the file to load");
-                return;
+                LOGGER.warn("No file specified; using default: "+scenarioFile+"\n");
+            } else {
+                scenarioFile = args[0];
             }
+            
 
             final NodeLookupService lookupService = new LocalNodeLookupService(5000);
 
             final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService,
                     "/protelis/com/bbn/resourcemanagement/resourcetracker.pt", false);
-            final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parseFromFile(args[0],
-                    args[0], factory);
+            final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parseFromFile(scenarioFile,
+                    scenarioFile, factory);
 
             scenario.setTerminationCondition(new NeverTerminate<>());
 
@@ -431,7 +434,7 @@ public final class NS2Parser {
 
             System.exit(0);
         } catch (final IOException ioe) {
-            LOGGER.error("Error reading the simulation at " + args[0], ioe);
+            LOGGER.error("Error reading the simulation at " + scenarioFile, ioe);
             System.exit(1);
         }
 

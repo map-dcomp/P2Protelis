@@ -2,8 +2,8 @@
 	"region": "B",
 	"resource-report": {
 		"clientDemand": {
-			"service1": {
-				"CPU": 1,
+			"service2": {
+				"CPU": 10,
 				"MEMORY": 10000000,
 				"DISK": 1000
 			}

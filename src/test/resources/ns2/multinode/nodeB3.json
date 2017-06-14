@@ -2,11 +2,6 @@
 	"region": "B",
 	"resource-report": {
 		"clientDemand": {
-			"service1": {
-				"CPU": 1,
-				"MEMORY": 10000000,
-				"DISK": 1000
-			}
 		},
 		"serverCapacity": {
 			"CPU": 1,
