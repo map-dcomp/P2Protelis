@@ -68,7 +68,13 @@ def nbrRegions() {
 //nbrRegions();
 
 
+
 let rgn = self.getRegionName();
-multiRegion(rgn,(n) -> { rgn == n },countNodes,[]);
+let s = multiRegion(rgn,(n) -> { rgn == n },countNodes,[]);
 //multiRegion(rgn,(n) -> { rgn == n },nbrRegions,[]);
 //multiRegion(rgn,(n) -> { rgn == n },() -> { [rgn, self.getDeviceUID()] },[]);
+
+let d = self.getResourceReport().getClientDemand();
+let c = self.getResourceReport().getServerCapacity();
+
+[d,c,s];

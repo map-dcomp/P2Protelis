@@ -6,6 +6,11 @@
 				"CPU": 1,
 				"MEMORY": 10000000,
 				"DISK": 1000
+			},
+			"service2": {
+				"CPU": 10,
+				"MEMORY": 100000000,
+				"DISK": 1000
 			}
 		},
 		"serverCapacity": {
