@@ -362,18 +362,21 @@ public final class NS2Parser {
      *            the arguments
      */
     public static void main(final String[] args) {
+        String scenarioFile = "./src/test/resources/ns2/multinode/";
         try {
             if (args.length < 1) {
-                LOGGER.error("You need to spcify the file to load");
-                return;
+                LOGGER.warn("No file specified; using default: "+scenarioFile+"\n");
+            } else {
+                scenarioFile = args[0];
             }
+            
 
             final NodeLookupService lookupService = new LocalNodeLookupService(5000);
 
             final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService,
                     "/protelis/com/bbn/resourcemanagement/resourcetracker.pt", false);
-            final Scenario<Node, Link> scenario = NS2Parser.parseFromFile(args[0], args[0], factory);
-
+            final Scenario<Node, Link> scenario = NS2Parser.parseFromFile(scenarioFile, scenarioFile, factory);
+            
             scenario.setTerminationCondition(new NeverTerminate<>());
 
             final BasicNetworkVisualizerFactory<Node, Link> visFactory = new BasicNetworkVisualizerFactory<>();
@@ -385,7 +388,7 @@ public final class NS2Parser {
 
             System.exit(0);
         } catch (final IOException ioe) {
-            LOGGER.error("Error reading the simulation at " + args[0], ioe);
+            LOGGER.error("Error reading the simulation at " + scenarioFile, ioe);
             System.exit(1);
         }
 
