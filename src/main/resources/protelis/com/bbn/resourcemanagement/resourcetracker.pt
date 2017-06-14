@@ -50,9 +50,9 @@ public def regionSet(potential) {
 def countNodes() {
     let nonce = once(self.nextRandomDouble());
     let leader = nonce == gossip(nonce, min);
-    //self.putEnvironmentVariable("blue",leader);
+	self.getExecutionEnvironment().put("blue",leader);
     let d = hopDistanceTo(leader);
-    [leader, countDevices(d)];
+    countDevices(d);
 }
 
 def nbrRegions() {
@@ -66,6 +66,7 @@ def nbrRegions() {
 //countNodes();
 //minHood(nbr(self.getDeviceUID()))
 //nbrRegions();
+
 
 let rgn = self.getRegionName();
 multiRegion(rgn,(n) -> { rgn == n },countNodes,[]);
