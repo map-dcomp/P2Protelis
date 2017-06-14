@@ -243,7 +243,7 @@ public class NetworkServer extends AbstractExecutionContext
     }
 
     @Override
-    protected final AbstractExecutionContext instance() {
+    protected AbstractExecutionContext instance() {
         return new ChildContext(this);
     }
 
