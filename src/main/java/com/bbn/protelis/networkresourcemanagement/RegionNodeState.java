@@ -1,5 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.io.Serializable;
+
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableSet;
@@ -7,7 +9,9 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Detailed resource information for the nodes in a region.
  */
-public class RegionNodeState {
+public class RegionNodeState implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /**
      * 
