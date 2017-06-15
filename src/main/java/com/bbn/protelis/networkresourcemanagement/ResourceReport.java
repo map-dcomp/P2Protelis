@@ -66,7 +66,7 @@ public class ResourceReport implements Serializable {
     /**
      * Server capacity for the service on the node.
      * 
-     * @return the summary information. Not null.
+     * @return Not null.
      */
     @Nonnull
     public ImmutableMap<NodeAttribute, Double> getServerCapacity() {
@@ -78,7 +78,7 @@ public class ResourceReport implements Serializable {
     /**
      * Link capacity for neighboring nodes. Key is node name.
      * 
-     * @return the summary information. Not null.
+     * @return Not null.
      */
     @Nonnull
     public ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
@@ -90,7 +90,7 @@ public class ResourceReport implements Serializable {
     /**
      * Link demand for neighboring nodes. Key is node name.
      * 
-     * @return the summary information. Not null.
+     * @return Not null.
      */
     @Nonnull
     public ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> getNeighborLinkDemand() {
