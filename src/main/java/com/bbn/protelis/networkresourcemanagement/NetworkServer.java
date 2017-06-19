@@ -370,10 +370,7 @@ public class NetworkServer extends AbstractExecutionContext
         this.regionNodeState = new RegionNodeState(this.regionName);
     }
 
-    /**
-     * @return the name of the region that this node currently belongs to, may
-     *         be null
-     */
+    @Override
     public String getRegionName() {
         return this.regionName;
     }
