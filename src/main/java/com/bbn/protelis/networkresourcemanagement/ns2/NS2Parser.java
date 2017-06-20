@@ -41,7 +41,6 @@ import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
 import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 
-
 /**
  * Read NS2 files in and create a network for protelis.
  */
@@ -409,11 +408,10 @@ public final class NS2Parser {
         String scenarioFile = "./src/test/resources/ns2/multinode/";
         try {
             if (args.length < 1) {
-                LOGGER.warn("No file specified; using default: "+scenarioFile+"\n");
+                LOGGER.warn("No file specified; using default: " + scenarioFile + "\n");
             } else {
                 scenarioFile = args[0];
             }
-            
 
             final NodeLookupService lookupService = new LocalNodeLookupService(5000);
 
