@@ -27,7 +27,7 @@ public class BasicResourceManager implements ResourceManager {
     private static final String SERVER_CAPACITY_KEY = "serverCapacity";
     private static final String NEIGHBOR_LINK_DEMAND_KEY = "neighborLinkDemand";
 
-    private final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> clientDemand;
+    private final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand;
     private final ImmutableMap<NodeAttribute, Double> serverCapacity;
     private final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand;
 
@@ -126,14 +126,15 @@ public class BasicResourceManager implements ResourceManager {
     }
 
     @Nonnull
-    private ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> parseClientDemand(
+    private ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> parseClientDemand(
             @Nonnull final Map<String, Object> resourceReportValues) {
         final Object specifiedClientDemandRaw = resourceReportValues.get(CLIENT_DEMAND_KEY);
         if (null != specifiedClientDemandRaw && specifiedClientDemandRaw instanceof Map) {
             // found something specified in the extra data
 
             // this will contain the new clientDemand
-            ImmutableMap.Builder<String, ImmutableMap<NodeAttribute, Double>> builder = ImmutableMap.builder();
+            ImmutableMap.Builder<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> builder = ImmutableMap
+                    .builder();
 
             @SuppressWarnings("unchecked")
             final Map<String, Object> specifiedClientDemand = (Map<String, Object>) specifiedClientDemandRaw;
@@ -146,7 +147,7 @@ public class BasicResourceManager implements ResourceManager {
                     final Map<String, Object> individualClientDemand = (Map<String, Object>) v;
                     final ImmutableMap<NodeAttribute, Double> serviceDemand = parseEnumDoubleMap(NodeAttribute.class,
                             individualClientDemand);
-                    builder.put(serviceName, serviceDemand);
+                    builder.put(new StringServiceIdentifier(serviceName), serviceDemand);
                 } else {
                     LOGGER.warn("While parsing resource report for node " + nodeName + " the service " + serviceName
                             + " doesn't have valid client demand data");
