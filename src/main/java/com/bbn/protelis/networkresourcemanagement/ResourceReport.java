@@ -26,7 +26,7 @@ public class ResourceReport implements Serializable {
      * @param neighborLinkDemand
      *            the network demand to neighbors for this service
      */
-    public ResourceReport(@Nonnull final String nodeName,
+    public ResourceReport(@Nonnull final NodeIdentifier nodeName,
             @Nonnull final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand,
             @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
             @Nonnull final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity,
@@ -39,12 +39,12 @@ public class ResourceReport implements Serializable {
 
     }
 
-    private final String nodeName;
+    private final NodeIdentifier nodeName;
 
     /**
-     * @return the name of the node that the report came from
+     * @return the identifier of the node that the report came from
      */
-    public final String getNodeName() {
+    public final NodeIdentifier getNodeName() {
         return nodeName;
     }
 
@@ -103,7 +103,7 @@ public class ResourceReport implements Serializable {
      *            the name of the node
      * @return empty report for a node
      */
-    public static ResourceReport getNullReport(@Nonnull final String nodeName) {
+    public static ResourceReport getNullReport(@Nonnull final NodeIdentifier nodeName) {
         final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand = ImmutableMap.of();
         final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
         final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = ImmutableMap.of();
