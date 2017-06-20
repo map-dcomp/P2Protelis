@@ -2,8 +2,6 @@ package com.bbn.protelis.networkresourcemanagement;
 
 import javax.annotation.Nonnull;
 
-import com.google.common.base.Objects;
-
 /**
  * Identifier for a node that just uses a string name.
  */
@@ -32,7 +30,7 @@ public class StringRegionIdentifier implements RegionIdentifier, Comparable<Stri
 
     @Override
     public int compareTo(final StringRegionIdentifier other) {
-        if (Objects.equal(this, other)) {
+        if (this.equals(other)) {
             return 0;
         } else {
             return getName().compareTo(other.getName());
@@ -41,7 +39,7 @@ public class StringRegionIdentifier implements RegionIdentifier, Comparable<Stri
 
     @Override
     public boolean equals(final Object o) {
-        if (Objects.equal(this, o)) {
+        if (this == o) {
             return true;
         } else if (o instanceof StringRegionIdentifier) {
             return ((StringRegionIdentifier) o).getName().equals(getName());
