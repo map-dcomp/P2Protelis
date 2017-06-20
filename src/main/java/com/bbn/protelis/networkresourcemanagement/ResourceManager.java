@@ -22,10 +22,10 @@ public interface ResourceManager {
      * Reserve a container.
      * 
      * @param name
-     *            the name of the contrainer to reserve.
+     *            the name of the container to reserve.
      * @param arguments
      *            key/value pairs of arguments to pass to the container
-     * @return if the reserve was successfull
+     * @return if the reserve was successful
      */
     boolean reserveContainer(@Nonnull String name, @Nonnull Map<String, String> arguments);
 
