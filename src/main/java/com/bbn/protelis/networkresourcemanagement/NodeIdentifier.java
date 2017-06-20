@@ -1,5 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import javax.annotation.Nonnull;
+
 import org.protelis.lang.datatype.DeviceUID;
 
 /**
@@ -8,4 +10,9 @@ import org.protelis.lang.datatype.DeviceUID;
  */
 public interface NodeIdentifier extends DeviceUID {
 
+    /**
+     * @return the name of the node.
+     */
+    @Nonnull
+    String getName();
 }

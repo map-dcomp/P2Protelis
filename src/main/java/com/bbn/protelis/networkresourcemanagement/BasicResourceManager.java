@@ -29,7 +29,7 @@ public class BasicResourceManager implements ResourceManager {
 
     private final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand;
     private final ImmutableMap<NodeAttribute, Double> serverCapacity;
-    private final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand;
 
     /**
      * Construct a resource manager for the specified node.
@@ -93,14 +93,14 @@ public class BasicResourceManager implements ResourceManager {
     }
 
     @Nonnull
-    private ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> parseNeighborLinkDemand(
+    private ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> parseNeighborLinkDemand(
             @Nonnull final Map<String, Object> resourceReportValues) {
         final Object specifiedDemandRaw = resourceReportValues.get(NEIGHBOR_LINK_DEMAND_KEY);
         if (null != specifiedDemandRaw && specifiedDemandRaw instanceof Map) {
             // found something specified in the extra data
 
             // this will contain the new demand
-            ImmutableMap.Builder<String, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
+            ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
 
             @SuppressWarnings("unchecked")
             final Map<String, Object> specifiedDemand = (Map<String, Object>) specifiedDemandRaw;
@@ -113,7 +113,7 @@ public class BasicResourceManager implements ResourceManager {
                     final Map<String, Object> individualDemand = (Map<String, Object>) v;
                     final ImmutableMap<LinkAttribute, Double> serviceDemand = parseEnumDoubleMap(LinkAttribute.class,
                             individualDemand);
-                    builder.put(nodeName, serviceDemand);
+                    builder.put(new StringNodeIdentifier(nodeName), serviceDemand);
                 } else {
                     LOGGER.warn("While parsing resource report for node " + nodeName + " the service " + nodeName
                             + " doesn't have valid client demand data");
@@ -182,30 +182,29 @@ public class BasicResourceManager implements ResourceManager {
 
     @Override
     public ResourceReport getCurrentResourceReport() {
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> linkCapacity;
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkCapacity;
         if (null == node) {
             linkCapacity = ImmutableMap.of();
         } else {
             linkCapacity = node.getNeighborLinkCapacity();
         }
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> linkDemand = computeNeighborLinkDemand();
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkDemand = computeNeighborLinkDemand();
         final ResourceReport report = new ResourceReport(new StringNodeIdentifier(nodeName), this.clientDemand,
                 this.serverCapacity, linkCapacity, linkDemand);
         return report;
     }
 
     @Nonnull
-    private ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> computeNeighborLinkDemand() {
+    private ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> computeNeighborLinkDemand() {
         if (null == node) {
             return ImmutableMap.of();
         } else {
-            final ImmutableMap.Builder<String, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
-            this.node.getNeighbors().forEach(uid -> {
-                final String neighborName = uid.getUID();
-                if (this.neighborLinkDemand.containsKey(neighborName)) {
-                    builder.put(neighborName, this.neighborLinkDemand.get(neighborName));
+            final ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
+            this.node.getNeighbors().forEach(neighborId -> {
+                if (this.neighborLinkDemand.containsKey(neighborId)) {
+                    builder.put(neighborId, this.neighborLinkDemand.get(neighborId));
                 } else if (neighborLinkDemand.containsKey("*")) {
-                    builder.put(neighborName, this.neighborLinkDemand.get("*"));
+                    builder.put(neighborId, this.neighborLinkDemand.get("*"));
                 }
             });
             return builder.build();

@@ -29,8 +29,8 @@ public class ResourceReport implements Serializable {
     public ResourceReport(@Nonnull final NodeIdentifier nodeName,
             @Nonnull final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand,
             @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
-            @Nonnull final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity,
-            @Nonnull final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
         this.nodeName = nodeName;
         this.clientDemand = clientDemand;
         this.serverCapacity = serverCapacity;
@@ -73,7 +73,7 @@ public class ResourceReport implements Serializable {
         return serverCapacity;
     }
 
-    private final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity;
 
     /**
      * Link capacity for neighboring nodes. Key is node name.
@@ -81,11 +81,11 @@ public class ResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
         return neighborLinkCapacity;
     }
 
-    private final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand;
 
     /**
      * Link demand for neighboring nodes. Key is node name.
@@ -93,7 +93,7 @@ public class ResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> getNeighborLinkDemand() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkDemand() {
         return neighborLinkDemand;
     }
 
@@ -106,8 +106,9 @@ public class ResourceReport implements Serializable {
     public static ResourceReport getNullReport(@Nonnull final NodeIdentifier nodeName) {
         final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand = ImmutableMap.of();
         final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = ImmutableMap.of();
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = ImmutableMap.of();
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = ImmutableMap
+                .of();
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = ImmutableMap.of();
 
         return new ResourceReport(nodeName, clientDemand, serverCapacity, neighborLinkCapacity, neighborLinkDemand);
     }

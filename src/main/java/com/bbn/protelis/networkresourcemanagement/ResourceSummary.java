@@ -6,6 +6,8 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.lang.NotImplementedException;
+
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -162,22 +164,24 @@ public class ResourceSummary implements Serializable {
     @Nonnull
     public static ResourceSummary merge(@Nonnull final ResourceReport report, @Nonnull final ResourceSummary summary) {
 
-        // TODO: do we need to check the region of the report?
-
-        final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
-                report.getClientDemand(), summary.getClientDemand());
-
-        final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeNodeDoubleMapViaSum(report.getServerCapacity(),
-                summary.getServerCapacity());
-
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = mergeStringAnyDoubleMapViaSum(
-                report.getNeighborLinkCapacity(), summary.getNeighborLinkCapacity());
-
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = mergeStringAnyDoubleMapViaSum(
-                report.getNeighborLinkDemand(), summary.getNeighborLinkDemand());
-
-        return new ResourceSummary(summary.getRegionName(), clientDemand, serverCapacity, neighborLinkCapacity,
-                neighborLinkDemand);
+        throw new NotImplementedException("Need to resolve the cross region issue here");
+//        
+//        // TODO: do we need to check the region of the report?
+//
+//        final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
+//                report.getClientDemand(), summary.getClientDemand());
+//
+//        final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeNodeDoubleMapViaSum(report.getServerCapacity(),
+//                summary.getServerCapacity());
+//
+//        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = mergeStringAnyDoubleMapViaSum(
+//                report.getNeighborLinkCapacity(), summary.getNeighborLinkCapacity());
+//
+//        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = mergeStringAnyDoubleMapViaSum(
+//                report.getNeighborLinkDemand(), summary.getNeighborLinkDemand());
+//
+//        return new ResourceSummary(summary.getRegionName(), clientDemand, serverCapacity, neighborLinkCapacity,
+//                neighborLinkDemand);
     }
 
     @Nonnull

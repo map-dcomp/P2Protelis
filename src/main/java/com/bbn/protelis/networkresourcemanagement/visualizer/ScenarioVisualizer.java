@@ -151,15 +151,15 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
 
         // Next, add all edges
         for (final L l : scenario.getLinks()) {
-            final DN leftNode = nodes.get(l.getLeft().getDeviceUID());
+            final DN leftNode = nodes.get(l.getLeft().getNodeIdentifier());
             if (null == leftNode) {
-                throw new RuntimeException("Link " + l.getName() + " refers to node " + l.getLeft().getName()
-                        + " that isn't in the graph.");
+                throw new RuntimeException("Link " + l.getName() + " refers to node "
+                        + l.getLeft().getNodeIdentifier().getName() + " that isn't in the graph.");
             }
-            final DN rightNode = nodes.get(l.getRight().getDeviceUID());
+            final DN rightNode = nodes.get(l.getRight().getNodeIdentifier());
             if (null == rightNode) {
-                throw new RuntimeException("Link " + l.getName() + " refers to node " + l.getRight().getName()
-                        + " that isn't in the graph.");
+                throw new RuntimeException("Link " + l.getName() + " refers to node "
+                        + l.getRight().getNodeIdentifier().getName() + " that isn't in the graph.");
             }
 
             final DL edge = visFactory.createDisplayLink(l, leftNode, rightNode);

@@ -303,9 +303,9 @@ public final class NS2Parser {
         } // input stream reader
 
         final Map<DeviceUID, N> servers = serversByName.entrySet().stream()
-                .collect(Collectors.toMap(e -> e.getValue().getDeviceUID(), Map.Entry::getValue));
+                .collect(Collectors.toMap(e -> e.getValue().getNodeIdentifier(), Map.Entry::getValue));
         final Map<DeviceUID, C> clients = clientsByName.entrySet().stream()
-                .collect(Collectors.toMap(e -> e.getValue().getDeviceUID(), Map.Entry::getValue));
+                .collect(Collectors.toMap(e -> e.getValue().getNodeIdentifier(), Map.Entry::getValue));
         final Scenario<N, L, C> scenario = new Scenario<>(scenarioName, servers, clients, links);
         return scenario;
     }
