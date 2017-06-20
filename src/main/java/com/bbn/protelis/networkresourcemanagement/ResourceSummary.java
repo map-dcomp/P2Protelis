@@ -137,7 +137,7 @@ public class ResourceSummary implements Serializable {
 
         final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
                 one.getClientDemand(), two.getClientDemand());
-        final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeNodeDoubleMapViaSum(one.getServerCapacity(),
+        final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeAnyDoubleMapViaSum(one.getServerCapacity(),
                 two.getServerCapacity());
 
         final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = mergeStringAnyDoubleMapViaSum(
@@ -167,7 +167,7 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
                 report.getClientDemand(), summary.getClientDemand());
 
-        final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeNodeDoubleMapViaSum(report.getServerCapacity(),
+        final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeAnyDoubleMapViaSum(report.getServerCapacity(),
                 summary.getServerCapacity());
 
         final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = mergeStringAnyDoubleMapViaSum(
@@ -190,7 +190,7 @@ public class ResourceSummary implements Serializable {
             if (null != twoValue) {
                 final ImmutableMap<T, Double> oneValue = oneEntry.getValue();
 
-                final ImmutableMap<T, Double> newValue = mergeNodeDoubleMapViaSum(oneValue, twoValue);
+                final ImmutableMap<T, Double> newValue = mergeAnyDoubleMapViaSum(oneValue, twoValue);
 
                 newMap.put(oneEntry.getKey(), newValue);
             } else {
@@ -207,8 +207,18 @@ public class ResourceSummary implements Serializable {
         return ImmutableMap.copyOf(newMap);
     }
 
+    /**
+     * Create a new ImmutableMap that sums the values for matching keys.
+     * 
+     * @param one
+     *            the first map to combine
+     * @param two
+     *            the second map to combine
+     * @return a new map
+     * @param <T> the type of the map key
+     */
     @Nonnull
-    private static <T> ImmutableMap<T, Double> mergeNodeDoubleMapViaSum(@Nonnull final ImmutableMap<T, Double> one,
+    public static <T> ImmutableMap<T, Double> mergeAnyDoubleMapViaSum(@Nonnull final ImmutableMap<T, Double> one,
             @Nonnull final ImmutableMap<T, Double> two) {
 
         final Map<T, Double> newMap = new HashMap<>(one);
