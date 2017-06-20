@@ -1,7 +1,6 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -9,6 +8,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -226,8 +226,8 @@ public class BasicResourceManager implements ResourceManager {
     @Override
     public boolean startTask(final String containerName,
             final String taskName,
-            final List<String> arguments,
-            final Map<String, String> environment) {
+            final ImmutableList<String> arguments,
+            final ImmutableMap<String, String> environment) {
         // TODO Auto-generated method stub
         return false;
     }
