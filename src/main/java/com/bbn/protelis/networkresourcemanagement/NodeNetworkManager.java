@@ -171,7 +171,7 @@ public class NodeNetworkManager implements NetworkManager {
      */
     private void listenForNeighbors() {
 
-        final InetSocketAddress addr = lookupService.getInetAddressForNode(node.getDeviceUID());
+        final InetSocketAddress addr = lookupService.getInetAddressForNode(node.getNodeIdentifier());
         final int port = addr.getPort();
         new Thread(threadGroup, () -> {
 
@@ -190,7 +190,7 @@ public class NodeNetworkManager implements NetworkManager {
                                 final ObjectInputStream in = new ObjectInputStream(s.getInputStream());
 
                                 // write uid for neighbor
-                                out.writeObject(node.getDeviceUID());
+                                out.writeObject(node.getNodeIdentifier());
                                 out.flush();
 
                                 // reads data from connectToNeighbor()
@@ -247,7 +247,7 @@ public class NodeNetworkManager implements NetworkManager {
 
             final DeviceUID neighborUid = (DeviceUID) in.readObject();
 
-            out.writeObject(node.getDeviceUID());
+            out.writeObject(node.getNodeIdentifier());
             out.writeInt(nonce);
             out.flush();
 

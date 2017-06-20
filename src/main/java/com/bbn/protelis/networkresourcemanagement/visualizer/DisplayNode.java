@@ -47,7 +47,7 @@ public class DisplayNode {
      * @return the uid of the node
      */
     public DeviceUID getUID() {
-        return node.getDeviceUID();
+        return node.getNodeIdentifier();
     }
 
     /**
@@ -58,7 +58,7 @@ public class DisplayNode {
         final StringBuilder builder = new StringBuilder();
         builder.append("<html>");
 
-        builder.append("<b>" + node.getName() + "</b>");
+        builder.append("<b>" + node.getNodeIdentifier().getName() + "</b>");
         if (node instanceof NetworkServer) {
             final NetworkServer server = (NetworkServer) node;
             final String valueStr = Objects.toString(server.getVM().getCurrentValue());

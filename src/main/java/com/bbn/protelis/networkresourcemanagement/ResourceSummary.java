@@ -6,6 +6,8 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.lang.NotImplementedException;
+
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -18,7 +20,7 @@ public class ResourceSummary implements Serializable {
 
     /**
      * 
-     * @param name
+     * @param region
      *            the name of this region
      * @param clientDemand
      *            the client demand for services from this region. Key is
@@ -32,28 +34,29 @@ public class ResourceSummary implements Serializable {
      *            the demand on the links to the neighboring regions (key is
      *            region name)
      */
-    public ResourceSummary(@Nonnull final String name,
-            @Nonnull final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> clientDemand,
+    public ResourceSummary(@Nonnull final RegionIdentifier region,
+            @Nonnull final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand,
             @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
-            @Nonnull final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity,
-            @Nonnull final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
-        this.name = name;
+            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity,
+            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
+        this.region = region;
         this.clientDemand = clientDemand;
         this.serverCapacity = serverCapacity;
         this.neighborLinkCapacity = neighborLinkCapacity;
         this.neighborLinkDemand = neighborLinkDemand;
     }
 
-    private final String name;
+    private final RegionIdentifier region;
 
     /**
      * @return the name of the region
      */
-    public final String getRegionName() {
-        return name;
+    @Nonnull
+    public final RegionIdentifier getRegion() {
+        return region;
     }
 
-    private final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> clientDemand;
+    private final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand;
 
     /**
      * Get client demand for this region. Key is the service name, value is the
@@ -62,7 +65,7 @@ public class ResourceSummary implements Serializable {
      * @return the summary information. Not null.
      */
     @Nonnull
-    public ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> getClientDemand() {
+    public ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> getClientDemand() {
         return clientDemand;
     }
 
@@ -78,7 +81,7 @@ public class ResourceSummary implements Serializable {
         return serverCapacity;
     }
 
-    private final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity;
+    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity;
 
     /**
      * Link capacity for neighboring regions. Key is region name.
@@ -86,11 +89,11 @@ public class ResourceSummary implements Serializable {
      * @return the summary information. Not null.
      */
     @Nonnull
-    public ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
+    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
         return neighborLinkCapacity;
     }
 
-    private final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand;
+    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand;
 
     /**
      * Link demand for neighboring regions. Key is region name.
@@ -98,23 +101,25 @@ public class ResourceSummary implements Serializable {
      * @return the summary information. Not null.
      */
     @Nonnull
-    public ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> getNeighborLinkDemand() {
+    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkDemand() {
         return neighborLinkDemand;
     }
 
     /**
      * 
-     * @param regionName
-     *            the name of the region
+     * @param region
+     *            the region
      * @return empty summary for a region
      */
-    public static ResourceSummary getNullSummary(@Nonnull final String regionName) {
-        final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> clientDemand = ImmutableMap.of();
+    public static ResourceSummary getNullSummary(@Nonnull final RegionIdentifier region) {
+        final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand = ImmutableMap.of();
         final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = ImmutableMap.of();
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = ImmutableMap.of();
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = ImmutableMap
+                .of();
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = ImmutableMap
+                .of();
 
-        return new ResourceSummary(regionName, clientDemand, serverCapacity, neighborLinkCapacity, neighborLinkDemand);
+        return new ResourceSummary(region, clientDemand, serverCapacity, neighborLinkCapacity, neighborLinkDemand);
     }
 
     /**
@@ -131,21 +136,21 @@ public class ResourceSummary implements Serializable {
      */
     @Nonnull
     public static ResourceSummary merge(@Nonnull final ResourceSummary one, @Nonnull final ResourceSummary two) {
-        if (!one.getRegionName().equals(two.getRegionName())) {
+        if (!one.getRegion().equals(two.getRegion())) {
             throw new IllegalArgumentException("Cannot merge resource summaries from different regions");
         }
 
-        final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
+        final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
                 one.getClientDemand(), two.getClientDemand());
         final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeNodeDoubleMapViaSum(one.getServerCapacity(),
                 two.getServerCapacity());
 
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = mergeStringAnyDoubleMapViaSum(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = mergeStringAnyDoubleMapViaSum(
                 one.getNeighborLinkCapacity(), two.getNeighborLinkCapacity());
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = mergeStringAnyDoubleMapViaSum(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = mergeStringAnyDoubleMapViaSum(
                 one.getNeighborLinkDemand(), two.getNeighborLinkDemand());
 
-        return new ResourceSummary(one.getRegionName(), clientDemand, serverCapacity, neighborLinkCapacity,
+        return new ResourceSummary(one.getRegion(), clientDemand, serverCapacity, neighborLinkCapacity,
                 neighborLinkDemand);
     }
 
@@ -162,30 +167,37 @@ public class ResourceSummary implements Serializable {
     @Nonnull
     public static ResourceSummary merge(@Nonnull final ResourceReport report, @Nonnull final ResourceSummary summary) {
 
-        // TODO: do we need to check the region of the report?
-
-        final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
-                report.getClientDemand(), summary.getClientDemand());
-
-        final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeNodeDoubleMapViaSum(report.getServerCapacity(),
-                summary.getServerCapacity());
-
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = mergeStringAnyDoubleMapViaSum(
-                report.getNeighborLinkCapacity(), summary.getNeighborLinkCapacity());
-
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = mergeStringAnyDoubleMapViaSum(
-                report.getNeighborLinkDemand(), summary.getNeighborLinkDemand());
-
-        return new ResourceSummary(summary.getRegionName(), clientDemand, serverCapacity, neighborLinkCapacity,
-                neighborLinkDemand);
+        throw new NotImplementedException("Need to resolve the cross region issue here");
+        //
+        // // TODO: do we need to check the region of the report?
+        //
+        // final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute,
+        // Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
+        // report.getClientDemand(), summary.getClientDemand());
+        //
+        // final ImmutableMap<NodeAttribute, Double> serverCapacity =
+        // mergeNodeDoubleMapViaSum(report.getServerCapacity(),
+        // summary.getServerCapacity());
+        //
+        // final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>>
+        // neighborLinkCapacity = mergeStringAnyDoubleMapViaSum(
+        // report.getNeighborLinkCapacity(), summary.getNeighborLinkCapacity());
+        //
+        // final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>>
+        // neighborLinkDemand = mergeStringAnyDoubleMapViaSum(
+        // report.getNeighborLinkDemand(), summary.getNeighborLinkDemand());
+        //
+        // return new ResourceSummary(summary.getRegionName(), clientDemand,
+        // serverCapacity, neighborLinkCapacity,
+        // neighborLinkDemand);
     }
 
     @Nonnull
-    private static <T> ImmutableMap<String, ImmutableMap<T, Double>> mergeStringAnyDoubleMapViaSum(
-            @Nonnull final ImmutableMap<String, ImmutableMap<T, Double>> one,
-            @Nonnull final ImmutableMap<String, ImmutableMap<T, Double>> two) {
-        final Map<String, ImmutableMap<T, Double>> newMap = new HashMap<>();
-        for (final ImmutableMap.Entry<String, ImmutableMap<T, Double>> oneEntry : one.entrySet()) {
+    private static <ID, T> ImmutableMap<ID, ImmutableMap<T, Double>> mergeStringAnyDoubleMapViaSum(
+            @Nonnull final ImmutableMap<ID, ImmutableMap<T, Double>> one,
+            @Nonnull final ImmutableMap<ID, ImmutableMap<T, Double>> two) {
+        final Map<ID, ImmutableMap<T, Double>> newMap = new HashMap<>();
+        for (final ImmutableMap.Entry<ID, ImmutableMap<T, Double>> oneEntry : one.entrySet()) {
             final ImmutableMap<T, Double> twoValue = two.get(oneEntry.getKey());
             if (null != twoValue) {
                 final ImmutableMap<T, Double> oneValue = oneEntry.getValue();
@@ -198,7 +210,7 @@ public class ResourceSummary implements Serializable {
                 newMap.put(oneEntry.getKey(), oneEntry.getValue());
             }
         }
-        for (final ImmutableMap.Entry<String, ImmutableMap<T, Double>> twoEntry : two.entrySet()) {
+        for (final ImmutableMap.Entry<ID, ImmutableMap<T, Double>> twoEntry : two.entrySet()) {
             if (!one.containsKey(twoEntry.getKey())) {
                 newMap.put(twoEntry.getKey(), twoEntry.getValue());
             }

@@ -35,7 +35,7 @@ public def C(potential, reduce, local, null) {
                 (a, b) -> { reduce.apply(a, b) },
                 // expression that will be evaluated if the field is empty
                 null,
-                mux (nbr(getParent(potential, (v) -> { nonce })) == nonce) { 
+                mux (nbr(getParent(potential, (v) -> { nonce })) == nonce) {
                     nbr(v)
                 } else { null }
             )
@@ -44,7 +44,7 @@ public def C(potential, reduce, local, null) {
 }
 
 public def regionSet(potential) {
-	C(potential, union, unionHood(nbr([self.getRegionName()])), []);
+	C(potential, union, unionHood(nbr([self.getRegionIdentifier()])), []);
 }
 
 def countNodes() {
@@ -69,7 +69,7 @@ def nbrRegions() {
 
 
 
-let rgn = self.getRegionName();
+let rgn = self.getRegionIdentifier();
 let s = multiRegion(rgn,(n) -> { rgn == n },countNodes,[]);
 //multiRegion(rgn,(n) -> { rgn == n },nbrRegions,[]);
 //multiRegion(rgn,(n) -> { rgn == n },() -> { [rgn, self.getDeviceUID()] },[]);

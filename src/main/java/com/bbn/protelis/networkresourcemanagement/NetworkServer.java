@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nonnull;
 
+import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
 import org.protelis.vm.impl.AbstractExecutionContext;
@@ -27,12 +28,12 @@ public class NetworkServer extends AbstractExecutionContext
     /**
      * Used when there is no region name.
      */
-    public static final String NULL_REGION_NAME = "__null-region__";
+    public static final StringRegionIdentifier NULL_REGION = new StringRegionIdentifier("__null-region__");
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkServer.class);
 
     /** Device numerical identifier */
-    private final StringUID uid;
+    private final StringNodeIdentifier uid;
 
     /** The Protelis VM to be executed by the device */
     private final ProtelisVM vm;
@@ -44,7 +45,8 @@ public class NetworkServer extends AbstractExecutionContext
 
     /**
      * The key into extra data passed to {@link #processExtraData(Map)} that
-     * specifies the region for a node.
+     * specifies the region for a node. This will create a
+     * {@link StringRegionIdentifier}.
      */
     public static final String EXTRA_DATA_REGION_KEY = "region";
 
@@ -107,22 +109,22 @@ public class NetworkServer extends AbstractExecutionContext
     /**
      * The neighboring nodes.
      */
-    private final Map<StringUID, Double> neighbors = new HashMap<>();
+    private final Map<NodeIdentifier, Double> neighbors = new HashMap<>();
 
     @Override
     @Nonnull
-    public final Set<StringUID> getNeighbors() {
+    public final Set<NodeIdentifier> getNeighbors() {
         return Collections.unmodifiableSet(neighbors.keySet());
     }
 
     @Override
-    public final void addNeighbor(@Nonnull final StringUID v, final double bandwidth) {
+    public final void addNeighbor(@Nonnull final NodeIdentifier v, final double bandwidth) {
         neighbors.put(v, bandwidth);
     }
 
     @Override
     public final void addNeighbor(@Nonnull final NetworkNode v, final double bandwidth) {
-        addNeighbor(v.getDeviceUID(), bandwidth);
+        addNeighbor(v.getNodeIdentifier(), bandwidth);
     }
 
     /**
@@ -131,9 +133,9 @@ public class NetworkServer extends AbstractExecutionContext
      * @see ResourceReport#getNeighborLinkCapacity()
      */
     @Nonnull
-    public ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
-        ImmutableMap.Builder<String, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
-        neighbors.forEach((k, v) -> builder.put(k.getUID(), ImmutableMap.of(LinkAttribute.DATARATE, v)));
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
+        ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
+        neighbors.forEach((k, v) -> builder.put(k, ImmutableMap.of(LinkAttribute.DATARATE, v)));
         return builder.build();
     }
 
@@ -150,10 +152,10 @@ public class NetworkServer extends AbstractExecutionContext
     public NetworkServer(@Nonnull final NodeLookupService lookupService, @Nonnull final ProtelisProgram program,
             @Nonnull final String name, @Nonnull final ResourceManager resourceManager) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
-        this.uid = new StringUID(name);
-        this.regionName = NULL_REGION_NAME;
-        this.networkState = new NetworkState(this.regionName);
-        this.regionNodeState = new RegionNodeState(this.regionName);
+        this.uid = new StringNodeIdentifier(name);
+        this.region = NULL_REGION;
+        this.networkState = new NetworkState(this.region);
+        this.regionNodeState = new RegionNodeState(this.region);
         this.resourceManager = resourceManager;
 
         // Finish making the new device and add it to our collection
@@ -184,11 +186,16 @@ public class NetworkServer extends AbstractExecutionContext
      * @return the name of the node
      */
     public final String getName() {
-        return uid.getUID();
+        return uid.getName();
     }
 
     @Override
-    public final StringUID getDeviceUID() {
+    public final NodeIdentifier getNodeIdentifier() {
+        return uid;
+    }
+
+    @Override
+    public final DeviceUID getDeviceUID() {
         return uid;
     }
 
@@ -220,8 +227,8 @@ public class NetworkServer extends AbstractExecutionContext
         }
 
         @Override
-        public StringUID getDeviceUID() {
-            return parent.getDeviceUID();
+        public NodeIdentifier getDeviceUID() {
+            return parent.getNodeIdentifier();
         }
 
         @Override
@@ -236,14 +243,27 @@ public class NetworkServer extends AbstractExecutionContext
 
         // TODO: need to better fix the whole ChildContext architecture
         /**
-         * @return the region name of the parent
+         * @return the region of the parent
          */
-        public String getRegionName() {
-            return parent.getRegionName();
+        public RegionIdentifier getRegion() {
+            return parent.getRegionIdentifier();
         }
-        
-        public NetworkState getNetworkState() { return parent.getNetworkState(); }
-        public RegionNodeState getRegionNodeState() { return parent.getRegionNodeState(); }
+
+        /**
+         * 
+         * @return parent network state
+         */
+        public NetworkState getNetworkState() {
+            return parent.getNetworkState();
+        }
+
+        /**
+         * 
+         * @return parent region node state
+         */
+        public RegionNodeState getRegionNodeState() {
+            return parent.getRegionNodeState();
+        }
     }
 
     @Override
@@ -354,7 +374,7 @@ public class NetworkServer extends AbstractExecutionContext
         return resourceManager.getCurrentResourceReport();
     }
 
-    private String regionName;
+    private RegionIdentifier region;
 
     /**
      * Changing the region has the side effect of resetting the network state
@@ -364,22 +384,24 @@ public class NetworkServer extends AbstractExecutionContext
      *            the new region that this node belongs to
      * @see #getNetworkState()
      */
-    public void setRegionName(final String region) {
-        this.regionName = region;
-        this.networkState = new NetworkState(this.regionName);
-        this.regionNodeState = new RegionNodeState(this.regionName);
+    public void setRegion(final RegionIdentifier region) {
+        this.region = region;
+        this.networkState = new NetworkState(this.region);
+        this.regionNodeState = new RegionNodeState(this.region);
     }
 
     @Override
-    public String getRegionName() {
-        return this.regionName;
+    public RegionIdentifier getRegionIdentifier() {
+        return this.region;
     }
 
     @Override
     public void processExtraData(@Nonnull final Map<String, Object> extraData) {
-        final Object region = extraData.get(EXTRA_DATA_REGION_KEY);
-        if (null != region) {
-            this.setRegionName(region.toString());
+        final Object regionValue = extraData.get(EXTRA_DATA_REGION_KEY);
+        if (null != regionValue) {
+            final String regionName = regionValue.toString();
+            final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
+            this.setRegion(region);
         }
 
         final Object pool = extraData.get(EXTRA_DATA_POOL);
