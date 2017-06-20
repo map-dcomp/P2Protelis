@@ -6,7 +6,7 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.protelis.lang.datatype.Field;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -155,41 +155,47 @@ public class ResourceSummary implements Serializable {
     }
 
     /**
-     * Merge a report and a summary.
+     * Convert a {@link ResourceReport} into a {@link ResourceSummary} to be
+     * merged later.
      * 
      * @param report
-     *            the report to merge. Not null.
-     * @param summary
-     *            the summary to merge. Not null.
-     * @return a newly created summary. Not null, but may be the result of
-     *         {@link #getNullSummary(String)}.
+     *            the report to convert
+     * @param nodeToRegion
+     *            the mapping of {@link NodeIdentifier} to
+     *            {@link RegionIdentifier}.
+     * @return a new {@link ResourceSummary} object
+     * @throws ClassCastException
+     *             if nodeRegions does not contain {@link RegionIdentifier}
+     *             objects.
      */
     @Nonnull
-    public static ResourceSummary merge(@Nonnull final ResourceReport report, @Nonnull final ResourceSummary summary) {
+    public static ResourceSummary convertToSummary(@Nonnull final ResourceReport report,
+            @Nonnull final Field nodeToRegion) {
+        final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand = report
+                .getClientDemand();
+        final ImmutableMap<NodeAttribute, Double> serverCapacity = report.getServerCapacity();
 
-        throw new NotImplementedException("Need to resolve the cross region issue here");
-        //
-        // // TODO: do we need to check the region of the report?
-        //
-        // final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute,
-        // Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
-        // report.getClientDemand(), summary.getClientDemand());
-        //
-        // final ImmutableMap<NodeAttribute, Double> serverCapacity =
-        // mergeNodeDoubleMapViaSum(report.getServerCapacity(),
-        // summary.getServerCapacity());
-        //
-        // final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>>
-        // neighborLinkCapacity = mergeStringAnyDoubleMapViaSum(
-        // report.getNeighborLinkCapacity(), summary.getNeighborLinkCapacity());
-        //
-        // final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>>
-        // neighborLinkDemand = mergeStringAnyDoubleMapViaSum(
-        // report.getNeighborLinkDemand(), summary.getNeighborLinkDemand());
-        //
-        // return new ResourceSummary(summary.getRegionName(), clientDemand,
-        // serverCapacity, neighborLinkCapacity,
-        // neighborLinkDemand);
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = convertNodeToRegion(
+                nodeToRegion, report.getNeighborLinkCapacity());
+
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = convertNodeToRegion(
+                nodeToRegion, report.getNeighborLinkDemand());
+
+        final RegionIdentifier reportRegion = (RegionIdentifier) nodeToRegion.getSample(report.getNodeName());
+
+        final ResourceSummary summary = new ResourceSummary(reportRegion, clientDemand, serverCapacity,
+                neighborLinkCapacity, neighborLinkDemand);
+        return summary;
+    }
+
+    private static <T> ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>> convertNodeToRegion(
+            @Nonnull final Field nodeToRegion, final ImmutableMap<NodeIdentifier, ImmutableMap<T, Double>> source) {
+
+        final Map<RegionIdentifier, ImmutableMap<T, Double>> dest = new HashMap<>();
+        source.forEach((k, v) -> dest.merge((RegionIdentifier) nodeToRegion.getSample(k), v,
+                ResourceSummary::mergeNodeDoubleMapViaSum));
+
+        return ImmutableMap.copyOf(dest);
     }
 
     @Nonnull
