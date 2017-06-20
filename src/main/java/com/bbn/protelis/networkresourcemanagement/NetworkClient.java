@@ -22,7 +22,7 @@ public class NetworkClient implements NetworkNode {
      */
     public NetworkClient(@Nonnull final String name) {
         this.uid = new StringNodeIdentifier(name);
-        this.regionName = NetworkServer.NULL_REGION_NAME;
+        this.region = NetworkServer.NULL_REGION;
     }
 
     private final StringNodeIdentifier uid;
@@ -56,21 +56,23 @@ public class NetworkClient implements NetworkNode {
 
     @Override
     public void processExtraData(@Nonnull final Map<String, Object> extraData) {
-        final Object region = extraData.get(NetworkServer.EXTRA_DATA_REGION_KEY);
-        if (null != region) {
-            this.setRegionName(region.toString());
+        final Object regionValue = extraData.get(NetworkServer.EXTRA_DATA_REGION_KEY);
+        if (null != regionValue) {
+            final String regionName = regionValue.toString();
+            final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
+            this.setRegion(region);
         }
     }
 
-    private String regionName;
+    private RegionIdentifier region;
 
-    private void setRegionName(final String region) {
-        this.regionName = region;
+    private void setRegion(final RegionIdentifier region) {
+        this.region = region;
     }
 
     @Override
-    public String getRegionName() {
-        return this.regionName;
+    public RegionIdentifier getRegionIdentifier() {
+        return this.region;
     }
 
 }

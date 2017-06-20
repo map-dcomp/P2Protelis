@@ -7,16 +7,16 @@ import com.google.common.base.Objects;
 /**
  * Identifier for a node that just uses a string name.
  */
-public class StringNodeIdentifier implements NodeIdentifier, Comparable<StringNodeIdentifier> {
+public class StringRegionIdentifier implements RegionIdentifier, Comparable<StringRegionIdentifier> {
 
     private static final long serialVersionUID = 1L;
 
     /**
      * 
      * @param name
-     *            the name for the node
+     *            the name for the region
      */
-    public StringNodeIdentifier(@Nonnull final String name) {
+    public StringRegionIdentifier(@Nonnull final String name) {
         this.name = name;
     }
 
@@ -31,7 +31,7 @@ public class StringNodeIdentifier implements NodeIdentifier, Comparable<StringNo
     }
 
     @Override
-    public int compareTo(final StringNodeIdentifier other) {
+    public int compareTo(final StringRegionIdentifier other) {
         if (Objects.equal(this, other)) {
             return 0;
         } else {
@@ -43,8 +43,8 @@ public class StringNodeIdentifier implements NodeIdentifier, Comparable<StringNo
     public boolean equals(final Object o) {
         if (Objects.equal(this, o)) {
             return true;
-        } else if (o instanceof StringNodeIdentifier) {
-            return ((StringNodeIdentifier) o).getName().equals(getName());
+        } else if (o instanceof StringRegionIdentifier) {
+            return ((StringRegionIdentifier) o).getName().equals(getName());
         } else {
             return false;
         }

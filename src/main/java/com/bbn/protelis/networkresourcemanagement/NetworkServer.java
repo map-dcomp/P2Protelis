@@ -28,7 +28,7 @@ public class NetworkServer extends AbstractExecutionContext
     /**
      * Used when there is no region name.
      */
-    public static final String NULL_REGION_NAME = "__null-region__";
+    public static final StringRegionIdentifier NULL_REGION = new StringRegionIdentifier("__null-region__");
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkServer.class);
 
@@ -45,7 +45,8 @@ public class NetworkServer extends AbstractExecutionContext
 
     /**
      * The key into extra data passed to {@link #processExtraData(Map)} that
-     * specifies the region for a node.
+     * specifies the region for a node. This will create a
+     * {@link StringRegionIdentifier}.
      */
     public static final String EXTRA_DATA_REGION_KEY = "region";
 
@@ -152,9 +153,9 @@ public class NetworkServer extends AbstractExecutionContext
             @Nonnull final String name, @Nonnull final ResourceManager resourceManager) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringNodeIdentifier(name);
-        this.regionName = NULL_REGION_NAME;
-        this.networkState = new NetworkState(this.regionName);
-        this.regionNodeState = new RegionNodeState(this.regionName);
+        this.region = NULL_REGION;
+        this.networkState = new NetworkState(this.region);
+        this.regionNodeState = new RegionNodeState(this.region);
         this.resourceManager = resourceManager;
 
         // Finish making the new device and add it to our collection
@@ -242,10 +243,10 @@ public class NetworkServer extends AbstractExecutionContext
 
         // TODO: need to better fix the whole ChildContext architecture
         /**
-         * @return the region name of the parent
+         * @return the region of the parent
          */
-        public String getRegionName() {
-            return parent.getRegionName();
+        public RegionIdentifier getRegion() {
+            return parent.getRegionIdentifier();
         }
 
         /**
@@ -373,7 +374,7 @@ public class NetworkServer extends AbstractExecutionContext
         return resourceManager.getCurrentResourceReport();
     }
 
-    private String regionName;
+    private RegionIdentifier region;
 
     /**
      * Changing the region has the side effect of resetting the network state
@@ -383,22 +384,24 @@ public class NetworkServer extends AbstractExecutionContext
      *            the new region that this node belongs to
      * @see #getNetworkState()
      */
-    public void setRegionName(final String region) {
-        this.regionName = region;
-        this.networkState = new NetworkState(this.regionName);
-        this.regionNodeState = new RegionNodeState(this.regionName);
+    public void setRegion(final RegionIdentifier region) {
+        this.region = region;
+        this.networkState = new NetworkState(this.region);
+        this.regionNodeState = new RegionNodeState(this.region);
     }
 
     @Override
-    public String getRegionName() {
-        return this.regionName;
+    public RegionIdentifier getRegionIdentifier() {
+        return this.region;
     }
 
     @Override
     public void processExtraData(@Nonnull final Map<String, Object> extraData) {
-        final Object region = extraData.get(EXTRA_DATA_REGION_KEY);
-        if (null != region) {
-            this.setRegionName(region.toString());
+        final Object regionValue = extraData.get(EXTRA_DATA_REGION_KEY);
+        if (null != regionValue) {
+            final String regionName = regionValue.toString();
+            final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
+            this.setRegion(region);
         }
 
         final Object pool = extraData.get(EXTRA_DATA_POOL);

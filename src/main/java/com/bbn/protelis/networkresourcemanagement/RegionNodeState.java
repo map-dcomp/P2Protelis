@@ -17,22 +17,22 @@ public class RegionNodeState implements Serializable {
      * 
      * Create an empty regional node state.
      * 
-     * @param regionName
+     * @param region
      *            the region that this state is for
      */
-    public RegionNodeState(@Nonnull final String regionName) {
-        this.regionName = regionName;
+    public RegionNodeState(@Nonnull final RegionIdentifier region) {
+        this.region = region;
         this.reports = ImmutableSet.of();
     }
 
-    private final String regionName;
+    private final RegionIdentifier region;
 
     /**
-     * @return the name of the region that this node state is for
+     * @return the region that this node state is for
      */
     @Nonnull
-    public String getRegionName() {
-        return this.regionName;
+    public RegionIdentifier getRegion() {
+        return this.region;
     }
 
     private ImmutableSet<ResourceReport> reports;

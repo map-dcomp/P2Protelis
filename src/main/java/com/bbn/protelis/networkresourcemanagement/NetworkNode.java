@@ -24,7 +24,7 @@ public interface NetworkNode {
      * @return the name of the region that this node currently belongs to, may
      *         be null
      */
-    String getRegionName();
+    RegionIdentifier getRegionIdentifier();
 
     /**
      * Process the extra data that was found when creating the node.
