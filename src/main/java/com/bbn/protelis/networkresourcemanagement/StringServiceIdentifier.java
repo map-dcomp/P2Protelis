@@ -5,9 +5,9 @@ import javax.annotation.Nonnull;
 /**
  * Identifier for a service that just uses a string name.
  */
-public class StringServiceIdentifier implements ServiceIdentifier, Comparable<StringServiceIdentifier> {
+public class StringServiceIdentifier implements ServiceIdentifier<String>, Comparable<StringServiceIdentifier> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 635248806922922389L;
 
     /**
      * 
@@ -56,6 +56,11 @@ public class StringServiceIdentifier implements ServiceIdentifier, Comparable<St
     @Override
     public String toString() {
         return getName();
+    }
+
+    @Override
+    public String getIdentifier() {
+        return name;
     }
 
 }

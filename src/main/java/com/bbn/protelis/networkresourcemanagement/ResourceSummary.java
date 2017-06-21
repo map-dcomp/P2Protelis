@@ -35,7 +35,7 @@ public class ResourceSummary implements Serializable {
      *            region name)
      */
     public ResourceSummary(@Nonnull final RegionIdentifier region,
-            @Nonnull final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand,
             @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
@@ -56,7 +56,7 @@ public class ResourceSummary implements Serializable {
         return region;
     }
 
-    private final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand;
 
     /**
      * Get client demand for this region. Key is the service name, value is the
@@ -65,7 +65,7 @@ public class ResourceSummary implements Serializable {
      * @return the summary information. Not null.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> getClientDemand() {
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> getClientDemand() {
         return clientDemand;
     }
 
@@ -112,7 +112,7 @@ public class ResourceSummary implements Serializable {
      * @return empty summary for a region
      */
     public static ResourceSummary getNullSummary(@Nonnull final RegionIdentifier region) {
-        final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand = ImmutableMap.of();
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand = ImmutableMap.of();
         final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = ImmutableMap
                 .of();
@@ -140,7 +140,7 @@ public class ResourceSummary implements Serializable {
             throw new IllegalArgumentException("Cannot merge resource summaries from different regions");
         }
 
-        final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand = mergeStringAnyDoubleMapViaSum(
                 one.getClientDemand(), two.getClientDemand());
         final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeNodeDoubleMapViaSum(one.getServerCapacity(),
                 two.getServerCapacity());
@@ -171,7 +171,7 @@ public class ResourceSummary implements Serializable {
     @Nonnull
     public static ResourceSummary convertToSummary(@Nonnull final ResourceReport report,
             @Nonnull final Field nodeToRegion) {
-        final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand = report
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand = report
                 .getClientDemand();
         final ImmutableMap<NodeAttribute, Double> serverCapacity = report.getServerCapacity();
 

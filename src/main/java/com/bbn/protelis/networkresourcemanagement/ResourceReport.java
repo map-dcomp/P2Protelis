@@ -27,7 +27,7 @@ public class ResourceReport implements Serializable {
      *            the network demand to neighbors for this service
      */
     public ResourceReport(@Nonnull final NodeIdentifier nodeName,
-            @Nonnull final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand,
             @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
@@ -48,7 +48,7 @@ public class ResourceReport implements Serializable {
         return nodeName;
     }
 
-    private final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand;
 
     /**
      * Get client demand for this node. Key is the service name, value is the
@@ -57,7 +57,7 @@ public class ResourceReport implements Serializable {
      * @return the summary information. Not null.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> getClientDemand() {
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> getClientDemand() {
         return clientDemand;
     }
 
@@ -104,7 +104,7 @@ public class ResourceReport implements Serializable {
      * @return empty report for a node
      */
     public static ResourceReport getNullReport(@Nonnull final NodeIdentifier nodeName) {
-        final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> clientDemand = ImmutableMap.of();
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand = ImmutableMap.of();
         final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = ImmutableMap
                 .of();
