@@ -387,6 +387,19 @@ public class NetworkServer extends AbstractExecutionContext
             this.setPool(Boolean.parseBoolean(pool.toString()));
         }
     }
+    
+    private String hardware;
+    
+    @Override
+    public String getHardware() {
+        return hardware;
+    }
+
+    @Override
+    public void setHardware(final String hardware) {
+        this.hardware = hardware;
+    }
+
 
     // ---- NetworkStateProvider
     private NetworkState networkState;

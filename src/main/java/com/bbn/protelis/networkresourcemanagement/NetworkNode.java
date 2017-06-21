@@ -72,5 +72,18 @@ public interface NetworkNode {
      */
     @Nonnull
     Set<StringUID> getNeighbors();
+    
+    /**
+     * 
+     * @return the hardware platform for this node, may be null
+     */
+    String getHardware();
+    
+    /**
+     * 
+     * @param hardware the hardware platform for this node
+     * @see #getHardware()
+     */
+    void setHardware(String hardware);
 
 }

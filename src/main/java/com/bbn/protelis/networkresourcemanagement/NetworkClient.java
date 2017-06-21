@@ -83,4 +83,16 @@ public class NetworkClient implements NetworkNode {
         return this.regionName;
     }
 
+    private String hardware;
+
+    @Override
+    public String getHardware() {
+        return hardware;
+    }
+
+    @Override
+    public void setHardware(final String hardware) {
+        this.hardware = hardware;
+    }
+
 }

@@ -241,7 +241,28 @@ public final class NS2Parser {
 
                         // final Node node = nodes.get(nodeName);
                         // node.operatingSystem = tokens[2];
+                    } else if (line.startsWith("tb-set-hardware")) {
+                        final String[] tokens = line.split("\\s");
+                        if (tokens.length != 3) {
+                            throw new NS2FormatException("Expecting tb-set-node-os to have 3 tokens: " + line);
+                        }
 
+                        if (!tokens[1].startsWith("$")) {
+                            throw new NS2FormatException("Expecting node name to start with $ on line: " + line);
+                        }
+                        final String nodeName = tokens[1].substring(1);
+
+                        final NetworkNode node;
+                        if (serversByName.containsKey(nodeName)) {
+                            node = serversByName.get(nodeName);
+                        } else if (clientsByName.containsKey(nodeName)) {
+                            node = clientsByName.get(nodeName);
+                        } else {
+                            throw new NS2FormatException("Unknown node " + nodeName + " on line: " + line);
+                        }
+
+                        final String hardware = tokens[2];
+                        node.setHardware(hardware);
                     } else {
                         if (LOGGER.isInfoEnabled()) {
                             LOGGER.info("Ignoring unknown line '" + line + "'");
