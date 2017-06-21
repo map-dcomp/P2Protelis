@@ -212,7 +212,7 @@ public class NodeNetworkManager implements NetworkManager {
                     } // while !interrupted accept connections
                 } catch (final IOException e) {
                     LOGGER.warn("Node: " + node.getName()
-                            + " received I/O exception accepting connections, trying to listen again", e);
+                            + " received I/O exception accepting connections, trying to listen again on port: " + port, e);
                 }
             } // while !interrupted, restart listen
 
