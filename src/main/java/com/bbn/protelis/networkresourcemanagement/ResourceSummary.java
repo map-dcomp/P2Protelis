@@ -192,8 +192,12 @@ public class ResourceSummary implements Serializable {
             @Nonnull final Field nodeToRegion, final ImmutableMap<NodeIdentifier, ImmutableMap<T, Double>> source) {
 
         final Map<RegionIdentifier, ImmutableMap<T, Double>> dest = new HashMap<>();
-        source.forEach((k, v) -> dest.merge((RegionIdentifier) nodeToRegion.getSample(k), v,
-                ResourceSummary::mergeNodeDoubleMapViaSum));
+        source.forEach((k, v) -> {
+            final RegionIdentifier region = (RegionIdentifier) nodeToRegion.getSample(k);
+            if (null != region) {
+                dest.merge(region, v, ResourceSummary::mergeNodeDoubleMapViaSum);
+            }
+        });
 
         return ImmutableMap.copyOf(dest);
     }
