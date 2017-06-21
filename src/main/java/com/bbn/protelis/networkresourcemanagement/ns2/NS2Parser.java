@@ -1,13 +1,13 @@
 package com.bbn.protelis.networkresourcemanagement.ns2;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,7 +41,6 @@ import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
 import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 
-
 /**
  * Read NS2 files in and create a network for protelis.
  */
@@ -68,8 +67,7 @@ public final class NS2Parser {
     }
 
     /**
-     * Parse an NS2 file into a map of Nodes. This reads from a classpath
-     * resource.
+     * Parse an NS2 file into a scenario.
      * 
      * @param scenarioName
      *            name of the scenario to create
@@ -87,61 +85,18 @@ public final class NS2Parser {
      * @throws IOException
      *             if there is an error reading from the reader
      */
-    public static <N extends NetworkServer, L extends NetworkLink, C extends NetworkClient> Scenario<N, L, C> parseFromResource(
-            final String scenarioName, final String baseDirectory, final NetworkFactory<N, L, C> factory)
+    public static <L extends NetworkLink, N extends NetworkServer, C extends NetworkClient> Scenario<N, L, C> parse(
+            final String scenarioName, final Path baseDirectory, final NetworkFactory<N, L, C> factory)
             throws IOException {
-
-        try (InputStream stream = Thread.currentThread().getContextClassLoader()
-                .getResourceAsStream(baseDirectory + "/" + TOPOLOGY_FILENAME)) {
-
-            return parseFromStream(scenarioName, baseDirectory, factory, stream, false);
-
-        } // topology stream
-    }
-
-    /**
-     * Parse an NS2 file into a map of Nodes. This reads from a file.
-     * 
-     * @param scenarioName
-     *            name of the scenario to create
-     * @param baseDirectory
-     *            the directory that contains the data.
-     * @param factory
-     *            how to create {@link NetworkServer}s and {@link NetworkLink}s
-     * @param <N>
-     *            the {@link NetworkServer} type created
-     * @param <L>
-     *            the {@link NetworkLink} type created
-     * @param <C>
-     *            the {@link NetworkClient} type created
-     * @return the network scenario
-     * @throws IOException
-     *             if there is an error reading from the reader
-     */
-    public static <N extends NetworkServer, L extends NetworkLink, C extends NetworkClient> Scenario<N, L, C> parseFromFile(
-            final String scenarioName, final String baseDirectory, final NetworkFactory<N, L, C> factory)
-            throws IOException {
-
-        try (InputStream stream = new FileInputStream(baseDirectory + "/" + TOPOLOGY_FILENAME)) {
-
-            return parseFromStream(scenarioName, baseDirectory, factory, stream, true);
-
-        } // topology stream
-    }
-
-    private static <L extends NetworkLink, N extends NetworkServer, C extends NetworkClient> Scenario<N, L, C> parseFromStream(
-            final String scenarioName,
-            final String baseDirectory,
-            final NetworkFactory<N, L, C> factory,
-            final InputStream stream,
-            final boolean readingFromFile) throws IOException {
         final Map<String, N> serversByName = new HashMap<>();
         final Map<String, C> clientsByName = new HashMap<>();
         final Set<L> links = new HashSet<>();
 
+        final Path topologyPath = baseDirectory.resolve(TOPOLOGY_FILENAME);
+
         String simulator = null;
 
-        try (Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+        try (Reader reader = Files.newBufferedReader(topologyPath, StandardCharsets.UTF_8)) {
             try (BufferedReader bufReader = new BufferedReader(reader)) {
 
                 // final Pattern setRegExp = Pattern.compile("set (\\s+)
@@ -189,12 +144,7 @@ public final class NS2Parser {
 
                                 final String objectType = tokens[1];
 
-                                final Map<String, Object> extraData;
-                                if (readingFromFile) {
-                                    extraData = getNodeDataFromFile(baseDirectory, name);
-                                } else {
-                                    extraData = getNodeDataFromResource(baseDirectory, name);
-                                }
+                                final Map<String, Object> extraData = getNodeData(baseDirectory, name);
 
                                 if ("node".equals(objectType)) {
                                     final boolean isClient = checkIsClient(extraData);
@@ -356,19 +306,19 @@ public final class NS2Parser {
      *             if there is an error reading from the file
      */
     @Nonnull
-    private static Map<String, Object> getNodeDataFromFile(final String baseDirectory, final String nodeName)
-            throws IOException {
+    private static Map<String, Object> getNodeData(final Path baseDirectory, final String nodeName) throws IOException {
 
-        final String path = baseDirectory + "/" + nodeName + ".json";
-        final File file = new File(path);
-        if (file.exists()) {
-            try (InputStream stream = new FileInputStream(path)) {
-                return getNodeDataFromStream(stream);
-            } // stream
+        final Path nodePath = baseDirectory.resolve(nodeName + ".json");
+        if (Files.exists(nodePath)) {
+            try (InputStream stream = Files.newInputStream(nodePath)) {
+                @SuppressWarnings("unchecked")
+                final JsonObject<String, Object> obj = (JsonObject<String, Object>) JsonReader.jsonToJava(stream,
+                        Collections.singletonMap(JsonReader.USE_MAPS, true));
+                return obj;
+            }
         } else {
             return Collections.emptyMap();
         }
-
     }
 
     private static Map<String, Object> getNodeDataFromStream(final InputStream stream) {
@@ -409,18 +359,19 @@ public final class NS2Parser {
         String scenarioFile = "./src/test/resources/ns2/multinode/";
         try {
             if (args.length < 1) {
-                LOGGER.warn("No file specified; using default: "+scenarioFile+"\n");
+                LOGGER.warn("No file specified; using default: " + scenarioFile + "\n");
             } else {
                 scenarioFile = args[0];
             }
-            
+
+            final Path baseDirectory = Paths.get(scenarioFile);
 
             final NodeLookupService lookupService = new LocalNodeLookupService(5000);
 
             final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService,
                     "/protelis/com/bbn/resourcemanagement/resourcetracker.pt", false);
-            final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parseFromFile(scenarioFile,
-                    scenarioFile, factory);
+            final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parse(scenarioFile,
+                    baseDirectory, factory);
 
             scenario.setTerminationCondition(new NeverTerminate<>());
 

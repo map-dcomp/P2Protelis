@@ -3,6 +3,10 @@ package com.bbn.protelis.networkresourcemanagement;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Random;
 
@@ -34,9 +38,12 @@ public class NS2ParserTest {
      * @throws IOException
      *             if there is an error reading the resource that holds the
      *             scenario
+     * @throws URISyntaxException
+     *             when there is an error converting the resource path for the
+     *             scenario to a URI.
      */
     @Test
-    public void testSimpleGraph() throws IOException {
+    public void testSimpleGraph() throws IOException, URISyntaxException {
         // pick a random port over 1024
         final Random random = new Random();
         final int port = random.nextInt(65535 - 1024) + 1024;
@@ -50,8 +57,11 @@ public class NS2ParserTest {
         final boolean anonymous = false;
 
         final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, program, anonymous);
-        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parseFromResource("multinode",
-                "ns2/multinode", factory);
+
+        final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/multinode");
+        final Path baseDirectory = Paths.get(baseu.toURI());
+        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parse("multinode", baseDirectory,
+                factory);
         Assert.assertNotNull("Parse didn't create a scenario", scenario);
 
         final long maxExecutions = 50;// 5;
