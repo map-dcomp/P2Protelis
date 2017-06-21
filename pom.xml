@@ -4,7 +4,7 @@
 	<groupId>com.bbn</groupId>
 	<artifactId>com.bbn.protelis.testbed</artifactId>
 	<name>Protelis Testbed</name>
-	<version>0.8</version>
+	<version>0.9</version>
 
 
 	<dependencies>
@@ -103,6 +103,14 @@
 					<excludes>
 						<exclude>com/bbn/protelis/processmanagement/RewindAndReplayTests.java</exclude> <!-- not currently working -->
 					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>2.17</version>
+				<configuration>
+					<configLocation>style.xml</configLocation>
 				</configuration>
 			</plugin>
 		</plugins>

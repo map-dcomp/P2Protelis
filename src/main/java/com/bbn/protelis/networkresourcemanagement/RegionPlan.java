@@ -14,51 +14,51 @@ public class RegionPlan implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * @param name
-     *            the name of the region
+     * @param region
+     *            the the region
      * @return empty plan for a region
      */
-    public static RegionPlan getNullPlan(@Nonnull final String name) {
-        final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> serverCapacity = ImmutableMap.of();
+    public static RegionPlan getNullPlan(@Nonnull final RegionIdentifier region) {
+        final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> serverCapacity = ImmutableMap.of();
         final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = ImmutableMap.of();
-        return new RegionPlan(name, serverCapacity, neighborLinkDemand);
+        return new RegionPlan(region, serverCapacity, neighborLinkDemand);
     }
 
     /**
      * 
-     * @param name
-     *            the name of the region that the plan is for
+     * @param region
+     *            the region that the plan is for
      * @param serverCapacity
      *            the planned server capacity
      * @param neighborLinkDemand
      *            the planned link demand
      */
-    public RegionPlan(@Nonnull final String name,
-            @Nonnull final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> serverCapacity,
+    public RegionPlan(@Nonnull final RegionIdentifier region,
+            @Nonnull final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> serverCapacity,
             @Nonnull final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
-        this.regionName = name;
+        this.region = region;
         this.serverCapacity = serverCapacity;
         this.neighborLinkDemand = neighborLinkDemand;
     }
 
-    private final String regionName;
+    private final RegionIdentifier region;
 
     /**
-     * @return name of the region
+     * @return the region
      */
     @Nonnull
-    public String getRegionName() {
-        return regionName;
+    public RegionIdentifier getRegion() {
+        return region;
     }
 
-    private final ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> serverCapacity;
+    private final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> serverCapacity;
 
     /**
      * 
      * @return planned server capacity. Key is service name.
      */
     @Nonnull
-    public ImmutableMap<String, ImmutableMap<NodeAttribute, Double>> getServerCapacity() {
+    public ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> getServerCapacity() {
         return serverCapacity;
     }
 
