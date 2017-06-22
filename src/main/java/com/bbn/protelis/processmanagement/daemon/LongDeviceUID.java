@@ -2,6 +2,9 @@ package com.bbn.protelis.processmanagement.daemon;
 
 import org.protelis.lang.datatype.DeviceUID;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class LongDeviceUID implements DeviceUID {
     private static final long serialVersionUID = 6002429193039916210L;
     

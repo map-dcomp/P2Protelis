@@ -147,8 +147,10 @@ public class NetworkServer extends AbstractExecutionContext
      * @param resourceManager
      *            where to get resource information from
      */
-    public NetworkServer(@Nonnull final NodeLookupService lookupService, @Nonnull final ProtelisProgram program,
-            @Nonnull final String name, @Nonnull final ResourceManager resourceManager) {
+    public NetworkServer(@Nonnull final NodeLookupService lookupService,
+            @Nonnull final ProtelisProgram program,
+            @Nonnull final String name,
+            @Nonnull final ResourceManager resourceManager) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringUID(name);
         this.regionName = NULL_REGION_NAME;
@@ -241,9 +243,21 @@ public class NetworkServer extends AbstractExecutionContext
         public String getRegionName() {
             return parent.getRegionName();
         }
-        
-        public NetworkState getNetworkState() { return parent.getNetworkState(); }
-        public RegionNodeState getRegionNodeState() { return parent.getRegionNodeState(); }
+
+        /**
+         * @return parent network state
+         */
+        public NetworkState getNetworkState() {
+            return parent.getNetworkState();
+        }
+
+        /**
+         * 
+         * @return parent region state
+         */
+        public RegionNodeState getRegionNodeState() {
+            return parent.getRegionNodeState();
+        }
     }
 
     @Override
@@ -387,9 +401,9 @@ public class NetworkServer extends AbstractExecutionContext
             this.setPool(Boolean.parseBoolean(pool.toString()));
         }
     }
-    
+
     private String hardware;
-    
+
     @Override
     public String getHardware() {
         return hardware;
@@ -399,7 +413,6 @@ public class NetworkServer extends AbstractExecutionContext
     public void setHardware(final String hardware) {
         this.hardware = hardware;
     }
-
 
     // ---- NetworkStateProvider
     private NetworkState networkState;

@@ -4,9 +4,9 @@ import java.io.IOException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 import org.apache.commons.lang3.ArrayUtils;
 import org.protelis.lang.ProtelisLoader;
 import org.protelis.vm.ProtelisProgram;
@@ -19,6 +19,9 @@ import com.bbn.protelis.processmanagement.testbed.daemon.AbstractDaemonWrapper;
 import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
 import com.bbn.protelis.processmanagement.testbed.termination.RoundNumberTermination;
 import com.bbn.protelis.processmanagement.testbed.visualizer.DisplayNode;
+
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
 
 public class StandaloneExecution {
     private static Logger logger;
@@ -59,7 +62,7 @@ public class StandaloneExecution {
         options.getOption("i").setArgs(100); // potentially many arguments
         
         /**** Parse command line ****/
-        CommandLineParser parser = new PosixParser();
+        CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
         
         /**** Interpret parsed options ****/

@@ -2,6 +2,9 @@ package com.bbn.protelis.processmanagement;
 
 import org.junit.Test;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class RewindAndReplayTests extends JSONFrameworkTest {
 
     /**

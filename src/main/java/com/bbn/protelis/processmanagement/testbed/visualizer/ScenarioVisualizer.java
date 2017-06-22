@@ -43,6 +43,9 @@ import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.GraphMouseListener;
 import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class ScenarioVisualizer extends JApplet {
     // Serialization inherited from JApplet
     private static final long serialVersionUID = 1657620527127657878L;

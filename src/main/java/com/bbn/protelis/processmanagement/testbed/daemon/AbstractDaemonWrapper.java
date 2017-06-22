@@ -15,6 +15,9 @@ import com.bbn.protelis.processmanagement.daemon.Daemon;
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
 import com.cedarsoftware.util.io.JsonReader;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public abstract class AbstractDaemonWrapper implements DaemonWrapper, Daemon.Listener {
     ProcessStatus status = ProcessStatus.init;
     

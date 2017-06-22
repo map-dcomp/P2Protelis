@@ -13,6 +13,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public abstract class Monitorable {
     public interface Listener {
         void identifyNeighbor(Monitorable monitorable, InetAddress nbr, int port);
