@@ -18,19 +18,13 @@ public interface NetworkNode {
      * @return the ID of the object
      */
     @Nonnull
-    StringUID getDeviceUID();
-
-    /**
-     * @return name of the object
-     */
-    @Nonnull
-    String getName();
+    NodeIdentifier getNodeIdentifier();
 
     /**
      * @return the name of the region that this node currently belongs to, may
      *         be null
      */
-    String getRegionName();
+    RegionIdentifier getRegionIdentifier();
 
     /**
      * Process the extra data that was found when creating the node.
@@ -52,7 +46,7 @@ public interface NetworkNode {
      *            capacity to the neighbor in bits per second. Infinity can be
      *            used for unknown.
      */
-    void addNeighbor(@Nonnull StringUID v, double bandwidth);
+    void addNeighbor(@Nonnull NodeIdentifier v, double bandwidth);
 
     /**
      * 
@@ -71,17 +65,18 @@ public interface NetworkNode {
      * @return unmodifiable set
      */
     @Nonnull
-    Set<StringUID> getNeighbors();
-    
+    Set<NodeIdentifier> getNeighbors();
+
     /**
      * 
      * @return the hardware platform for this node, may be null
      */
     String getHardware();
-    
+
     /**
      * 
-     * @param hardware the hardware platform for this node
+     * @param hardware
+     *            the hardware platform for this node
      * @see #getHardware()
      */
     void setHardware(String hardware);

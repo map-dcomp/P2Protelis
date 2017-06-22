@@ -10,23 +10,23 @@ public class NetworkState {
     /**
      * Create an object with no known network state.
      *
-     * @param regionName
+     * @param region
      *            the region that this state is for
      */
-    public NetworkState(final String regionName) {
-        this.regionName = regionName;
-        this.regionSummary = ResourceSummary.getNullSummary(regionName);
-        this.regionPlan = RegionPlan.getNullPlan(regionName);
+    public NetworkState(final RegionIdentifier region) {
+        this.region = region;
+        this.regionSummary = ResourceSummary.getNullSummary(region);
+        this.regionPlan = RegionPlan.getNullPlan(region);
     }
 
-    private final String regionName;
+    private final RegionIdentifier region;
 
     /**
      * @return the region that this network state is for
      */
     @Nonnull
-    public String getRegionName() {
-        return regionName;
+    public RegionIdentifier getRegion() {
+        return region;
     }
 
     private ResourceSummary regionSummary;
@@ -50,7 +50,7 @@ public class NetworkState {
      *             if the summary is for a different region than the node
      */
     public void setRegionSummary(@Nonnull final ResourceSummary summary) {
-        if (!summary.getRegionName().equals(this.regionName)) {
+        if (!summary.getRegion().equals(this.region)) {
             throw new IllegalArgumentException(
                     "Region summary must be for the same region as the network state object");
         }
@@ -76,7 +76,7 @@ public class NetworkState {
      *             if the plan is for a different region than the node
      */
     public void setRegionPlan(@Nonnull final RegionPlan plan) {
-        if (!plan.getRegionName().equals(this.regionName)) {
+        if (!plan.getRegion().equals(this.region)) {
             throw new IllegalArgumentException(
                     "Region summary must be for the same region as the network state object");
         }

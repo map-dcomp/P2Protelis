@@ -12,19 +12,20 @@ import com.google.common.collect.ImmutableMap;
  */
 public class NullResourceManager implements ResourceManager {
 
-    private final String nodeName;
+    private final NodeIdentifier nodeId;
 
     /**
      * 
-     * @param nodeName the node name to use for {@link #getCurrentResourceReport()}
+     * @param nodeName
+     *            the node name to use for {@link #getCurrentResourceReport()}
      */
-    public NullResourceManager(final String nodeName) {
-        this.nodeName = nodeName;
+    public NullResourceManager(final NodeIdentifier nodeName) {
+        this.nodeId = nodeName;
     }
 
     @Override
     public ResourceReport getCurrentResourceReport() {
-        return ResourceReport.getNullReport(nodeName);
+        return ResourceReport.getNullReport(nodeId);
     }
 
     @Override

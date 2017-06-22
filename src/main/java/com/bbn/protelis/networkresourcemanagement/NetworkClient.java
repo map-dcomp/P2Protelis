@@ -7,8 +7,6 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import com.bbn.protelis.utils.StringUID;
-
 /**
  * Represents a set of clients of for services in the network. Clients are an
  * endpoint in a network topology. Clients can only connect to nodes, they
@@ -23,64 +21,58 @@ public class NetworkClient implements NetworkNode {
      *            the name of the client.
      */
     public NetworkClient(@Nonnull final String name) {
-        this.uid = new StringUID(name);
-        this.regionName = NetworkServer.NULL_REGION_NAME;
+        this.uid = new StringNodeIdentifier(name);
+        this.region = NetworkServer.NULL_REGION;
     }
 
-    private final StringUID uid;
-
-    /**
-     * @return the name of the client
-     */
-    @Nonnull
-    public final String getName() {
-        return uid.getUID();
-    }
+    private final StringNodeIdentifier uid;
 
     @Override
     @Nonnull
-    public final StringUID getDeviceUID() {
+    public final StringNodeIdentifier getNodeIdentifier() {
         return uid;
     }
 
     /**
      * The neighboring nodes.
      */
-    private final Map<StringUID, Double> neighborNodes = new HashMap<>();
+    private final Map<NodeIdentifier, Double> neighborNodes = new HashMap<>();
 
     @Override
     @Nonnull
-    public final Set<StringUID> getNeighbors() {
+    public final Set<NodeIdentifier> getNeighbors() {
         return Collections.unmodifiableSet(neighborNodes.keySet());
     }
 
     @Override
-    public final void addNeighbor(@Nonnull final StringUID v, final double bandwidth) {
+    public final void addNeighbor(@Nonnull final NodeIdentifier v, final double bandwidth) {
         neighborNodes.put(v, bandwidth);
     }
 
     @Override
     public final void addNeighbor(@Nonnull final NetworkNode v, final double bandwidth) {
-        addNeighbor(v.getDeviceUID(), bandwidth);
+        addNeighbor(v.getNodeIdentifier(), bandwidth);
     }
 
     @Override
     public void processExtraData(@Nonnull final Map<String, Object> extraData) {
-        final Object region = extraData.get(NetworkServer.EXTRA_DATA_REGION_KEY);
-        if (null != region) {
-            this.setRegionName(region.toString());
+        final Object regionValue = extraData.get(NetworkServer.EXTRA_DATA_REGION_KEY);
+        if (null != regionValue) {
+            final String regionName = regionValue.toString();
+            final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
+            this.setRegion(region);
         }
     }
 
-    private String regionName;
+    private RegionIdentifier region;
 
-    private void setRegionName(final String region) {
-        this.regionName = region;
+    private void setRegion(final RegionIdentifier region) {
+        this.region = region;
     }
 
     @Override
-    public String getRegionName() {
-        return this.regionName;
+    public RegionIdentifier getRegionIdentifier() {
+        return this.region;
     }
 
     private String hardware;
