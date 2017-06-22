@@ -18,6 +18,9 @@ import com.bbn.protelis.processmanagement.daemon.Monitorable;
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
 import com.bbn.protelis.processmanagement.testbed.Scenario;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class LocalDaemon extends AbstractDaemonWrapper {
     private Daemon daemon = null;
     private Monitorable client; // needs to be configured elsewhere

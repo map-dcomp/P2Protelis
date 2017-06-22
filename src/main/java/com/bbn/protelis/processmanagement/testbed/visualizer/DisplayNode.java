@@ -21,6 +21,9 @@ import com.bbn.protelis.processmanagement.testbed.daemon.AbstractDaemonWrapper.L
 import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
 import com.bbn.protelis.processmanagement.testbed.visualizer.DisplayEdge.EdgeType;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class DisplayNode implements Listener {
     // Image collection:
     static final Icon serverRun = new ImageIcon(DisplayNode.class.getResource("/server-small-green.png"));
