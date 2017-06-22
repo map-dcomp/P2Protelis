@@ -44,9 +44,9 @@ public class BasicNetworkFactory implements NetworkFactory<NetworkServer, Networ
             instance = ProtelisLoader.parse(program);
         }
 
-        final BasicResourceManager manager = new BasicResourceManager(name, extraData);
-        final NetworkServer node = new NetworkServer(lookupService, instance, name, manager);
-        manager.setNode(node);
+        final NetworkServer node = new NetworkServer(lookupService, instance, name);
+        final BasicResourceManager manager = new BasicResourceManager(node, extraData);
+        node.setResourceManager(manager);
 
         node.processExtraData(extraData);
 

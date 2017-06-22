@@ -19,7 +19,6 @@ public class BasicResourceManager implements ResourceManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicResourceManager.class);
 
-    private final String nodeName;
     private final Map<String, Object> extraData;
 
     private static final String EXTRA_DATA_RESOURCE_REPORT_KEY = "resource-report";
@@ -34,15 +33,15 @@ public class BasicResourceManager implements ResourceManager {
     /**
      * Construct a resource manager for the specified node.
      * 
-     * @param nodeName
+     * @param node
      *            the node that this resource manager is for
      * @param extraData
      *            the extra data for the node. This contains the information to
      *            return from the methods.
      * @see NetworkServer#processExtraData(Map)
      */
-    public BasicResourceManager(@Nonnull final String nodeName, @Nonnull final Map<String, Object> extraData) {
-        this.nodeName = nodeName;
+    public BasicResourceManager(@Nonnull final NetworkServer node, @Nonnull final Map<String, Object> extraData) {
+        this.node = node;
         this.extraData = new HashMap<String, Object>(extraData);
 
         final Object resourceReportValuesRaw = this.extraData.get(EXTRA_DATA_RESOURCE_REPORT_KEY);
@@ -60,18 +59,7 @@ public class BasicResourceManager implements ResourceManager {
         }
     }
 
-    private NetworkServer node = null;
-
-    /**
-     * Set the node object that is being used. This is used to get the link
-     * capacity information.
-     * 
-     * @param node
-     *            the node
-     */
-    public void setNode(@Nonnull final NetworkServer node) {
-        this.node = node;
-    }
+    private final NetworkServer node;
 
     @Nonnull
     private ImmutableMap<NodeAttribute, Double> parseServerCapacity(
@@ -148,8 +136,8 @@ public class BasicResourceManager implements ResourceManager {
                             individualClientDemand);
                     builder.put(serviceName, serviceDemand);
                 } else {
-                    LOGGER.warn("While parsing resource report for node " + nodeName + " the service " + serviceName
-                            + " doesn't have valid client demand data");
+                    LOGGER.warn("While parsing resource report for node " + node.getName() + " the service "
+                            + serviceName + " doesn't have valid client demand data");
                 }
             });
             return builder.build();
@@ -171,7 +159,7 @@ public class BasicResourceManager implements ResourceManager {
                     builder.put(attr, value);
                 }
             } catch (final IllegalArgumentException e) {
-                LOGGER.warn("While parsing resource report for node " + nodeName + " '" + attrStr
+                LOGGER.warn("While parsing resource report for node " + node.getName() + " '" + attrStr
                         + "' does not parse as a NodeAttribute, ignoring");
             }
         });
@@ -181,34 +169,25 @@ public class BasicResourceManager implements ResourceManager {
 
     @Override
     public ResourceReport getCurrentResourceReport() {
-        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> linkCapacity;
-        if (null == node) {
-            linkCapacity = ImmutableMap.of();
-        } else {
-            linkCapacity = node.getNeighborLinkCapacity();
-        }
+        final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> linkCapacity = node.getNeighborLinkCapacity();
         final ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> linkDemand = computeNeighborLinkDemand();
-        final ResourceReport report = new ResourceReport(nodeName, this.clientDemand, this.serverCapacity, linkCapacity,
-                linkDemand);
+        final ResourceReport report = new ResourceReport(node.getName(), this.clientDemand, this.serverCapacity,
+                linkCapacity, linkDemand);
         return report;
     }
 
     @Nonnull
     private ImmutableMap<String, ImmutableMap<LinkAttribute, Double>> computeNeighborLinkDemand() {
-        if (null == node) {
-            return ImmutableMap.of();
-        } else {
-            final ImmutableMap.Builder<String, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
-            this.node.getNeighbors().forEach(uid -> {
-                final String neighborName = uid.getUID();
-                if (this.neighborLinkDemand.containsKey(neighborName)) {
-                    builder.put(neighborName, this.neighborLinkDemand.get(neighborName));
-                } else if (neighborLinkDemand.containsKey("*")) {
-                    builder.put(neighborName, this.neighborLinkDemand.get("*"));
-                }
-            });
-            return builder.build();
-        }
+        final ImmutableMap.Builder<String, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
+        this.node.getNeighbors().forEach(uid -> {
+            final String neighborName = uid.getUID();
+            if (this.neighborLinkDemand.containsKey(neighborName)) {
+                builder.put(neighborName, this.neighborLinkDemand.get(neighborName));
+            } else if (neighborLinkDemand.containsKey("*")) {
+                builder.put(neighborName, this.neighborLinkDemand.get("*"));
+            }
+        });
+        return builder.build();
     }
 
     @Override
