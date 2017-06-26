@@ -38,8 +38,8 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
     
     // This set of variables are expected to be configured from JSON serialization
     /** Should be a comparable uid; might be a number or a name or anything else. */
-    protected Object identifier;
-    private String shortName;
+    protected Object identifier = "";
+    private String shortName = "";
     /** The port where the QRNode will serve connections from others */
     private int port;
     private Object[][] dependencyList = new Object[0][];
@@ -207,6 +207,20 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
         public long time = System.currentTimeMillis();
         private static int count = 0;
         public int index = count++;
+        
+        @Override 
+        public int hashCode() {
+            return (int)time;
+        }
+        
+        @Override
+        public boolean equals(final Object o) {
+            if(o instanceof Event) {
+                return 0 == compareTo((Event)o);
+            } else {
+                return super.equals(o);
+            }
+        }
         
         @Override
         public int compareTo(final Event o) {

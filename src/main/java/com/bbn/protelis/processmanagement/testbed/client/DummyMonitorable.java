@@ -9,6 +9,7 @@ import com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 public class DummyMonitorable extends Monitorable {
     private ProcessStatus status = ProcessStatus.run;
@@ -22,7 +23,7 @@ public class DummyMonitorable extends Monitorable {
     
     public DummyMonitorable(final int port, final int[] dependencyList) {
         this.port = port;
-        this.dependencyList = dependencyList;
+        this.dependencyList = Arrays.copyOf(dependencyList, dependencyList.length);
     }
     
     private void initializePersistentState() {
