@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.common.testbed.termination.NeverTerminate;
 import com.bbn.protelis.networkresourcemanagement.BasicNetworkFactory;
+import com.bbn.protelis.networkresourcemanagement.BasicResourceManagerFactory;
 import com.bbn.protelis.networkresourcemanagement.NetworkClient;
 import com.bbn.protelis.networkresourcemanagement.NetworkFactory;
 import com.bbn.protelis.networkresourcemanagement.NetworkLink;
@@ -388,7 +389,8 @@ public final class NS2Parser {
             final Path baseDirectory = Paths.get(scenarioFile);
             final NodeLookupService lookupService = new LocalNodeLookupService(5000);
 
-            final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService,
+            final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
+            final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, managerFactory,
                     "/protelis/com/bbn/resourcemanagement/resourcetracker.pt", false);
             final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parse(scenarioFile,
                     baseDirectory, factory);

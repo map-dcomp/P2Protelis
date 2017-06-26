@@ -56,7 +56,8 @@ public class NS2ParserTest {
         final String program = "/protelis/com/bbn/resourcemanagement/resourcetracker.pt";
         final boolean anonymous = false;
 
-        final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, program, anonymous);
+        final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
+        final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, managerFactory, program, anonymous);
 
         final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/multinode");
         final Path baseDirectory = Paths.get(baseu.toURI());
