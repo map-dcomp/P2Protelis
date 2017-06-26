@@ -137,7 +137,8 @@ public class BasicResourceManager implements ResourceManager {
                     final ImmutableMap<NodeAttribute, Double> serviceDemand = parseEnumDoubleMap(NodeAttribute.class,
                             individualClientDemand);
                     builder.put(
-                            new ApplicationIdentifier(new GAV("groupPlaceholder", serviceName, "versionPlaceholder")),
+                            //new ApplicationIdentifier(new GAV("groupPlaceholder", serviceName, "versionPlaceholder")),
+                            new StringServiceIdentifier(serviceName),
                             serviceDemand);
                 } else {
                     LOGGER.warn("While parsing resource report for node " + node.getName() + " the service "
