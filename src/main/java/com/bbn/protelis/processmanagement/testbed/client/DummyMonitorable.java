@@ -11,6 +11,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class DummyMonitorable extends Monitorable {
     private ProcessStatus status = ProcessStatus.run;
     private int port = (int) (5000 + Math.round(10000 * Math.random()));

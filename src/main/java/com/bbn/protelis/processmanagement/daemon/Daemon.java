@@ -21,6 +21,9 @@ import org.slf4j.Logger;
 
 import com.bbn.protelis.utils.LongUID;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 /**
  * @author Danilo Pianini
  * @author Jacob Beal

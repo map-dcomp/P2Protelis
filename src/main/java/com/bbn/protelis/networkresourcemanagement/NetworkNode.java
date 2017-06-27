@@ -21,6 +21,12 @@ public interface NetworkNode {
     NodeIdentifier getNodeIdentifier();
 
     /**
+     * @return the name of the node
+     */
+    @Nonnull
+    String getName();
+
+    /**
      * @return the name of the region that this node currently belongs to, may
      *         be null
      */
@@ -66,5 +72,19 @@ public interface NetworkNode {
      */
     @Nonnull
     Set<NodeIdentifier> getNeighbors();
+
+    /**
+     * 
+     * @return the hardware platform for this node, may be null
+     */
+    String getHardware();
+
+    /**
+     * 
+     * @param hardware
+     *            the hardware platform for this node
+     * @see #getHardware()
+     */
+    void setHardware(String hardware);
 
 }

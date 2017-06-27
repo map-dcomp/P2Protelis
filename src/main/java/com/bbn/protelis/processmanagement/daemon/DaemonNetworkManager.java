@@ -31,6 +31,9 @@ import org.protelis.lang.datatype.Tuple;
 import org.protelis.vm.util.CodePath;
 import org.protelis.vm.NetworkManager;
 
+// TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class DaemonNetworkManager implements NetworkManager, Monitorable.Listener {
     /* Debugging */
     private Logger logger = null;

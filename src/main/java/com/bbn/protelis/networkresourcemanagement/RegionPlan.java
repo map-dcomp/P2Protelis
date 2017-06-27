@@ -19,7 +19,7 @@ public class RegionPlan implements Serializable {
      * @return empty plan for a region
      */
     public static RegionPlan getNullPlan(@Nonnull final RegionIdentifier region) {
-        final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> serverCapacity = ImmutableMap.of();
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverCapacity = ImmutableMap.of();
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = ImmutableMap
                 .of();
         return new RegionPlan(region, serverCapacity, neighborLinkDemand);
@@ -35,7 +35,7 @@ public class RegionPlan implements Serializable {
      *            the planned link demand
      */
     public RegionPlan(@Nonnull final RegionIdentifier region,
-            @Nonnull final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> serverCapacity,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverCapacity,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
         this.region = region;
         this.serverCapacity = serverCapacity;
@@ -52,14 +52,14 @@ public class RegionPlan implements Serializable {
         return region;
     }
 
-    private final ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> serverCapacity;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverCapacity;
 
     /**
      * 
      * @return planned server capacity. Key is service name.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier, ImmutableMap<NodeAttribute, Double>> getServerCapacity() {
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> getServerCapacity() {
         return serverCapacity;
     }
 

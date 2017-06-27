@@ -44,13 +44,13 @@ public def C(potential, reduce, local, null) {
 }
 
 public def regionSet(potential) {
-	C(potential, union, unionHood(nbr([self.getRegionIdentifier()])), []);
+        C(potential, union, unionHood(nbr([self.getRegionIdentifier()])), []);
 }
 
 def countNodes() {
     let nonce = once(self.nextRandomDouble());
     let leader = nonce == gossip(nonce, min);
-	self.getExecutionEnvironment().put("blue",leader);
+        self.getExecutionEnvironment().put("blue",leader);
     let d = hopDistanceTo(leader);
     countDevices(d);
 }

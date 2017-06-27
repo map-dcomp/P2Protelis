@@ -1,15 +1,14 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.kie.api.management.GAV;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -20,7 +19,6 @@ public class BasicResourceManager implements ResourceManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicResourceManager.class);
 
-    private final String nodeName;
     private final Map<String, Object> extraData;
 
     private static final String EXTRA_DATA_RESOURCE_REPORT_KEY = "resource-report";
@@ -35,15 +33,15 @@ public class BasicResourceManager implements ResourceManager {
     /**
      * Construct a resource manager for the specified node.
      * 
-     * @param nodeName
+     * @param node
      *            the node that this resource manager is for
      * @param extraData
      *            the extra data for the node. This contains the information to
      *            return from the methods.
      * @see NetworkServer#processExtraData(Map)
      */
-    public BasicResourceManager(@Nonnull final String nodeName, @Nonnull final Map<String, Object> extraData) {
-        this.nodeName = nodeName;
+    public BasicResourceManager(@Nonnull final NetworkServer node, @Nonnull final Map<String, Object> extraData) {
+        this.node = node;
         this.extraData = new HashMap<String, Object>(extraData);
 
         final Object resourceReportValuesRaw = this.extraData.get(EXTRA_DATA_RESOURCE_REPORT_KEY);
@@ -61,22 +59,11 @@ public class BasicResourceManager implements ResourceManager {
         }
     }
 
-    private NetworkServer node = null;
-
-    /**
-     * Set the node object that is being used. This is used to get the link
-     * capacity information.
-     * 
-     * @param node
-     *            the node
-     */
-    public void setNode(@Nonnull final NetworkServer node) {
-        this.node = node;
-    }
+    private final NetworkServer node;
 
     @Nonnull
-    private ImmutableMap<NodeAttribute, Double> parseServerCapacity(
-            @Nonnull final Map<String, Object> resourceReportValues) {
+    private ImmutableMap<NodeAttribute, Double>
+            parseServerCapacity(@Nonnull final Map<String, Object> resourceReportValues) {
         final Object raw = resourceReportValues.get(SERVER_CAPACITY_KEY);
         if (null != raw && raw instanceof Map) {
             // found something specified in the extra data
@@ -94,8 +81,8 @@ public class BasicResourceManager implements ResourceManager {
     }
 
     @Nonnull
-    private ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> parseNeighborLinkDemand(
-            @Nonnull final Map<String, Object> resourceReportValues) {
+    private ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>>
+            parseNeighborLinkDemand(@Nonnull final Map<String, Object> resourceReportValues) {
         final Object specifiedDemandRaw = resourceReportValues.get(NEIGHBOR_LINK_DEMAND_KEY);
         if (null != specifiedDemandRaw && specifiedDemandRaw instanceof Map) {
             // found something specified in the extra data
@@ -127,8 +114,8 @@ public class BasicResourceManager implements ResourceManager {
     }
 
     @Nonnull
-    private ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> parseClientDemand(
-            @Nonnull final Map<String, Object> resourceReportValues) {
+    private ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>>
+            parseClientDemand(@Nonnull final Map<String, Object> resourceReportValues) {
         final Object specifiedClientDemandRaw = resourceReportValues.get(CLIENT_DEMAND_KEY);
         if (null != specifiedClientDemandRaw && specifiedClientDemandRaw instanceof Map) {
             // found something specified in the extra data
@@ -151,8 +138,8 @@ public class BasicResourceManager implements ResourceManager {
                     //builder.put(new ApplicationIdentifier(new GAV("groupPlaceholder", serviceName, "versionPlaceholder")), serviceDemand);
                     builder.put(new StringServiceIdentifier(serviceName), serviceDemand);
                 } else {
-                    LOGGER.warn("While parsing resource report for node " + nodeName + " the service " + serviceName
-                            + " doesn't have valid client demand data");
+                    LOGGER.warn("While parsing resource report for node " + node.getName() + " the service "
+                            + serviceName + " doesn't have valid client demand data");
                 }
             });
             return builder.build();
@@ -174,7 +161,7 @@ public class BasicResourceManager implements ResourceManager {
                     builder.put(attr, value);
                 }
             } catch (final IllegalArgumentException e) {
-                LOGGER.warn("While parsing resource report for node " + nodeName + " '" + attrStr
+                LOGGER.warn("While parsing resource report for node " + node.getName() + " '" + attrStr
                         + "' does not parse as a NodeAttribute, ignoring");
             }
         });
@@ -184,33 +171,26 @@ public class BasicResourceManager implements ResourceManager {
 
     @Override
     public ResourceReport getCurrentResourceReport() {
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkCapacity;
-        if (null == node) {
-            linkCapacity = ImmutableMap.of();
-        } else {
-            linkCapacity = node.getNeighborLinkCapacity();
-        }
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkCapacity = node
+                .getNeighborLinkCapacity();
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkDemand = computeNeighborLinkDemand();
-        final ResourceReport report = new ResourceReport(new StringNodeIdentifier(nodeName), this.clientDemand,
+        final ResourceReport report = new ResourceReport(new StringNodeIdentifier(node.getName()), this.clientDemand,
                 this.serverCapacity, linkCapacity, linkDemand);
         return report;
     }
 
     @Nonnull
     private ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> computeNeighborLinkDemand() {
-        if (null == node) {
-            return ImmutableMap.of();
-        } else {
-            final ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
-            this.node.getNeighbors().forEach(neighborId -> {
-                if (this.neighborLinkDemand.containsKey(neighborId)) {
-                    builder.put(neighborId, this.neighborLinkDemand.get(neighborId));
-                } else if (neighborLinkDemand.containsKey("*")) {
-                    builder.put(neighborId, this.neighborLinkDemand.get("*"));
-                }
-            });
-            return builder.build();
-        }
+        final ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap
+                .builder();
+        this.node.getNeighbors().forEach(neighborId -> {
+            if (this.neighborLinkDemand.containsKey(neighborId)) {
+                builder.put(neighborId, this.neighborLinkDemand.get(neighborId));
+            } else if (neighborLinkDemand.containsKey("*")) {
+                builder.put(neighborId, this.neighborLinkDemand.get("*"));
+            }
+        });
+        return builder.build();
     }
 
     @Override
@@ -228,8 +208,8 @@ public class BasicResourceManager implements ResourceManager {
     @Override
     public boolean startTask(final String containerName,
             final String taskName,
-            final List<String> arguments,
-            final Map<String, String> environment) {
+            final ImmutableList<String> arguments,
+            final ImmutableMap<String, String> environment) {
         // TODO Auto-generated method stub
         return false;
     }

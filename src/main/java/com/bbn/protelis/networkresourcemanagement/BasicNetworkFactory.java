@@ -16,6 +16,7 @@ public class BasicNetworkFactory implements NetworkFactory<NetworkServer, Networ
     private final NodeLookupService lookupService;
     private final String program;
     private final boolean anonymousProgram;
+    private final ResourceManagerFactory<NetworkServer> managerFactory;
 
     /**
      * Create a basic factory.
@@ -27,11 +28,17 @@ public class BasicNetworkFactory implements NetworkFactory<NetworkServer, Networ
      * @param anonymous
      *            if true, parse as main expression; if false, treat as a module
      *            reference
+     * @param managerFactory
+     *            used to create the {@link ResourceManager}s.
      */
-    public BasicNetworkFactory(final NodeLookupService lookupService, final String program, final boolean anonymous) {
+    public BasicNetworkFactory(final NodeLookupService lookupService,
+            @Nonnull final ResourceManagerFactory<NetworkServer> managerFactory,
+            final String program,
+            final boolean anonymous) {
         this.lookupService = lookupService;
         this.program = program;
         this.anonymousProgram = anonymous;
+        this.managerFactory = managerFactory;
     }
 
     @Override
@@ -44,9 +51,9 @@ public class BasicNetworkFactory implements NetworkFactory<NetworkServer, Networ
             instance = ProtelisLoader.parse(program);
         }
 
-        final BasicResourceManager manager = new BasicResourceManager(name, extraData);
-        final NetworkServer node = new NetworkServer(lookupService, instance, name, manager);
-        manager.setNode(node);
+        final NetworkServer node = new NetworkServer(lookupService, instance, name);
+        final ResourceManager manager = managerFactory.createResourceManager(node, extraData);
+        node.setResourceManager(manager);
 
         node.processExtraData(extraData);
 

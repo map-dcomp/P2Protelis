@@ -2,6 +2,9 @@ package com.bbn.protelis.processmanagement.testbed.client;
 
 import java.io.Serializable;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class Message implements Serializable {
     private static final long serialVersionUID = -7307941668294668610L;
     
