@@ -18,6 +18,9 @@ import com.bbn.protelis.processmanagement.daemon.Monitorable;
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
 import com.bbn.protelis.processmanagement.testbed.Scenario;
 
+import cern.colt.Arrays;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class LocalDaemon extends AbstractDaemonWrapper {
     private Daemon daemon = null;
     private Monitorable client; // needs to be configured elsewhere
@@ -25,6 +28,7 @@ public class LocalDaemon extends AbstractDaemonWrapper {
      * The testPortOffset field is used for shifting ports to avoid OS-level conflicts during rapid batch testing.
      * It is intended to be set by the JUnit test and accessed by any clients that care
      */
+    @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "Need to be able to modify for the user specifying a value during testing.")
     public static int testPortOffset = 0;
     
     public void setClient(final Monitorable v) {
@@ -51,7 +55,7 @@ public class LocalDaemon extends AbstractDaemonWrapper {
         // ... from JSON'ed array spec
         for (Object[] epair : environment) {
             if (epair.length != 2 || !(epair[0] instanceof String)) {
-                scenario.logger.warn("Ignoring bad enviroment element: " + epair); 
+                scenario.logger.warn("Ignoring bad enviroment element: " + Arrays.toString(epair)); 
                 continue;
             }
             String key = (String)epair[0];
@@ -82,6 +86,7 @@ public class LocalDaemon extends AbstractDaemonWrapper {
             case hung:
             case stop:
                 status = ProcessStatus.stop;
+                break;
             default:
                 break;
             }

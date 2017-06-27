@@ -10,7 +10,7 @@ import com.bbn.protelis.processmanagement.daemon.Monitorable;
  * Attack in precisely one instance, targeted at one client.
  */
 public class SpecificAttackModel implements AttackModel {
-    private String targetName;
+    private String targetName = "";
     private int session;
 
     static class SpecificTargetAttack implements Attack, Serializable {
