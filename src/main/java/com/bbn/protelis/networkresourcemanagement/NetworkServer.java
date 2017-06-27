@@ -452,4 +452,9 @@ public class NetworkServer extends AbstractExecutionContext
     }
     // ---- end RegionNodeStateProvider
 
+    @Override
+    public String toString() {
+        return getName();
+    }
+    
 }

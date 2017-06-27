@@ -21,6 +21,12 @@ public interface NetworkNode {
     NodeIdentifier getNodeIdentifier();
 
     /**
+     * @return the name of the node
+     */
+    @Nonnull
+    String getName();
+
+    /**
      * @return the name of the region that this node currently belongs to, may
      *         be null
      */
