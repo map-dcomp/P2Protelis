@@ -2,6 +2,7 @@ package com.bbn.protelis.processmanagement.testbed.daemon;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -18,6 +19,8 @@ import com.bbn.protelis.processmanagement.daemon.Monitorable;
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
 import com.bbn.protelis.processmanagement.testbed.Scenario;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 //TODO: This file needs checkstyle cleanup
 //CHECKSTYLE:OFF
 
@@ -25,11 +28,13 @@ public class LocalDaemon extends AbstractDaemonWrapper {
     private Daemon daemon = null;
     private Monitorable client; // needs to be configured elsewhere
     /**
-     * The testPortOffset field is used for shifting ports to avoid OS-level conflicts during rapid batch testing.
-     * It is intended to be set by the JUnit test and accessed by any clients that care
+     * The testPortOffset field is used for shifting ports to avoid OS-level
+     * conflicts during rapid batch testing. It is intended to be set by the
+     * JUnit test and accessed by any clients that care
      */
+    @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "Need to be able to modify for the user specifying a value during testing.")
     public static int testPortOffset = 0;
-    
+
     public void setClient(final Monitorable v) {
         if (null != client) {
             throw new IllegalStateException("Cannot change a non-null client");
@@ -41,28 +46,29 @@ public class LocalDaemon extends AbstractDaemonWrapper {
     public void initialize(final Scenario scenario) throws UnknownHostException {
         // Start the client
         client.init();
-        
+
         // Create the daemon
         daemon = new Daemon(program, uid, client, scenario.logger);
         daemon.addListener(this);
 
         // Initialize the environment
-        // ... from environment buttons (this also allows a scenario to tell if it's got a UI)
+        // ... from environment buttons (this also allows a scenario to tell if
+        // it's got a UI)
         for (String var : scenario.environmentButtons) {
             daemon.getExecutionEnvironment().put(var, false);
         }
         // ... from JSON'ed array spec
         for (Object[] epair : environment) {
             if (epair.length != 2 || !(epair[0] instanceof String)) {
-                scenario.logger.warn("Ignoring bad enviroment element: " + epair); 
+                scenario.logger.warn("Ignoring bad enviroment element: " + Arrays.toString(epair));
                 continue;
             }
-            String key = (String)epair[0];
+            String key = (String) epair[0];
             Object value = epair[1];
             if (value instanceof Object[]) {
                 List<Object> l = new ArrayList<>();
-                for (Object v : (Object[])value) { 
-                    l.add(v); 
+                for (Object v : (Object[]) value) {
+                    l.add(v);
                 }
                 value = new ArrayTupleImpl(l);
             }
@@ -81,17 +87,18 @@ public class LocalDaemon extends AbstractDaemonWrapper {
     public ProcessStatus getDaemonStatus() {
         if (status == ProcessStatus.run) {
             ProcessStatus daemonStatus = daemon.getStatus();
-            switch(daemonStatus) {
+            switch (daemonStatus) {
             case hung:
             case stop:
                 status = ProcessStatus.stop;
+                break;
             default:
                 break;
             }
         }
         return status;
     }
-    
+
     @Override
     public ProcessStatus getProcessStatus() {
         return client.getStatus();
@@ -112,7 +119,7 @@ public class LocalDaemon extends AbstractDaemonWrapper {
     @Override
     public void signalProcess(final ProcessStatus init) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -129,12 +136,10 @@ public class LocalDaemon extends AbstractDaemonWrapper {
     @Override
     public Set<DeviceUID> getLogicalNeighbors() {
         try {
-            Tuple ln = (Tuple)daemon.getExecutionEnvironment().get("logicalNeighbors");
-            return (Set)StreamSupport.stream(ln.spliterator(), false)
-                    .map((id) -> { 
-                        return new LongDeviceUID(((Number)id).longValue()); 
-                    })
-                    .collect(Collectors.toSet());
+            Tuple ln = (Tuple) daemon.getExecutionEnvironment().get("logicalNeighbors");
+            return (Set) StreamSupport.stream(ln.spliterator(), false).map((id) -> {
+                return new LongDeviceUID(((Number) id).longValue());
+            }).collect(Collectors.toSet());
         } catch (Exception e) {
             return null;
         }

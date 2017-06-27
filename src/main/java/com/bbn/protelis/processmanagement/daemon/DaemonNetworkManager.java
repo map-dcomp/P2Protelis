@@ -266,7 +266,7 @@ public class DaemonNetworkManager implements NetworkManager, Monitorable.Listene
         /* Identity */
         private long uid;
         @SuppressWarnings("unused") // TODO: determine whether we still need this
-        private int port;
+//        private int port;
         private final String name; // debug-friendly UID
         private final int nonce; // uid for connection (to symmetry-break multiple connections)
         /* Content */
@@ -288,7 +288,7 @@ public class DaemonNetworkManager implements NetworkManager, Monitorable.Listene
             this.uid = uid;
             this.nonce = nonce;
             name = host + ":" + port;
-            this.port = port;
+//            this.port = port;
             // Finish by linking the object streams
             socket = s;
             this.in = in; this.out = out;

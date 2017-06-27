@@ -23,9 +23,9 @@ public abstract class AbstractDaemonWrapper implements DaemonWrapper, Daemon.Lis
     
     public boolean template = false;
     public long uid;        // Must be unique
-    public String alias;    // Display name (may not be unique)
+    public String alias = "";    // Display name (may not be unique)
     // TODO: determine if "location" is needed
-    public int[] location;  // Display location
+//    public int[] location;  // Display location
     public ProtelisProgram program; // Protelis program run by daemon
     public Object[][] environment = new Object[][] {}; // [[String,String/Integer],...]
 
