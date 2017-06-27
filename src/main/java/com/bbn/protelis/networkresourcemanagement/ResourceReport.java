@@ -1,7 +1,6 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 import javax.annotation.Nonnull;
 
