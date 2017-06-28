@@ -5,6 +5,9 @@ import org.slf4j.Logger;
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class Scenario {
     /**
      * Where should logging messages be directed?

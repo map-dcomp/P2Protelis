@@ -5,6 +5,9 @@ import java.util.Set;
 
 import com.bbn.protelis.processmanagement.daemon.Monitorable;
 
+/**
+ * Null attack.
+ */
 public class NullAttackModel implements AttackModel {
 
     @Override

@@ -5,37 +5,37 @@ import java.lang.Math.min
 /****** Helper functions ******/
 
 def findIncomingMatches(record,nbrBad) {
-	let nbrUIDs = nbrBad.filter(self, (m) -> { !m.isIncoming(); })
-		.map(self, (m) -> { m.getContents().getUID() } );
-	record.filter(self, (msg) -> { nbrUIDs.contains(msg.getContents().getUID()); } );
+        let nbrUIDs = nbrBad.filter(self, (m) -> { !m.isIncoming(); })
+                .map(self, (m) -> { m.getContents().getUID() } );
+        record.filter(self, (msg) -> { nbrUIDs.contains(msg.getContents().getUID()); } );
 }
 
 def addFollowingOutgoings(record,bad) {
-	let badidx = bad.map(self, (b) -> { record.indexof(b) })
-		.filter(self, (i) -> {i >= 0})
-		.reduce(self, record.size(), (a,b) -> { min(a,b) });
-	//self.putEnvironmentVariable("idx",badidx);
-	record.subTupleEnd(badidx)
+        let badidx = bad.map(self, (b) -> { record.indexof(b) })
+                .filter(self, (i) -> {i >= 0})
+                .reduce(self, record.size(), (a,b) -> { min(a,b) });
+        //self.putEnvironmentVariable("idx",badidx);
+        record.subTupleEnd(badidx)
 }
 
 // What are the UIDs of neighbors owning incoming transitive?
 def uidMatch(s1,s2) { 
-	let s1id = s1.map(self, (m) -> { m.getContents().getUID(); });
-	let s2id = s2.map(self, (m) -> { m.getContents().getUID(); });
-	s1id.intersection(s2id).size() > 0;
+        let s1id = s1.map(self, (m) -> { m.getContents().getUID(); });
+        let s2id = s2.map(self, (m) -> { m.getContents().getUID(); });
+        s1id.intersection(s2id).size() > 0;
 }
 def nbrsOwning(incoming,transitive) {
-	unionHood(mux(uidMatch(incoming,nbr(transitive))) { nbr([self.getId()]) } else { [] });
+        unionHood(mux(uidMatch(incoming,nbr(transitive))) { nbr([self.getId()]) } else { [] });
 }
 
 //def stableFor(value, rounds) {
-//	rep(record <- [value,0]) {
-//		[value, if(record.get(0).equals(value)) { 1+record.get(1) } else { 1 }]
-//	}.get(1)>rounds
+//      rep(record <- [value,0]) {
+//              [value, if(record.get(0).equals(value)) { 1+record.get(1) } else { 1 }]
+//      }.get(1)>rounds
 //}
 
 def incomingAlreadyDeleted(msg,deleted) {
-	deleted.filter(self, (m)-> { m.isIncoming() && m.getContents().getUID().equals(msg.getContents().getUID()) }).size()>0;
+        deleted.filter(self, (m)-> { m.isIncoming() && m.getContents().getUID().equals(msg.getContents().getUID()) }).size()>0;
 }
 
 def sameID(m1, m2) {
@@ -44,21 +44,21 @@ def sameID(m1, m2) {
 
 // Return true if incoming not just to the device but to the contaminated region
 def purelyIncoming(msg,contaminated) {
-	let allContaminated = unionHood(nbr(contaminated));
-	if(msg.isIncoming()) {
-		let matched = allContaminated.filter(self, (m) -> { sameID(m,msg) });
-		matched.size()==0;
-	} else {
-		false; // can't be purely incoming if not incoming at all
-	}
+        let allContaminated = unionHood(nbr(contaminated));
+        if(msg.isIncoming()) {
+                let matched = allContaminated.filter(self, (m) -> { sameID(m,msg) });
+                matched.size()==0;
+        } else {
+                false; // can't be purely incoming if not incoming at all
+        }
 }
 
 def envOrDefault(var,default) {
-	if(self.hasEnvironmentVariable(var)) {
-		self.getEnvironmentVariable(var);
-	} else {
-		default;
-	}
+        if(self.hasEnvironmentVariable(var)) {
+                self.getEnvironmentVariable(var);
+        } else {
+                default;
+        }
 }
 
 /****** Debugging controls ******/
@@ -78,17 +78,17 @@ self.putEnvironmentVariable("attackMessages",badness);
 
 // Identify every message that might have been affected by the bad message
 let contaminated = 
-	rep(transitiveBadness <- []) {
-		let primary = badness;
-		let nbrBad = unionHood(nbr(transitiveBadness));
-		let incomingBad = findIncomingMatches(record,nbrBad);
-		self.putEnvironmentVariable("logicalNeighbors",nbrsOwning(incomingBad,transitiveBadness));
-		addFollowingOutgoings(record,incomingBad.union(primary));
-	};
+        rep(transitiveBadness <- []) {
+                let primary = badness;
+                let nbrBad = unionHood(nbr(transitiveBadness));
+                let incomingBad = findIncomingMatches(record,nbrBad);
+                self.putEnvironmentVariable("logicalNeighbors",nbrsOwning(incomingBad,transitiveBadness));
+                addFollowingOutgoings(record,incomingBad.union(primary));
+        };
 if(contaminated.size()>0) {
-	self.putEnvironmentVariable("contaminated",contaminated);
+        self.putEnvironmentVariable("contaminated",contaminated);
 } else {
-	self.removeEnvironmentVariable("contaminated");
+        self.removeEnvironmentVariable("contaminated");
 };
 
 // Back out the contaminated messages, one by one
@@ -99,22 +99,22 @@ let deleted = self.getEnvironmentVariable("deletedMessages",[]);
 let nbrDeletes = unionHood(nbr(deleted));
 let allBad = contaminated.union(deleted);
 if(contaminated.size()>0 && allHood PlusSelf(nbr(!self.getClient().isProcessing()))) {
-	let maybeRemovable = contaminated.get(contaminated.size()-1);
-	let removable = (maybeRemovable.isIncoming() || incomingAlreadyDeleted(maybeRemovable,nbrDeletes));
-	let pure = purelyIncoming(maybeRemovable,allBad);
-	if(removable && rollback) {
-		let discard = !pure || badness.contains(maybeRemovable);
-		//if(!discard) {
-		//	self.putEnvironmentVariable("replays",[maybeRemovable].union(self.getEnvironmentVariable("replays",[])));
-		//} else {
-		//	false
-		//};
-		self.getClient().rewindOneStep(discard);
-		let newDeletes = deleted.union([maybeRemovable]);
-		self.putEnvironmentVariable("deletedMessages",newDeletes);
-	} else { 
-		false;
-	};
+        let maybeRemovable = contaminated.get(contaminated.size()-1);
+        let removable = (maybeRemovable.isIncoming() || incomingAlreadyDeleted(maybeRemovable,nbrDeletes));
+        let pure = purelyIncoming(maybeRemovable,allBad);
+        if(removable && rollback) {
+                let discard = !pure || badness.contains(maybeRemovable);
+                //if(!discard) {
+                //      self.putEnvironmentVariable("replays",[maybeRemovable].union(self.getEnvironmentVariable("replays",[])));
+                //} else {
+                //      false
+                //};
+                self.getClient().rewindOneStep(discard);
+                let newDeletes = deleted.union([maybeRemovable]);
+                self.putEnvironmentVariable("deletedMessages",newDeletes);
+        } else { 
+                false;
+        };
 } else { false };
 
 // Note that this strategy can't trace all the way back to the origin, only to the
@@ -135,12 +135,12 @@ self.putEnvironmentVariable("green",badness.size()==0);
 self.putEnvironmentVariable("blue",clean && !nbrsClean);
 
 if(!nbrsClean) {
-	self.getClient().setIsProcessing(false);
-	"Rewind"
+        self.getClient().setIsProcessing(false);
+        "Rewind"
 } else {
-	if(nbrsClean) { self.putEnvironmentVariable("deletedMessages",[]); } else { false; };
-	self.getClient().setIsProcessing(replay);
-	"Normal"
+        if(nbrsClean) { self.putEnvironmentVariable("deletedMessages",[]); } else { false; };
+        self.getClient().setIsProcessing(replay);
+        "Normal"
 };
 
 //self.putEnvironmentVariable("Record",record);

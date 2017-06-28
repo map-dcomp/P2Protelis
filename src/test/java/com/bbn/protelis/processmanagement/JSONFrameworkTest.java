@@ -19,6 +19,9 @@ import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
 import com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon;
 import com.cedarsoftware.util.io.JsonReader;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class JSONFrameworkTest {
     private static final int portOffsetWrap = 5000;
     static boolean nonTerminating = false; // Set this to true if you want to have tests wait for the user

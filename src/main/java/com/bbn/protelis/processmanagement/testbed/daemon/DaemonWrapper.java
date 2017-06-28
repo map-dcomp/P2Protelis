@@ -9,6 +9,9 @@ import org.protelis.vm.ExecutionEnvironment;
 import com.bbn.protelis.processmanagement.daemon.ProcessStatus;
 import com.bbn.protelis.processmanagement.testbed.Scenario;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public interface DaemonWrapper {
     /**
      * Every DaemonWrapper should be instantiable with a no-argument constructor from a JSON object; initialize then move from that initial state into an live, executing daemon.

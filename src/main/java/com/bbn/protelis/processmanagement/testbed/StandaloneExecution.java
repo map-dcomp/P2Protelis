@@ -4,9 +4,10 @@ import java.io.IOException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 import org.apache.commons.lang3.ArrayUtils;
 import org.protelis.lang.ProtelisLoader;
 import org.protelis.vm.ProtelisProgram;
@@ -19,6 +20,9 @@ import com.bbn.protelis.processmanagement.testbed.daemon.AbstractDaemonWrapper;
 import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
 import com.bbn.protelis.processmanagement.testbed.termination.RoundNumberTermination;
 import com.bbn.protelis.processmanagement.testbed.visualizer.DisplayNode;
+
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
 
 public class StandaloneExecution {
     private static Logger logger;
@@ -51,15 +55,15 @@ public class StandaloneExecution {
         options.addOption("a", "--anonymous-program", true, "Run the argument as an anonymous Protelis class");
         options.addOption("c", "--protelis-class", true, "Run the protelis class specified in the argument");
         options.addOption("t", "--termination-condition", true, "Automatically; default only when signalled or on crash");
-        options.getOption("t").setArgs(10); // potentially many arguments
+        options.getOption("t").setArgs(Option.UNLIMITED_VALUES); // potentially many arguments
         options.addOption("T", "--termination-poll-frequency", true, "Milliseconds between termination polling; default 100");
         options.addOption("e", "--environment-buttons", true, "Names of user-toggled global flags");
-        options.getOption("e").setArgs(100); // potentially many arguments
+        options.getOption("e").setArgs(Option.UNLIMITED_VALUES); // potentially many arguments
         options.addOption("i", "--ignore-environment-variable", true, "Additional environment variables to ignore");
-        options.getOption("i").setArgs(100); // potentially many arguments
+        options.getOption("i").setArgs(Option.UNLIMITED_VALUES); // potentially many arguments
         
         /**** Parse command line ****/
-        CommandLineParser parser = new PosixParser();
+        CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
         
         /**** Interpret parsed options ****/

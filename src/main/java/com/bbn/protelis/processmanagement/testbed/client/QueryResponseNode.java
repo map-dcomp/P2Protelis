@@ -33,13 +33,17 @@ import com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon;
 import cern.colt.Arrays;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class QueryResponseNode extends CrumpleZoneMonitorable {
     private Logger logger = LoggerFactory.getLogger("QueryResponseNode");
     
     // This set of variables are expected to be configured from JSON serialization
     /** Should be a comparable uid; might be a number or a name or anything else. */
-    protected Object identifier;
-    private String shortName;
+    protected Object identifier = "";
+    private String shortName = "";
     /** The port where the QRNode will serve connections from others */
     private int port;
     private Object[][] dependencyList = new Object[0][];
@@ -160,7 +164,7 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
             for (Attack a : q.attacks) {
                 if (a.apply(QueryResponseNode.this)) {
                     infections.add(q);
-                    q.infective = true;
+//                    q.infective = true;
                 }
             }
             
@@ -208,6 +212,20 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
         private static int count = 0;
         public int index = count++;
         
+        @Override 
+        public int hashCode() {
+            return (int)time;
+        }
+        
+        @Override
+        public boolean equals(final Object o) {
+            if(o instanceof Event) {
+                return 0 == compareTo((Event)o);
+            } else {
+                return super.equals(o);
+            }
+        }
+        
         @Override
         public int compareTo(final Event o) {
             if (time == o.time) {
@@ -227,7 +245,7 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
             this.query = query; 
             sourceAddr = source; sourcePort = srcPort; 
         }
-        private UUID packet_id = UUID.randomUUID();
+//        private UUID packet_id = UUID.randomUUID();
         private Object sessionID; // persistent ID for a query-response chain
         private String originName = ""; // optional tag for debugging
         // To/from information
@@ -239,7 +257,7 @@ public class QueryResponseNode extends CrumpleZoneMonitorable {
         // Attack and contamination model:
         private Set<Attack> attacks = new HashSet<>();
         private boolean contaminated = false;
-        private boolean infective = false;
+//        private boolean infective = false;
         // no payload, since just a dummy
         
         private boolean isOrigin() { 

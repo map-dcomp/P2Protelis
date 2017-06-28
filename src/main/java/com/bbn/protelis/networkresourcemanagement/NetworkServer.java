@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nonnull;
 
-import org.apache.bcel.generic.ExceptionThrower;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
@@ -141,23 +140,24 @@ public class NetworkServer extends AbstractExecutionContext
     }
 
     /**
+     * Creates a {@link NetworkServer} with a {@link NullResourceManager}.
+     * 
      * @param program
      *            the program to run on the node
      * @param name
      *            the name of the node (must be unique)
      * @param lookupService
      *            How to find other nodes
-     * @param resourceManager
-     *            where to get resource information from
      */
-    public NetworkServer(@Nonnull final NodeLookupService lookupService, @Nonnull final ProtelisProgram program,
-            @Nonnull final String name, @Nonnull final ResourceManager resourceManager) {
+    public NetworkServer(@Nonnull final NodeLookupService lookupService,
+            @Nonnull final ProtelisProgram program,
+            @Nonnull final String name) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
         this.uid = new StringNodeIdentifier(name);
         this.region = NULL_REGION;
         this.networkState = new NetworkState(this.region);
         this.regionNodeState = new RegionNodeState(this.region);
-        this.resourceManager = resourceManager;
+        this.resourceManager = new NullResourceManager(this.uid);
 
         // Finish making the new device and add it to our collection
         vm = new ProtelisVM(program, this);
@@ -374,7 +374,16 @@ public class NetworkServer extends AbstractExecutionContext
         }
     }
 
-    private final ResourceManager resourceManager;
+    private ResourceManager resourceManager;
+
+    /**
+     * 
+     * @param resourceManager
+     *            the new {@link ResourceManager} for this node
+     */
+    public void setResourceManager(@Nonnull final ResourceManager resourceManager) {
+        this.resourceManager = resourceManager;
+    }
 
     /**
      * Get the latest resource report. This method should be called once per
@@ -424,6 +433,18 @@ public class NetworkServer extends AbstractExecutionContext
         }
     }
 
+    private String hardware;
+
+    @Override
+    public String getHardware() {
+        return hardware;
+    }
+
+    @Override
+    public void setHardware(final String hardware) {
+        this.hardware = hardware;
+    }
+
     // ---- NetworkStateProvider
     private NetworkState networkState;
 
@@ -444,4 +465,9 @@ public class NetworkServer extends AbstractExecutionContext
     }
     // ---- end RegionNodeStateProvider
 
+    @Override
+    public String toString() {
+        return getName();
+    }
+    
 }

@@ -7,10 +7,16 @@ import com.bbn.protelis.processmanagement.testbed.daemon.DaemonWrapper;
 import com.bbn.protelis.processmanagement.testbed.visualizer.ScenarioVisualizer;
 
 
+/**
+ * Run a scenario.
+ */
 public class ScenarioRunner {
     private final Scenario scenario;
     private ScenarioVisualizer visualizer;
-    
+
+    /**
+     * @param scenario the scenario to run
+     */
     public ScenarioRunner(final Scenario scenario) {
         scenario.logger.info("Initializing scenario");
         this.scenario = scenario;

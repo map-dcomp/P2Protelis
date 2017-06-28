@@ -43,6 +43,7 @@ import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
 import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Visualizer for a {@link Scenario}. Call {@link #start()} to open the
@@ -289,6 +290,8 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     /**
      * Wait for the visualizer to close.
      */
+    @SuppressFBWarnings(value = { "UW_UNCOND_WAIT",
+            "WA_NOT_IN_LOOP" }, justification = "There isn't a conditional that we can check here")
     public void waitForClose() {
         if (frameOpen) {
             synchronized (closeLock) {

@@ -1,5 +1,8 @@
 package com.bbn.protelis.processmanagement.daemon;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public enum ProcessStatus {
     init, 
     run, 

@@ -2,6 +2,9 @@ package com.bbn.protelis.processmanagement.testbed.client;
 
 import com.bbn.protelis.processmanagement.daemon.Monitorable;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 /**
  * Support a rewindable message.
  * @author jakebeal

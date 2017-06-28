@@ -3,6 +3,9 @@ package com.bbn.protelis.processmanagement.testbed.visualizer;
 import java.awt.Color;
 import java.awt.Paint;
 
+//TODO: This file needs checkstyle cleanup
+//CHECKSTYLE:OFF
+
 public class DisplayEdge {
     public enum EdgeType { PHYSICAL, LOGICAL, BOTH };
     

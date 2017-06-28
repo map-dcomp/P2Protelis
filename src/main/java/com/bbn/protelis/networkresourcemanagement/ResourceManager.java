@@ -5,10 +5,13 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 /**
- * This is the interface the {@link NetworkServer} is using to collect information from.
- * This interface is used to retrieve {@link ResourceReport}s and to make
- * changes to the {@link NetworkServer}.
+ * This is the interface the {@link NetworkServer} is using to collect
+ * information from. This interface is used to retrieve {@link ResourceReport}s
+ * and to make changes to the {@link NetworkServer}.
  */
 public interface ResourceManager {
 
@@ -55,8 +58,8 @@ public interface ResourceManager {
      */
     boolean startTask(@Nonnull String containerName,
             @Nonnull String taskName,
-            @Nonnull List<String> arguments,
-            @Nonnull Map<String, String> environment);
+            @Nonnull ImmutableList<String> arguments,
+            @Nonnull ImmutableMap<String, String> environment);
 
     /**
      * Stop a task.
