@@ -7,7 +7,8 @@ import org.kie.api.management.GAV;
 import com.google.common.collect.ComparisonChain;
 
 /**
- * Identifier for an application, using the {group, artifact, version} triplet, as personifed by the GAV value class
+ * Identifier for an application, using the {group, artifact, version} triplet,
+ * as personified by the GAV value class.
  */
 public class ApplicationIdentifier implements ServiceIdentifier<GAV>, Comparable<ApplicationIdentifier> {
 
@@ -15,22 +16,20 @@ public class ApplicationIdentifier implements ServiceIdentifier<GAV>, Comparable
 
     /**
      * 
-     * @param GAV
-     * the applicaiton coordinates
+     * @param coordinates
+     *            the applicaiton coordinates
      */
     public ApplicationIdentifier(@Nonnull final GAV coordinates) {
         this.coordinates = coordinates;
     }
 
     private final GAV coordinates;
-    
+
     @Override
     public int compareTo(final ApplicationIdentifier other) {
-        return ComparisonChain.start()
-                .compare(other.getIdentifier().getGroupId(), this.getIdentifier().getGroupId())
-                .compare(other.getIdentifier().getArtifactId(),  this.getIdentifier().getArtifactId())
-                .compare(other.getIdentifier().getVersion(),  this.getIdentifier().getVersion())
-                .result();
+        return ComparisonChain.start().compare(other.getIdentifier().getGroupId(), this.getIdentifier().getGroupId())
+                .compare(other.getIdentifier().getArtifactId(), this.getIdentifier().getArtifactId())
+                .compare(other.getIdentifier().getVersion(), this.getIdentifier().getVersion()).result();
     }
 
     @Override

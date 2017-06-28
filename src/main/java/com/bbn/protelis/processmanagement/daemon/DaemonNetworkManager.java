@@ -265,7 +265,7 @@ public class DaemonNetworkManager implements NetworkManager, Monitorable.Listene
     static class Neighbor implements Runnable {
         /* Identity */
         private long uid;
-        @SuppressWarnings("unused") // TODO: determine whether we still need this
+        //@SuppressWarnings("unused") // TODO: determine whether we still need this
 //        private int port;
         private final String name; // debug-friendly UID
         private final int nonce; // uid for connection (to symmetry-break multiple connections)

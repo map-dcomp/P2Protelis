@@ -150,10 +150,12 @@ public class BasicResourceManager implements ResourceManager {
                     final Map<String, Object> individualClientDemand = (Map<String, Object>) v;
                     final ImmutableMap<NodeAttribute, Double> serviceDemand = parseEnumDoubleMap(NodeAttribute.class,
                             individualClientDemand);
+                    
                     // builder.put(new ApplicationIdentifier(new
                     // GAV("groupPlaceholder", serviceName,
                     // "versionPlaceholder")), serviceDemand);
                     builder.put(new StringServiceIdentifier(serviceName), serviceDemand);
+
                 } else {
                     LOGGER.warn("While parsing resource report for node " + node.getName() + " the service "
                             + serviceName + " doesn't have valid client demand data");
@@ -191,8 +193,8 @@ public class BasicResourceManager implements ResourceManager {
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkCapacity = node
                 .getNeighborLinkCapacity();
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkDemand = computeNeighborLinkDemand();
-        final ResourceReport report = new ResourceReport(new StringNodeIdentifier(node.getName()), this.clientDemand,
-                this.serverCapacity, linkCapacity, linkDemand);
+        final ResourceReport report = new ResourceReport(new StringNodeIdentifier(node.getName()),
+                System.currentTimeMillis(), this.clientDemand, this.serverCapacity, linkCapacity, linkDemand);
         return report;
     }
 
