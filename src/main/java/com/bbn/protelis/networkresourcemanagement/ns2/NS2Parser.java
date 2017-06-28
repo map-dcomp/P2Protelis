@@ -331,7 +331,7 @@ public final class NS2Parser {
      *             if there is an error reading from the file
      */
     @Nonnull
-    private static Map<String, Object> getNodeDataFromResource(final String baseDirectory, final String nodeName)
+    public static Map<String, Object> getNodeDataFromResource(final String baseDirectory, final String nodeName)
             throws IOException {
 
         final String path = baseDirectory + "/" + nodeName + ".json";

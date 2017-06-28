@@ -23,10 +23,25 @@ public class BasicResourceManager implements ResourceManager {
     private final String nodeName;
     private final Map<String, Object> extraData;
 
-    private static final String EXTRA_DATA_RESOURCE_REPORT_KEY = "resource-report";
-    private static final String CLIENT_DEMAND_KEY = "clientDemand";
-    private static final String SERVER_CAPACITY_KEY = "serverCapacity";
-    private static final String NEIGHBOR_LINK_DEMAND_KEY = "neighborLinkDemand";
+    /**
+     * Used to find resource report information in extraData.
+     */
+    public static final String EXTRA_DATA_RESOURCE_REPORT_KEY = "resource-report";
+    /**
+     * Used to find client demand in
+     * {@link BasicResourceManager#EXTRA_DATA_RESOURCE_REPORT_KEY}.
+     */
+    public static final String CLIENT_DEMAND_KEY = "clientDemand";
+    /**
+     * Used to find server capacity in
+     * {@link BasicResourceManager#EXTRA_DATA_RESOURCE_REPORT_KEY}.
+     */
+    public static final String SERVER_CAPACITY_KEY = "serverCapacity";
+    /**
+     * Used to find neighbor link demand in
+     * {@link BasicResourceManager#EXTRA_DATA_RESOURCE_REPORT_KEY}.
+     */
+    public static final String NEIGHBOR_LINK_DEMAND_KEY = "neighborLinkDemand";
 
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand;
     private final ImmutableMap<NodeAttribute, Double> serverCapacity;
@@ -148,7 +163,9 @@ public class BasicResourceManager implements ResourceManager {
                     final Map<String, Object> individualClientDemand = (Map<String, Object>) v;
                     final ImmutableMap<NodeAttribute, Double> serviceDemand = parseEnumDoubleMap(NodeAttribute.class,
                             individualClientDemand);
-                    builder.put(new ApplicationIdentifier(new GAV("groupPlaceholder", serviceName, "versionPlaceholder")), serviceDemand);
+                    builder.put(
+                            new ApplicationIdentifier(new GAV("groupPlaceholder", serviceName, "versionPlaceholder")),
+                            serviceDemand);
                 } else {
                     LOGGER.warn("While parsing resource report for node " + nodeName + " the service " + serviceName
                             + " doesn't have valid client demand data");
@@ -200,7 +217,8 @@ public class BasicResourceManager implements ResourceManager {
         if (null == node) {
             return ImmutableMap.of();
         } else {
-            final ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
+            final ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap
+                    .builder();
             this.node.getNeighbors().forEach(neighborId -> {
                 if (this.neighborLinkDemand.containsKey(neighborId)) {
                     builder.put(neighborId, this.neighborLinkDemand.get(neighborId));
