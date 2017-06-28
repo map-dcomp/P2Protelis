@@ -80,6 +80,9 @@ public class NS2ParserTest {
             Assert.assertFalse("Node: " + node.getName() + " isn't dead", node.isExecuting());
 
             Assert.assertThat(node.getExecutionCount(), greaterThanOrEqualTo(maxExecutions));
+
+            Assert.assertNull("Received exception inside the program loop: " + node.getExceptionThrownInProgramLoop(),
+                    node.getExceptionThrownInProgramLoop());
         }
 
     }

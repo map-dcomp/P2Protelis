@@ -289,6 +289,18 @@ public class NetworkServer extends AbstractExecutionContext
     protected void postRunCycle() {
     }
 
+    private Exception programLoopException = null;
+
+    /**
+     * This is used for test cases. One can check this value to see if the
+     * execute loop exited due to an exception.
+     * 
+     * @return the exception thrown in the program loop, null otherwise
+     */
+    public Exception getExceptionThrownInProgramLoop() {
+        return programLoopException;
+    }
+
     /**
      * Execute the protolis program.
      */
@@ -308,6 +320,7 @@ public class NetworkServer extends AbstractExecutionContext
                 break;
             } catch (final Exception e) {
                 LOGGER.error("Exception thrown: terminating Protelis on node: " + getName(), e);
+                programLoopException = e;
                 break;
             }
         }
