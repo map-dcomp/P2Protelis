@@ -65,6 +65,8 @@ public class DisplayNode {
             builder.append("<br><hr>" + valueStr);
         }
 
+        builder.append("</html>");
+        
         return builder.toString();
     }
 
