@@ -119,14 +119,23 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
             vv = null;
         }
 
+        this.scenario = scenario;
+
         // Add the nodes and edges
         createGraphFromNetwork();
-        // Configure the rendering environment
         configureGraphRendering();
-
+        this.add(vv);
     }
 
     private void createGraphFromNetwork() {
+        // clear whatever is on the screen
+        clearEdges();
+        clearNodes();
+
+        if (null == scenario) {
+            return;
+        }
+
         // First add nodes to collection, so they'll be there for edge addition
         for (final Map.Entry<DeviceUID, N> entry : scenario.getServers().entrySet()) {
             addNode(entry.getValue());
@@ -134,7 +143,14 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
         for (final Map.Entry<DeviceUID, C> entry : scenario.getClients().entrySet()) {
             addNode(entry.getValue());
         }
+
+        // create edges
         refreshEdges();
+    }
+
+    private void clearNodes() {
+        nodes.forEach((uid, dn) -> g.removeVertex(dn));
+        nodes.clear();
     }
 
     private DN addNode(final NetworkNode node) {
@@ -144,12 +160,17 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
         return n;
     }
 
-    private void refreshEdges() {
-        // First, discard all current edges
-        for (final DL e : edges) {
-            g.removeEdge(e);
-        }
+    private void clearEdges() {
+        edges.forEach(dl -> g.removeEdge(dl));
         edges.clear();
+    }
+
+    private void refreshEdges() {
+        clearEdges();
+
+        if (null == scenario) {
+            return;
+        }
 
         // Next, add all edges
         for (final L l : scenario.getLinks()) {
@@ -306,6 +327,10 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
      *             if already running
      */
     public void start(final boolean createFrame) throws IllegalStateException {
+        if (null == scenario) {
+            throw new IllegalStateException("Cannot start without a scenario");
+        }
+
         if (null != refresher) {
             throw new IllegalStateException("Cannot start while already running");
         }
