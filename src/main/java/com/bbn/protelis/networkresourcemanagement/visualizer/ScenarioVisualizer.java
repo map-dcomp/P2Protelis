@@ -66,6 +66,9 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     private static final int DEFAULT_HEIGHT = 800;// 480;//1080;
     private static final int LAYOUT_WIDTH = (int) (0.9 * DEFAULT_WIDTH);
     private static final int LAYOUT_HEIGHT = (int) (0.9 * DEFAULT_HEIGHT);
+    /**
+     * How often to redraw the graph in milliseconds.
+     */
     private static final int REFRESH_RATE = 100;// 500
     private final Object closeLock = new Object();
     private final NetworkVisualizerFactory<DN, DL> visFactory;
