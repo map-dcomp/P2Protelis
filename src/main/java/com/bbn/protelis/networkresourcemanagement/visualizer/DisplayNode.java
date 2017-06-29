@@ -5,7 +5,6 @@ import java.awt.Paint;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import org.protelis.lang.datatype.DeviceUID;
@@ -18,10 +17,18 @@ import com.bbn.protelis.networkresourcemanagement.NetworkServer;
  */
 public class DisplayNode {
 
-    // Image collection:
-    private static final Icon SERVER_SINGLE = new ImageIcon(DisplayNode.class.getResource("/server-small-green.png"));
-    private static final Icon SERVER_POOL = new ImageIcon(DisplayNode.class.getResource("/server-small-yellow.png"));
-    private static final Icon CLIENT = new ImageIcon(DisplayNode.class.getResource("/server-small-blue.png"));
+    /**
+     * Icon for single servers.
+     */
+    public static final ImageIcon SERVER_SINGLE = new ImageIcon(DisplayNode.class.getResource("/server-small-green.png"));
+    /**
+     * Icon for pooled servers.
+     */
+    public static final ImageIcon SERVER_POOL = new ImageIcon(DisplayNode.class.getResource("/server-small-yellow.png"));
+    /**
+     * Icon for clients.
+     */
+    public static final ImageIcon CLIENT = new ImageIcon(DisplayNode.class.getResource("/server-small-blue.png"));
 
     private final NetworkNode node;
 
@@ -113,7 +120,7 @@ public class DisplayNode {
      * 
      * @return the icon to use for the object
      */
-    public Icon getIcon() {
+    public ImageIcon getIcon() {
         if (node instanceof NetworkServer) {
             final NetworkServer server = (NetworkServer) node;
             if (server.isPool()) {
