@@ -4,7 +4,7 @@
 	<groupId>com.bbn</groupId>
 	<artifactId>com.bbn.protelis.testbed</artifactId>
 	<name>Protelis Testbed</name>
-	<version>0.11.0</version>
+	<version>0.12.0</version>
 
 	<dependencies>
 		<dependency>

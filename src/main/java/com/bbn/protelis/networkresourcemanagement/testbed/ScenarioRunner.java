@@ -40,8 +40,8 @@ public class ScenarioRunner<N extends NetworkServer, L extends NetworkLink, C ex
      */
     public ScenarioRunner(@Nonnull final Scenario<N, L, C> scenario,
             final ScenarioVisualizer<?, ?, L, N, C> visualizer) {
-        if (null != visualizer && scenario != visualizer.getScenario()) {
-            throw new IllegalArgumentException("The visualizer is using a different scenario");
+        if (null != visualizer) {
+            visualizer.setScenario(scenario);
         }
 
         if (LOGGER.isInfoEnabled()) {
@@ -110,7 +110,6 @@ public class ScenarioRunner<N extends NetworkServer, L extends NetworkLink, C ex
         }
         if (visualizer != null) {
             visualizer.stop();
-            visualizer.destroy();
         }
 
         LOGGER.debug("Waiting for all daemons to stop");
