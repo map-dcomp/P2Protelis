@@ -63,4 +63,13 @@ public class DisplayEdge {
     public Paint getEdgeColor() {
         return GREY;
     }
+    
+    /**
+     * @return the text to display on the edge (link name)
+     */
+    public String getDisplayText() {
+        return getLink().getName();
+    }
+
+
 }

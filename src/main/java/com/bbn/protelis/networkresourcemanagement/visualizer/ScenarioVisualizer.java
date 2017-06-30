@@ -283,7 +283,7 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
         vv.getRenderContext().setEdgeLabelTransformer(new Transformer<DL, String>() {
             @Override
             public String transform(final DL e) {
-                return e.getLink().getName();
+                return e.getDisplayText();
             }
         });
 

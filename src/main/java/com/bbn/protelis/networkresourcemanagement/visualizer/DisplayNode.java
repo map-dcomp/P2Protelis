@@ -20,11 +20,13 @@ public class DisplayNode {
     /**
      * Icon for single servers.
      */
-    public static final ImageIcon SERVER_SINGLE = new ImageIcon(DisplayNode.class.getResource("/server-small-green.png"));
+    public static final ImageIcon SERVER_SINGLE = new ImageIcon(
+            DisplayNode.class.getResource("/server-small-green.png"));
     /**
      * Icon for pooled servers.
      */
-    public static final ImageIcon SERVER_POOL = new ImageIcon(DisplayNode.class.getResource("/server-small-yellow.png"));
+    public static final ImageIcon SERVER_POOL = new ImageIcon(
+            DisplayNode.class.getResource("/server-small-yellow.png"));
     /**
      * Icon for clients.
      */
@@ -36,7 +38,7 @@ public class DisplayNode {
      * @return the node
      */
     @Nonnull
-    protected final NetworkNode getNode() {
+    public final NetworkNode getNode() {
         return node;
     }
 
@@ -73,7 +75,7 @@ public class DisplayNode {
         }
 
         builder.append("</html>");
-        
+
         return builder.toString();
     }
 
