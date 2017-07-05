@@ -64,6 +64,9 @@ checkstyle {
 }
 
 apply plugin: 'findbugs'
+findbugs {
+    ignoreFailures = false
+}
 
 // need to delete the bin directory created by IDEs
 clean {
