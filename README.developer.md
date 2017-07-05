@@ -7,5 +7,13 @@
 
 # Building on the command line
 
-    ./gradlew build
+Build
 
+    ./gradlew build
+    
+
+Run all checks
+
+    ./gradlew check
+
+The outputs are in build/reports.
