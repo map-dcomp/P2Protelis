@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.io.IOUtils;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.NetworkManager;
 import org.protelis.vm.util.CodePath;
@@ -91,12 +92,13 @@ public class NodeNetworkManager implements NetworkManager {
      */
     public void start(final NetworkServer node) {
         synchronized (lock) {
-            if (null != threadGroup) {
+            if (running) {
                 throw new IllegalStateException(
                         "Cannot start network manager when it's already running. Node: " + node.getName());
             }
 
-            threadGroup = new ThreadGroup("clients for " + node.getName());
+            running = true;
+
             this.node = node;
             listenForNeighbors();
 
@@ -106,28 +108,29 @@ public class NodeNetworkManager implements NetworkManager {
         }
     }
 
-    private ThreadGroup threadGroup = null;
+    private boolean running = false;
 
     /**
      * Stop the manager.
      */
     public void stop() {
         synchronized (lock) {
-            if (null != threadGroup) {
-                threadGroup.interrupt();
-                final int numThreads = threadGroup.activeCount();
-                final Thread[] activeThreads = new Thread[numThreads];
-                final int numActiveThreads = threadGroup.enumerate(activeThreads);
-                for (int i = 0; i < numActiveThreads; ++i) {
-                    try {
-                        activeThreads[i].join();
-                    } catch (final InterruptedException e) {
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("Interrupted waiting for thread join", e);
-                        }
+            running = false;
+
+            // stop talking to neighbors
+            nbrs.forEach((k, v) -> {
+                v.terminate();
+                try {
+                    v.join();
+                } catch (final InterruptedException e) {
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace("Interrupted during join", e);
                     }
                 }
-            }
+            });
+
+            // force one to stop listening
+            IOUtils.closeQuietly(server);
         }
     }
 
@@ -149,8 +152,7 @@ public class NodeNetworkManager implements NetworkManager {
                     other.terminate();
                 }
 
-                final NetworkNeighbor neighbor = new NetworkNeighbor(this.threadGroup, uid, nonce, remoteAddr, s, in,
-                        out);
+                final NetworkNeighbor neighbor = new NetworkNeighbor(uid, nonce, remoteAddr, s, in, out);
                 nbrs.put(uid, neighbor);
                 neighbor.start();
             } else {
@@ -165,6 +167,8 @@ public class NodeNetworkManager implements NetworkManager {
         } // lock so that we don't add 2 connections to the neighbor
     }
 
+    private ServerSocket server = null;
+
     /**
      * Listen for neighbor connections.
      * 
@@ -173,49 +177,54 @@ public class NodeNetworkManager implements NetworkManager {
 
         final InetSocketAddress addr = lookupService.getInetAddressForNode(node.getNodeIdentifier());
         final int port = addr.getPort();
-        new Thread(threadGroup, () -> {
+        new Thread(() -> {
 
-            while (!Thread.interrupted()) {
-                try (ServerSocket server = new ServerSocket(port)) {
+            while (running) {
+                try {
+                    server = new ServerSocket(port);
                     server.setReuseAddress(true);
                     LOGGER.info("Node: " + node.getName() + " Daemon listening for neighbors on port " + port);
-                    while (!Thread.interrupted()) {
+                    while (running) {
                         final Socket s = server.accept();
-                        final String threadName = "Node: " + node.getName() + " client: "
-                                + s.getRemoteSocketAddress().toString();
-                        new Thread(this.threadGroup, () -> {
-                            try {
-                                // If the link connects, trade UIDs
-                                final ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-                                final ObjectInputStream in = new ObjectInputStream(s.getInputStream());
 
-                                // write uid for neighbor
-                                out.writeObject(node.getNodeIdentifier());
-                                out.flush();
+                        // don't need a thread here since addNeighbor will take
+                        // care of creating a thread to service the connection.
+                        try {
+                            // If the link connects, trade UIDs
+                            final ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+                            final ObjectInputStream in = new ObjectInputStream(s.getInputStream());
 
-                                // reads data from connectToNeighbor()
-                                final DeviceUID uid = (DeviceUID) in.readObject();
-                                final int nonce = in.readInt();
+                            // write uid for neighbor
+                            out.writeObject(node.getNodeIdentifier());
+                            out.flush();
 
-                                addNeighbor(uid, nonce, s, in, out);
+                            // reads data from connectToNeighbor()
+                            final DeviceUID uid = (DeviceUID) in.readObject();
+                            final int nonce = in.readInt();
 
-                                // Given that all else is successful, note link
-                                // in
-                                // link table
-                                // linkToNbr.put(remoteAddr, uid);
-                            } catch (final IOException | ClassNotFoundException e) {
-                                if (LOGGER.isDebugEnabled()) {
-                                    LOGGER.debug("Got exception creating link to neighbor that connected to us.", e);
-                                }
+                            addNeighbor(uid, nonce, s, in, out);
+                        } catch (final IOException | ClassNotFoundException e) {
+                            if (LOGGER.isDebugEnabled()) {
+                                LOGGER.debug("Got exception creating link to neighbor that connected to us.", e);
                             }
-                        }, threadName).start();
-                    } // while !interrupted accept connections
-                } catch (final IOException e) {
-                    LOGGER.warn("Node: " + node.getName()
-                            + " received I/O exception accepting connections, trying to listen again on port: " + port, e);
-                }
-            } // while !interrupted, restart listen
+                        }
 
+                    } // while running accept connections
+                } catch (final IOException e) {
+                    if (running) {
+                        LOGGER.warn("Node: " + node.getName()
+                                + " received I/O exception accepting connections, trying to listen again on port: "
+                                + port, e);
+                    }
+                }
+
+                IOUtils.closeQuietly(server);
+                server = null;
+            } // while running, restart listen
+
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Existing thread: " + Thread.currentThread().getName());
+            }
         }, "Node: " + node.getName() + " server thread").start();
 
     }
