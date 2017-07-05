@@ -326,6 +326,8 @@ public class NetworkServer extends AbstractExecutionContext
         }
     }
 
+    private final Object lock = new Object();
+
     private Thread executeThread = null;
 
     /**
@@ -333,22 +335,30 @@ public class NetworkServer extends AbstractExecutionContext
      * @return is the node currently executing?
      */
     public final boolean isExecuting() {
-        return null != executeThread && executeThread.isAlive();
+        synchronized (lock) {
+            return running && null != executeThread && executeThread.isAlive();
+        }
     }
+
+    private boolean running = false;
 
     /**
      * Start the node executing.
      */
     public final void startExecuting() {
-        if (null != executeThread) {
-            throw new IllegalStateException("Already executing, cannot start again!");
+        synchronized (lock) {
+            if (running) {
+                throw new IllegalStateException("Already executing, cannot start again!");
+            }
+
+            running = true;
+
+            accessNetworkManager().start(this);
+
+            executeThread = new Thread(() -> run());
+            executeThread.setName("Node-" + getName());
+            executeThread.start();
         }
-
-        accessNetworkManager().start(this);
-
-        executeThread = new Thread(() -> run());
-        executeThread.setName("Node-" + getName());
-        executeThread.start();
     }
 
     /**
@@ -361,17 +371,22 @@ public class NetworkServer extends AbstractExecutionContext
      * Stop the node executing and wait for the stop.
      */
     public final void stopExecuting() {
-        if (null != executeThread) {
+        if (isExecuting()) {
             preStopExecuting();
 
-            executeThread.interrupt();
-            try {
-                executeThread.join(); // may want to have a timeout here
-            } catch (final InterruptedException e) {
-                LOGGER.debug("Got interrupted waiting for join, probably just time to shutdown", e);
-            }
-            executeThread = null;
-        }
+            synchronized (lock) {
+                running = false;
+                if (null != executeThread) {
+                    executeThread.interrupt();
+                    try {
+                        executeThread.join(); // may want to have a timeout here
+                    } catch (final InterruptedException e) {
+                        LOGGER.debug("Got interrupted waiting for join, probably just time to shutdown", e);
+                    }
+                    executeThread = null;
+                } // non-null executeThread
+            } // lock
+        } // isExecuting
     }
 
     private ResourceManager resourceManager;
@@ -469,5 +484,5 @@ public class NetworkServer extends AbstractExecutionContext
     public String toString() {
         return getName();
     }
-    
+
 }

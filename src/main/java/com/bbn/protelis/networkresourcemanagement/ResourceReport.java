@@ -14,6 +14,11 @@ public class ResourceReport implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Timestamp for null reports.
+     */
+    public static final long NULL_TIMESTAMP = -1;
+
+    /**
      * 
      * @param nodeName
      *            the name of the node that this report is from
@@ -118,7 +123,8 @@ public class ResourceReport implements Serializable {
     }
 
     /**
-     * Create a resource report with no data. The timestamp is set to -1.
+     * Create a resource report with no data. The timestamp is set to
+     * {@link #NULL_TIMESTAMP}.
      * 
      * @param nodeName
      *            the name of the node
@@ -131,7 +137,8 @@ public class ResourceReport implements Serializable {
                 .of();
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = ImmutableMap.of();
 
-        return new ResourceReport(nodeName, -1, clientDemand, serverCapacity, neighborLinkCapacity, neighborLinkDemand);
+        return new ResourceReport(nodeName, NULL_TIMESTAMP, clientDemand, serverCapacity, neighborLinkCapacity,
+                neighborLinkDemand);
     }
 
 }

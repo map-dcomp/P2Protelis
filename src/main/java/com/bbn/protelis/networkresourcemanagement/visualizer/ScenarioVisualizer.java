@@ -1,6 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement.visualizer;
 
 import java.awt.BasicStroke;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Paint;
 import java.awt.Rectangle;
@@ -15,18 +16,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
-import javax.swing.JApplet;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
 import org.apache.commons.collections15.Transformer;
 import org.protelis.lang.datatype.DeviceUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.common.visualizer.MultiVertexRenderer;
 import com.bbn.protelis.networkresourcemanagement.NetworkClient;
@@ -43,7 +40,6 @@ import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
 import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Visualizer for a {@link Scenario}. Call {@link #start()} to open the
@@ -61,22 +57,22 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  *            the client type
  */
 public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, L extends NetworkLink, N extends NetworkServer, C extends NetworkClient>
-        extends JApplet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioVisualizer.class);
+        extends JPanel {
 
-    // Serialization inherited from JApplet
+    // Serialization inherited from JPanel
     private static final long serialVersionUID = 1L;
 
     private static final int DEFAULT_WIDTH = 1200;// 640;//1920;
     private static final int DEFAULT_HEIGHT = 800;// 480;//1080;
     private static final int LAYOUT_WIDTH = (int) (0.9 * DEFAULT_WIDTH);
     private static final int LAYOUT_HEIGHT = (int) (0.9 * DEFAULT_HEIGHT);
+    /**
+     * How often to redraw the graph in milliseconds.
+     */
     private static final int REFRESH_RATE = 100;// 500
     private final Object closeLock = new Object();
-    private volatile boolean frameOpen = false;
     private final NetworkVisualizerFactory<DN, DL> visFactory;
 
-    private JFrame frame;
     private VisualizationViewer<DN, DL> vv;
     private Timer refresher;
 
@@ -95,12 +91,11 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     // Graph contents
     private Map<DeviceUID, DN> nodes = new HashMap<>();
     private Set<DL> edges = new HashSet<>();
-    private final Scenario<N, L, C> scenario;
+    private Scenario<N, L, C> scenario = null;
 
     /**
-     * @return the scenario that is being visualized
+     * @return the scenario that is being visualized, may be null
      */
-    @Nonnull
     public final Scenario<N, L, C> getScenario() {
         return scenario;
     }
@@ -108,24 +103,42 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     /**
      * Create a visualization.
      * 
-     * @param scenario
-     *            the scenario to visualize
      * @param visFactory
      *            the factory for creating display objects
      */
-    public ScenarioVisualizer(final Scenario<N, L, C> scenario, final NetworkVisualizerFactory<DN, DL> visFactory) {
+    public ScenarioVisualizer(final NetworkVisualizerFactory<DN, DL> visFactory) {
         this.visFactory = visFactory;
+
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+    }
+
+    /**
+     * @param scenario
+     *            the scenario to display
+     */
+    public void setScenario(final Scenario<N, L, C> scenario) {
+        if (null != vv) {
+            this.remove(vv);
+            vv = null;
+        }
+
         this.scenario = scenario;
 
         // Add the nodes and edges
         createGraphFromNetwork();
-        // Configure the rendering environment
         configureGraphRendering();
-        // set up Swing components
-        initializeSwingComponents();
+        this.add(vv);
     }
 
     private void createGraphFromNetwork() {
+        // clear whatever is on the screen
+        clearEdges();
+        clearNodes();
+
+        if (null == scenario) {
+            return;
+        }
+
         // First add nodes to collection, so they'll be there for edge addition
         for (final Map.Entry<DeviceUID, N> entry : scenario.getServers().entrySet()) {
             addNode(entry.getValue());
@@ -133,7 +146,14 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
         for (final Map.Entry<DeviceUID, C> entry : scenario.getClients().entrySet()) {
             addNode(entry.getValue());
         }
+
+        // create edges
         refreshEdges();
+    }
+
+    private void clearNodes() {
+        nodes.forEach((uid, dn) -> g.removeVertex(dn));
+        nodes.clear();
     }
 
     private DN addNode(final NetworkNode node) {
@@ -143,12 +163,17 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
         return n;
     }
 
-    private void refreshEdges() {
-        // First, discard all current edges
-        for (final DL e : edges) {
-            g.removeEdge(e);
-        }
+    private void clearEdges() {
+        edges.forEach(dl -> g.removeEdge(dl));
         edges.clear();
+    }
+
+    private void refreshEdges() {
+        clearEdges();
+
+        if (null == scenario) {
+            return;
+        }
 
         // Next, add all edges
         for (final L l : scenario.getLinks()) {
@@ -258,7 +283,7 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
         vv.getRenderContext().setEdgeLabelTransformer(new Transformer<DL, String>() {
             @Override
             public String transform(final DL e) {
-                return e.getLink().getName();
+                return e.getDisplayText();
             }
         });
 
@@ -288,87 +313,55 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     }
 
     /**
-     * Wait for the visualizer to close.
+     * Start and create a frame for display.
+     * 
+     * @see #start(boolean)
      */
-    @SuppressFBWarnings(value = { "UW_UNCOND_WAIT",
-            "WA_NOT_IN_LOOP" }, justification = "There isn't a conditional that we can check here")
-    public void waitForClose() {
-        if (frameOpen) {
-            synchronized (closeLock) {
-                try {
-                    closeLock.wait();
-                } catch (final InterruptedException e) {
-                    LOGGER.debug("Got interrupted, should be time to shutdown", e);
-                }
-            }
-        }
-    }
-
-    private void initializeSwingComponents() {
-        frame = new JFrame("Graph View: " + scenario.getName());
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        // The the display that it should kill the remote nodes on window close.
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosed(final WindowEvent e) {
-                // status = ProcessStatus.stop;
-                closed = true;
-                synchronized (closeLock) {
-                    closeLock.notifyAll();
-                }
-            }
-        });
-
-        final JPanel jungPanel = new JPanel();
-        jungPanel.setLayout(new BoxLayout(jungPanel, BoxLayout.Y_AXIS));
-
-        // JPanel envPanel = new JPanel();
-        // envPanel.setLayout(new BoxLayout(envPanel, BoxLayout.X_AXIS));
-        // // Add a button to the frame to allow the user to toggle each
-        // specified
-        // // global variable.
-        // for (String var : scenario.environmentButtons) {
-        // JToggleButton toggle = new JToggleButton(var);
-        //
-        // toggle.addActionListener(new ActionListener() {
-        // @Override
-        // public void actionPerformed(ActionEvent event) {
-        // AbstractButton abstractButton = (AbstractButton) event.getSource();
-        // boolean selected = abstractButton.getModel().isSelected();
-        // for (DisplayNode dn : nodes.values()) {
-        // dn.setEnvironmentVariable(var, selected);
-        // }
-        // }
-        // });
-        //
-        // envPanel.add(toggle);
-        // toggle.setSelected(false);
-        // }
-
-        jungPanel.add(vv);
-
-        final JPanel masterPanel = new JPanel();
-
-        masterPanel.setLayout(new BoxLayout(masterPanel, BoxLayout.Y_AXIS));
-        masterPanel.add(jungPanel);
-        // masterPanel.add(envPanel);
-
-        frame.add(masterPanel);
-    }
-
-    @Override
     public void start() {
-        super.start();
+        start(true);
+    }
 
-        frame.pack();
-        frame.setVisible(true);
-        frameOpen = true;
+    /**
+     * Start the visualization and start the refresher timer.
+     * 
+     * @param createFrame
+     *            if true, then create a frame to display the graph
+     * @throws IllegalStateException
+     *             if already running
+     */
+    public void start(final boolean createFrame) throws IllegalStateException {
+        if (null == scenario) {
+            throw new IllegalStateException("Cannot start without a scenario");
+        }
 
-        // TODO: figure out if this needs to be here
-        // for(DisplayNode dn : g.getVertices()) {
-        // vv.getRenderContext().getVertexIconTransformer().transform(dn);
-        // }
+        if (null != refresher) {
+            throw new IllegalStateException("Cannot start while already running");
+        }
+
+        if (createFrame) {
+            final JFrame frame = new JFrame("Graph View: " + scenario.getName());
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+            // The the display that it should kill the remote nodes on window
+            // close.
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(final WindowEvent e) {
+                    // status = ProcessStatus.stop;
+                    closed = true;
+                    synchronized (closeLock) {
+                        closeLock.notifyAll();
+                    }
+                }
+            });
+
+            final Container cpane = frame.getContentPane();
+            cpane.setLayout(new BoxLayout(cpane, BoxLayout.Y_AXIS));
+            cpane.add(this);
+
+            frame.pack();
+            frame.setVisible(true);
+        }
 
         refresher = new Timer(REFRESH_RATE, new ActionListener() {
             @Override
@@ -380,9 +373,14 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
         refresher.start();
     }
 
-    @Override
+    /**
+     * Stop refreshing the visualization. Must be called to stop the refresh
+     * timer. If already stopped this is a nop.
+     */
     public void stop() {
-        refresher.stop();
-        super.stop();
+        if (null != refresher) {
+            refresher.stop();
+            refresher = null;
+        }
     }
 }

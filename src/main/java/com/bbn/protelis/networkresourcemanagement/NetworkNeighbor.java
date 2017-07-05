@@ -14,8 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A network link between a {@link NetworkServer} and it's neighbor. Used to send and
- * receive data.
+ * A network link between a {@link NetworkServer} and it's neighbor. Used to
+ * send and receive data.
  */
 /* package */
 final class NetworkNeighbor extends Thread {
@@ -25,8 +25,8 @@ final class NetworkNeighbor extends Thread {
     private Map<CodePath, Object> sharedValues = new HashMap<>();
 
     /**
-     * @return The data most recently shared from the remote {@link NetworkServer}. Not
-     *         null.
+     * @return The data most recently shared from the remote
+     *         {@link NetworkServer}. Not null.
      */
     public Map<CodePath, Object> getSharedValues() {
         synchronized (lock) {
@@ -57,9 +57,13 @@ final class NetworkNeighbor extends Thread {
     // us
     private final Object lock = new Object();
 
-    /* package */ NetworkNeighbor(final ThreadGroup group, final DeviceUID uid, final int nonce,
-            final InetSocketAddress addr, final Socket s, final ObjectInputStream in, final ObjectOutputStream out) {
-        super(group, uid.toString() + addr.toString());
+    /* package */ NetworkNeighbor(final DeviceUID uid,
+            final int nonce,
+            final InetSocketAddress addr,
+            final Socket s,
+            final ObjectInputStream in,
+            final ObjectOutputStream out) {
+        super(uid.toString() + addr.toString());
 
         this.in = in;
         this.out = out;
@@ -80,13 +84,16 @@ final class NetworkNeighbor extends Thread {
         }
     }
 
+    private boolean running = false;
+
     /**
      * Listen for incoming packets
      */
     @Override
     public void run() {
+        running = true;
         try {
-            while (!isInterrupted()) {
+            while (running) {
                 final Object incoming = in.readObject();
                 @SuppressWarnings("unchecked")
                 final Map<CodePath, Object> shared = (incoming instanceof Map) ? (Map<CodePath, Object>) incoming
@@ -98,7 +105,13 @@ final class NetworkNeighbor extends Thread {
                 }
             }
         } catch (final IOException | ClassNotFoundException e) {
-            LOGGER.error(getName() + ": failed to receive from neighbor", e);
+            if (!running) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(getName() + ": failed to receive from neighbor", e);
+                }
+            } else {
+                LOGGER.error(getName() + ": failed to receive from neighbor", e);
+            }
         } finally {
             terminate();
         }
@@ -108,19 +121,20 @@ final class NetworkNeighbor extends Thread {
      * Terminate the connection.
      */
     public void terminate() {
+        running = false;
         interrupt();
         try {
             in.close();
         } catch (final IOException e) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Got error closing input stream, ignoring. Interrupted: " + isInterrupted(), e);
+                LOGGER.debug("Got error closing input stream, ignoring.", e);
             }
         }
         try {
             out.close();
         } catch (final IOException e) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Got error closing output stream, ignoring. Interrupted: " + isInterrupted(), e);
+                LOGGER.debug("Got error closing output stream, ignoring.", e);
             }
         }
 
@@ -128,10 +142,9 @@ final class NetworkNeighbor extends Thread {
             socket.close();
         } catch (final IOException e) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Got error closing socket, ignoring. Interrupted: " + isInterrupted(), e);
+                LOGGER.debug("Got error closing socket, ignoring.", e);
             }
         }
-
     }
 
     /**

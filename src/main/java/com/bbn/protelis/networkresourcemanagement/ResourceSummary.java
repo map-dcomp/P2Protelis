@@ -33,13 +33,24 @@ public class ResourceSummary implements Serializable {
      * @param neighborLinkDemand
      *            the demand on the links to the neighboring regions (key is
      *            region name)
+     * @param minTimestamp
+     *            the minimum timestamp of the reports combined to create this
+     *            summary
+     * @param maxTimestamp
+     *            the maximum timestamp of the reports combined to create this
+     *            summary
+     * 
      */
     public ResourceSummary(@Nonnull final RegionIdentifier region,
+            final long minTimestamp,
+            final long maxTimestamp,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand,
             @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
         this.region = region;
+        this.minTimestamp = minTimestamp;
+        this.maxTimestamp = maxTimestamp;
         this.clientDemand = clientDemand;
         this.serverCapacity = serverCapacity;
         this.neighborLinkCapacity = neighborLinkCapacity;
@@ -54,6 +65,26 @@ public class ResourceSummary implements Serializable {
     @Nonnull
     public final RegionIdentifier getRegion() {
         return region;
+    }
+
+    private final long minTimestamp;
+
+    /**
+     * @return the minimum timestamp of the reports combined to create this
+     *         summary
+     */
+    public long getMinTimestamp() {
+        return minTimestamp;
+    }
+
+    private final long maxTimestamp;
+
+    /**
+     * @return the maximum timestamp of the reports combined to create this
+     *         summary
+     */
+    public long getMaxTimestamp() {
+        return maxTimestamp;
     }
 
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand;
@@ -106,6 +137,8 @@ public class ResourceSummary implements Serializable {
     }
 
     /**
+     * Uses {@link ResourceReport#NULL_TIMESTAMP} as the minimum and maximum
+     * timestamps.
      * 
      * @param region
      *            the region
@@ -119,7 +152,8 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = ImmutableMap
                 .of();
 
-        return new ResourceSummary(region, clientDemand, serverCapacity, neighborLinkCapacity, neighborLinkDemand);
+        return new ResourceSummary(region, ResourceReport.NULL_TIMESTAMP, ResourceReport.NULL_TIMESTAMP, clientDemand,
+                serverCapacity, neighborLinkCapacity, neighborLinkDemand);
     }
 
     /**
@@ -150,8 +184,10 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = mergeStringAnyDoubleMapViaSum(
                 one.getNeighborLinkDemand(), two.getNeighborLinkDemand());
 
-        return new ResourceSummary(one.getRegion(), clientDemand, serverCapacity, neighborLinkCapacity,
-                neighborLinkDemand);
+        final long minTimestamp = Math.min(one.getMinTimestamp(), two.getMinTimestamp());
+        final long maxTimestamp = Math.max(one.getMaxTimestamp(), two.getMaxTimestamp());
+        return new ResourceSummary(one.getRegion(), minTimestamp, maxTimestamp, clientDemand, serverCapacity,
+                neighborLinkCapacity, neighborLinkDemand);
     }
 
     /**
@@ -183,8 +219,8 @@ public class ResourceSummary implements Serializable {
 
         final RegionIdentifier reportRegion = (RegionIdentifier) nodeToRegion.getSample(report.getNodeName());
 
-        final ResourceSummary summary = new ResourceSummary(reportRegion, clientDemand, serverCapacity,
-                neighborLinkCapacity, neighborLinkDemand);
+        final ResourceSummary summary = new ResourceSummary(reportRegion, report.getTimestamp(), report.getTimestamp(),
+                clientDemand, serverCapacity, neighborLinkCapacity, neighborLinkDemand);
         return summary;
     }
 
@@ -237,7 +273,8 @@ public class ResourceSummary implements Serializable {
      * @param two
      *            the second map to combine
      * @return a new map
-     * @param <T> the type of the map key
+     * @param <T>
+     *            the type of the map key
      */
     @Nonnull
     public static <T> ImmutableMap<T, Double> mergeAnyDoubleMapViaSum(@Nonnull final ImmutableMap<T, Double> one,

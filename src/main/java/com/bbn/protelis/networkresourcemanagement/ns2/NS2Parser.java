@@ -399,7 +399,7 @@ public final class NS2Parser {
 
             final BasicNetworkVisualizerFactory visFactory = new BasicNetworkVisualizerFactory();
             final ScenarioVisualizer<DisplayNode, DisplayEdge, NetworkLink, NetworkServer, NetworkClient> visualizer = new ScenarioVisualizer<>(
-                    scenario, visFactory);
+                    visFactory);
 
             final ScenarioRunner<NetworkServer, NetworkLink, NetworkClient> emulation = new ScenarioRunner<>(scenario,
                     visualizer);

@@ -15,7 +15,7 @@ public class NetworkLink {
     public String getName() {
         return this.name;
     }
-
+    
     private final NetworkNode left;
 
     /**
