@@ -18,6 +18,9 @@ env
 log "Java is: $(type -p java)"
 log "Javac is: $(type -p javac)"
 
+LOCAL_REPO="${mydir}"/.gradle-repo
+mkdir -p "${LOCAL_REPO}"
+
 cd "${mydir}"/..
-try ./gradlew clean build check
+try ./gradlew --gradle-user-home "${LOCAL_REPO}" clean build check
 
