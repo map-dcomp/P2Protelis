@@ -5,8 +5,6 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import com.bbn.protelis.utils.StringUID;
-
 /**
  * Common functionality between {@link NetworkServer} and {@link NetworkClient}.
  * 
@@ -60,7 +58,7 @@ public interface NetworkNode {
      *            the neighbor to add
      * @param bandwidth
      *            to the neighbor in bits per second
-     * @see #addNeighbor(StringUID, double)
+     * @see #addNeighbor(NodeIdentifier, double)
      */
     void addNeighbor(@Nonnull NetworkNode v, double bandwidth);
 

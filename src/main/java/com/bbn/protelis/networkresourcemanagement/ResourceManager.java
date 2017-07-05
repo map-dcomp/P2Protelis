@@ -1,6 +1,5 @@
 package com.bbn.protelis.networkresourcemanagement;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -68,7 +67,7 @@ public interface ResourceManager {
      *            the container that the task is running in
      * @param taskName
      *            the name of the task from
-     *            {@link #startTask(String, String, List, Map)}
+     *            {@link #startTask(String, String, ImmutableList, ImmutableMap)}
      * @return if the stop was successfull
      */
     boolean stopTask(@Nonnull String containerName, @Nonnull String taskName);
