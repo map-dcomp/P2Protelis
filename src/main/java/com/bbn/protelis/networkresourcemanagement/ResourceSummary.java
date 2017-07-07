@@ -164,7 +164,7 @@ public class ResourceSummary implements Serializable {
      * @param two
      *            the second summary to merge. Not null.
      * @return a newly created summary. Not null, but may be the result of
-     *         {@link #getNullSummary(String)}
+     *         {@link #getNullSummary(RegionIdentifier)}
      * @throws IllegalArgumentException
      *             if the 2 summaries are not for the same region
      */

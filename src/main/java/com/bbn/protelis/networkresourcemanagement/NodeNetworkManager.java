@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.commons.io.IOUtils;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.vm.NetworkManager;
 import org.protelis.vm.util.CodePath;
@@ -130,7 +129,15 @@ public class NodeNetworkManager implements NetworkManager {
             });
 
             // force one to stop listening
-            IOUtils.closeQuietly(server);
+            try {
+                if (null != server) {
+                    server.close();
+                }
+            } catch (final IOException e) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Error closing server socket", e);
+                }
+            }
         }
     }
 
@@ -218,7 +225,15 @@ public class NodeNetworkManager implements NetworkManager {
                     }
                 }
 
-                IOUtils.closeQuietly(server);
+                try {
+                    if (null != server) {
+                        server.close();
+                    }
+                } catch (final IOException e) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Error closing server socket", e);
+                    }
+                }
                 server = null;
             } // while running, restart listen
 

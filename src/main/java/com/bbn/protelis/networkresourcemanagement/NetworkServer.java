@@ -16,7 +16,6 @@ import org.protelis.vm.impl.SimpleExecutionEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.bbn.protelis.utils.StringUID;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -129,7 +128,7 @@ public class NetworkServer extends AbstractExecutionContext
 
     /**
      * @return link capacity to neighbors
-     * @see #addNeighbor(StringUID, double)
+     * @see #addNeighbor(NodeIdentifier, double)
      * @see ResourceReport#getNeighborLinkCapacity()
      */
     @Nonnull

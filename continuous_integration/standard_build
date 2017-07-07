@@ -1,0 +1,26 @@
+#!/bin/sh
+
+debug() { ! "${log_debug-false}" || log "DEBUG: $*" >&2; }
+log() { printf '%s\n' "$*"; }
+warn() { log "WARNING: $*" >&2; }
+error() { log "ERROR: $*" >&2; }
+fatal() { error "$*"; exit 1; }
+try() { "$@" || fatal "'$@' failed"; }
+
+mydir=$(cd "$(dirname "$0")" && pwd -L) || fatal "Unable to determine script directory"
+
+git_branch=$(git show -s --pretty=%d HEAD | awk -F, '{print $2}' | awk -F')' '{print $1}')
+git_version=$(git describe --always)
+log "BRANCH: ${git_branch} GIT_VERSION: ${git_version}"
+
+env
+
+log "Java is: $(type -p java)"
+log "Javac is: $(type -p javac)"
+
+LOCAL_REPO="${mydir}"/.gradle-repo
+mkdir -p "${LOCAL_REPO}"
+
+cd "${mydir}"/..
+try ./gradlew --gradle-user-home "${LOCAL_REPO}" clean build check
+

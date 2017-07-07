@@ -24,40 +24,57 @@ import com.cedarsoftware.util.io.JsonReader;
 
 public class JSONFrameworkTest {
     private static final int portOffsetWrap = 5000;
-    static boolean nonTerminating = false; // Set this to true if you want to have tests wait for the user
-    
+    static boolean nonTerminating = false; // Set this to true if you want to
+                                           // have tests wait for the user
 
     /**
      * Common pattern of running a test.
-     * @param program   Protelis program to load
-     * @param module    Boolean indicating whether the program is anonymous or in a class
-     * @param network   JSON file containing serialization of an array of DaemonWrappers
-     * @param rounds    How long the test should run for
+     * 
+     * @param program
+     *            Protelis program to load
+     * @param module
+     *            Boolean indicating whether the program is anonymous or in a
+     *            class
+     * @param network
+     *            JSON file containing serialization of an array of
+     *            DaemonWrappers
+     * @param rounds
+     *            How long the test should run for
      * @param expectedResult
      * @throws IOException
      */
-    protected void runTest(final String program, final boolean module, final String network, final int rounds, final String expectedResult) throws IOException {
-        runTest(program,module,network,rounds,expectedResult,new String[0]);
+    protected void runTest(final String program,
+            final boolean module,
+            final String network,
+            final int rounds,
+            final String expectedResult) throws IOException {
+        runTest(program, module, network, rounds, expectedResult, new String[0]);
     }
-    
-    protected void runTest(final String program, final boolean module, final String network, final int rounds, final String expectedResult, final String[] extraArgs) {
+
+    protected void runTest(final String program,
+            final boolean module,
+            final String network,
+            final int rounds,
+            final String expectedResult,
+            final String[] extraArgs) {
         Object[] expected = {};
         try {
             expected = readExpectedResult(expectedResult);
             // Turn parameters into arguments
-            String[] baseArgs = {"-f",network,module ? "-c" : "-a",program};
+            String[] baseArgs = { "-f", network, module ? "-c" : "-a", program };
             if (!nonTerminating) {
-                baseArgs = ArrayUtils.addAll(baseArgs, new String[]{"-t","rounds",Integer.toString(rounds)});
+                baseArgs = ArrayUtils.addAll(baseArgs, new String[] { "-t", "rounds", Integer.toString(rounds) });
             }
             String[] args = ArrayUtils.addAll(baseArgs, extraArgs);
             // Run the simulation
             DaemonWrapper[] returns = StandaloneExecution.runStandalone(args);
-            // Reorganize the return values into a map and check if they are correct
-            Map<Long,Object> results = new HashMap<>();
-            for (DaemonWrapper d : returns) { 
-                results.put(d.getUID(), d.getValue()); 
+            // Reorganize the return values into a map and check if they are
+            // correct
+            Map<Long, Object> results = new HashMap<>();
+            for (DaemonWrapper d : returns) {
+                results.put(d.getUID(), d.getValue());
             }
-            compareValues(expected,results);
+            compareValues(expected, results);
         } catch (Exception e) {
             failException(e);
         } finally {
@@ -73,7 +90,7 @@ public class JSONFrameworkTest {
             throw new FileNotFoundException("Couldn't locate JSON file: " + resource);
         }
         JsonReader jr = new JsonReader(in);
-        Object[] objects = (Object[])jr.readObject();
+        Object[] objects = (Object[]) jr.readObject();
         jr.close();
         return objects;
     }
@@ -86,8 +103,8 @@ public class JSONFrameworkTest {
         if (!(actual instanceof Tuple)) {
             return false;
         }
-        Object[] expectedA = ((Object[])expected);
-        Tuple actualT = (Tuple)actual;
+        Object[] expectedA = ((Object[]) expected);
+        Tuple actualT = (Tuple) actual;
         // Perform the actual element-by-element comparison
         if (expectedA.length != actualT.size()) {
             return false;
@@ -100,7 +117,7 @@ public class JSONFrameworkTest {
                     return false;
                 }
             } else {
-                if (!(e_v.equals(a_v) || tupleEquals(e_v,a_v))) {
+                if (!(e_v.equals(a_v) || tupleEquals(e_v, a_v))) {
                     return false;
                 }
             }
@@ -108,27 +125,29 @@ public class JSONFrameworkTest {
         return true;
     }
 
-    private void compareValues(final Object[] expected, final Map<Long,Object> actual) {
+    private void compareValues(final Object[] expected, final Map<Long, Object> actual) {
         Assert.assertEquals("Number of daemons does not match number of results:", expected.length, actual.size());
-        String mismatches = "Mismatches:";
+        final StringBuilder mismatches = new StringBuilder();
+        mismatches.append("Mismatches:");
         boolean allMatches = true;
         for (int i = 0; i < expected.length; i++) {
-            Object e_i = ((Object[])expected[i])[0];
-            Object e_v = ((Object[])expected[i])[1];
-            Object a_v = actual.get((Long)e_i);
-            String e_vStr = (e_v == null) ? "null" : (e_v instanceof Object[]) ? Arrays.deepToString((Object[])e_v) : e_v.toString();
+            Object e_i = ((Object[]) expected[i])[0];
+            Object e_v = ((Object[]) expected[i])[1];
+            Object a_v = actual.get((Long) e_i);
+            String e_vStr = (e_v == null) ? "null"
+                    : (e_v instanceof Object[]) ? Arrays.deepToString((Object[]) e_v) : e_v.toString();
             if (e_v == null) {
-                if (a_v != null) { 
-                    allMatches = false; 
-                    mismatches += " Daemon " + e_i + ": expected null but observed " + a_v; 
+                if (a_v != null) {
+                    allMatches = false;
+                    mismatches.append(" Daemon " + e_i + ": expected null but observed " + a_v);
                 }
             } else {
-                if (a_v == null) { 
-                    allMatches = false; 
-                    mismatches += " Daemon " + e_i + ": expected " + e_vStr + " but observed null"; 
-                } else if (!(e_v.equals(a_v) || tupleEquals(e_v,a_v))) {
+                if (a_v == null) {
                     allMatches = false;
-                    mismatches += " Daemon " + e_i + ": expected " + e_vStr + " but observed " + a_v;
+                    mismatches.append(" Daemon " + e_i + ": expected " + e_vStr + " but observed null");
+                } else if (!(e_v.equals(a_v) || tupleEquals(e_v, a_v))) {
+                    allMatches = false;
+                    mismatches.append(" Daemon " + e_i + ": expected " + e_vStr + " but observed " + a_v);
                 }
             }
         }
