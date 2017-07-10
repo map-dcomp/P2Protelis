@@ -1,6 +1,6 @@
 # Eclipse setup
 
-  1. ./gradlew eclipse
+  1. ./gradlew eclipseClasspath
   2. Install gradle support http://www.vogella.com/tutorials/EclipseGradle/article.html only step 2
   3. Import the project
   
