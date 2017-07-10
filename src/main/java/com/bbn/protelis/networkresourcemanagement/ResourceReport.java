@@ -25,18 +25,20 @@ public class ResourceReport implements Serializable {
      * @param timestamp
      *            the time that the ResourceReport was generated.
      * @param serverLoad
-     *            the current load on this service
+     *            the current load on this service and the region is load is
+     *            coming from
      * @param serverCapacity
      *            the server capacity for this service
      * @param networkCapacity
      *            the network capacity to neighbors for this service
      * @param networkLoad
-     *            the network load from neighbors for this service
+     *            the network load from neighbors for this service and the
+     *            region the load is coming from
      */
     public ResourceReport(@Nonnull final NodeIdentifier nodeName,
             final long timestamp,
             @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverLoad,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad) {
         this.nodeName = nodeName;
@@ -73,16 +75,17 @@ public class ResourceReport implements Serializable {
         return nodeName;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverLoad;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad;
 
     /**
      * Get server load for this node. Key is the service name, value is the load
-     * of each {@link NodeAttribute}.
+     * of each {@link NodeAttribute} by region.
      * 
      * @return the load information. Not null.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> getServerLoad() {
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>>
+            getServerLoad() {
         return serverLoad;
     }
 
@@ -131,7 +134,8 @@ public class ResourceReport implements Serializable {
      * @return empty report for a node
      */
     public static ResourceReport getNullReport(@Nonnull final NodeIdentifier nodeName) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverLoad = ImmutableMap.of();
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad = ImmutableMap
+                .of();
         final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = ImmutableMap.of();
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad = ImmutableMap.of();

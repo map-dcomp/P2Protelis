@@ -43,7 +43,7 @@ public class BasicResourceManager implements ResourceManager {
      */
     public static final String NETWORK_LOAD_KEY = "networkLoad";
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverLoad;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad;
     private final ImmutableMap<NodeAttribute, Double> serverCapacity;
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad;
 
@@ -131,14 +131,14 @@ public class BasicResourceManager implements ResourceManager {
     }
 
     @Nonnull
-    private ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>>
+    private ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>>
             parseClientDemand(@Nonnull final Map<String, Object> resourceReportValues) {
         final Object specifiedClientDemandRaw = resourceReportValues.get(SERVER_LOAD_KEY);
         if (null != specifiedClientDemandRaw && specifiedClientDemandRaw instanceof Map) {
             // found something specified in the extra data
 
             // this will contain the new clientDemand
-            ImmutableMap.Builder<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> builder = ImmutableMap
+            ImmutableMap.Builder<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> builder = ImmutableMap
                     .builder();
 
             @SuppressWarnings("unchecked")
@@ -156,7 +156,8 @@ public class BasicResourceManager implements ResourceManager {
                     // builder.put(new ApplicationIdentifier(new
                     // GAV("groupPlaceholder", serviceName,
                     // "versionPlaceholder")), serviceDemand);
-                    builder.put(new StringServiceIdentifier(serviceName), serviceDemand);
+                    builder.put(new StringServiceIdentifier(serviceName),
+                            ImmutableMap.of(node.getRegionIdentifier(), serviceDemand));
 
                 } else {
                     LOGGER.warn("While parsing resource report for node " + node.getName() + " the service "
