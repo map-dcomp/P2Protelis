@@ -269,8 +269,21 @@ public class ResourceSummary implements Serializable {
 
     }
 
+    /**
+     * Create a new map that sums the values of the inner map for matching keys.
+     * 
+     * @param one
+     *            the first map to combine
+     * @param two
+     *            the second map to combine
+     * @return a new map
+     * @param <ID>
+     *            first level lookup
+     * @param <T>
+     *            second level lookup
+     */
     @Nonnull
-    private static <ID, T> ImmutableMap<ID, ImmutableMap<T, Double>> mergeMaps2(
+    public static <ID, T> ImmutableMap<ID, ImmutableMap<T, Double>> mergeMaps2(
             @Nonnull final ImmutableMap<ID, ImmutableMap<T, Double>> one,
             @Nonnull final ImmutableMap<ID, ImmutableMap<T, Double>> two) {
         final Map<ID, ImmutableMap<T, Double>> newMap = new HashMap<>();
