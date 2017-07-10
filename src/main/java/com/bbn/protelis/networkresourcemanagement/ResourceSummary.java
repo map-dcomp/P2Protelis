@@ -208,14 +208,14 @@ public class ResourceSummary implements Serializable {
     public static ResourceSummary convertToSummary(@Nonnull final ResourceReport report,
             @Nonnull final Field nodeToRegion) {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand = report
-                .getClientDemand();
+                .getServerLoad();
         final ImmutableMap<NodeAttribute, Double> serverCapacity = report.getServerCapacity();
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = convertNodeToRegion(
-                nodeToRegion, report.getNeighborLinkCapacity());
+                nodeToRegion, report.getNetworkCapacity());
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = convertNodeToRegion(
-                nodeToRegion, report.getNeighborLinkDemand());
+                nodeToRegion, report.getNetworkLoad());
 
         final RegionIdentifier reportRegion = (RegionIdentifier) nodeToRegion.getSample(report.getNodeName());
 

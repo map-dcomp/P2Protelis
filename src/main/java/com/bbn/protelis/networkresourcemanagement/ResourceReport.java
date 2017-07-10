@@ -24,27 +24,27 @@ public class ResourceReport implements Serializable {
      *            the name of the node that this report is from
      * @param timestamp
      *            the time that the ResourceReport was generated.
-     * @param clientDemand
-     *            the demand from the clients of the service
+     * @param serverLoad
+     *            the current load on this service
      * @param serverCapacity
      *            the server capacity for this service
-     * @param neighborLinkCapacity
+     * @param networkCapacity
      *            the network capacity to neighbors for this service
-     * @param neighborLinkDemand
-     *            the network demand to neighbors for this service
+     * @param networkLoad
+     *            the network load from neighbors for this service
      */
     public ResourceReport(@Nonnull final NodeIdentifier nodeName,
             final long timestamp,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand,
             @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverLoad,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad) {
         this.nodeName = nodeName;
         this.timestamp = timestamp;
-        this.clientDemand = clientDemand;
+        this.serverLoad = serverLoad;
         this.serverCapacity = serverCapacity;
-        this.neighborLinkCapacity = neighborLinkCapacity;
-        this.neighborLinkDemand = neighborLinkDemand;
+        this.networkCapacity = networkCapacity;
+        this.networkLoad = networkLoad;
 
     }
 
@@ -73,17 +73,17 @@ public class ResourceReport implements Serializable {
         return nodeName;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverLoad;
 
     /**
-     * Get client demand for this node. Key is the service name, value is the
-     * demand by {@link NodeAttribute}.
+     * Get server load for this node. Key is the service name, value is the load
+     * of each {@link NodeAttribute}.
      * 
-     * @return the summary information. Not null.
+     * @return the load information. Not null.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> getClientDemand() {
-        return clientDemand;
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> getServerLoad() {
+        return serverLoad;
     }
 
     private final ImmutableMap<NodeAttribute, Double> serverCapacity;
@@ -98,7 +98,7 @@ public class ResourceReport implements Serializable {
         return serverCapacity;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity;
 
     /**
      * Link capacity for neighboring nodes. Key is node name.
@@ -106,20 +106,20 @@ public class ResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
-        return neighborLinkCapacity;
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkCapacity() {
+        return networkCapacity;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad;
 
     /**
-     * Link demand for neighboring nodes. Key is node name.
+     * Load neighboring nodes. Key is node name.
      * 
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkDemand() {
-        return neighborLinkDemand;
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkLoad() {
+        return networkLoad;
     }
 
     /**
@@ -131,14 +131,12 @@ public class ResourceReport implements Serializable {
      * @return empty report for a node
      */
     public static ResourceReport getNullReport(@Nonnull final NodeIdentifier nodeName) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand = ImmutableMap.of();
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverLoad = ImmutableMap.of();
         final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = ImmutableMap
-                .of();
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = ImmutableMap.of();
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = ImmutableMap.of();
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad = ImmutableMap.of();
 
-        return new ResourceReport(nodeName, NULL_TIMESTAMP, clientDemand, serverCapacity, neighborLinkCapacity,
-                neighborLinkDemand);
+        return new ResourceReport(nodeName, NULL_TIMESTAMP, serverCapacity, serverLoad, networkCapacity, networkLoad);
     }
 
 }

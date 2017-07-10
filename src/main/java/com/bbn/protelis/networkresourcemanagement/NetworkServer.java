@@ -129,7 +129,7 @@ public class NetworkServer extends AbstractExecutionContext
     /**
      * @return link capacity to neighbors
      * @see #addNeighbor(NodeIdentifier, double)
-     * @see ResourceReport#getNeighborLinkCapacity()
+     * @see ResourceReport#getNetworkCapacity()
      */
     @Nonnull
     public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {

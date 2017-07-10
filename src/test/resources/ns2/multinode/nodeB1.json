@@ -1,7 +1,7 @@
 {
   "region": "B",
   "resource-report": {
-    "clientDemand": {
+    "serverLoad": {
       "service2": {
         "CPU": 10,
         "MEMORY": 10000000,
@@ -13,7 +13,7 @@
       "MEMORY": 10000000000,
       "DISK": 1000000
     },
-    "neighborLinkDemand": {
+    "networkLoad": {
       "*": {
         "DATARATE": 1000
       }
