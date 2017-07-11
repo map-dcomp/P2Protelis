@@ -198,7 +198,7 @@ public class BasicResourceManager implements ResourceManager {
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkDemand = computeNeighborLinkDemand();
         final ResourceReport report = new ResourceReport(new StringNodeIdentifier(node.getName()),
                 System.currentTimeMillis(), demandWindow, this.serverCapacity, this.serverLoad, this.serverLoad,
-                linkDemand, linkCapacity);
+                linkCapacity, linkDemand, linkDemand);
         return report;
     }
 

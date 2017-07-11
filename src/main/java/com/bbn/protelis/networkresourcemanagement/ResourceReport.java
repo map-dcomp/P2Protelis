@@ -53,6 +53,8 @@ public class ResourceReport implements Serializable {
      *            the window size used for estimating demand
      * @param serverDemand
      *            the estimated demand on the server
+     * @param networkDemand
+     *            the estimated demand on the network connected to the server
      */
     public ResourceReport(@Nonnull final NodeIdentifier nodeName,
             final long timestamp,
@@ -61,7 +63,8 @@ public class ResourceReport implements Serializable {
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad) {
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkDemand) {
         this.nodeName = nodeName;
         this.timestamp = timestamp;
         this.demandEstimationWindow = demandEstimationWindow;
@@ -70,6 +73,7 @@ public class ResourceReport implements Serializable {
         this.serverDemand = serverDemand;
         this.networkCapacity = networkCapacity;
         this.networkLoad = networkLoad;
+        this.networkDemand = networkDemand;
 
     }
 
@@ -163,13 +167,25 @@ public class ResourceReport implements Serializable {
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad;
 
     /**
-     * Load neighboring nodes. Key is node name.
+     * Network load to neighboring nodes. Key is node name.
      * 
      * @return Not null.
      */
     @Nonnull
     public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkLoad() {
         return networkLoad;
+    }
+
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkDemand;
+
+    /**
+     * Network demand to neighboring nodes. Key is node name.
+     * 
+     * @return Not null.
+     */
+    @Nonnull
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkDemand() {
+        return networkDemand;
     }
 
     /**
@@ -191,7 +207,7 @@ public class ResourceReport implements Serializable {
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad = ImmutableMap.of();
 
         return new ResourceReport(nodeName, NULL_TIMESTAMP, demandWindow, serverCapacity, serverLoad, serverLoad,
-                networkCapacity, networkLoad);
+                networkCapacity, networkLoad, networkLoad);
     }
 
 }

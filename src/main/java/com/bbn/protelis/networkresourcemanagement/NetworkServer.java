@@ -486,4 +486,9 @@ public class NetworkServer extends AbstractExecutionContext
         return getName();
     }
 
+    //FIXME HACK for Protelis
+    public ResourceReport getResourceReport()  {
+        return getResourceReport(ResourceReport.EstimationWindow.SHORT);
+    }
+
 }
