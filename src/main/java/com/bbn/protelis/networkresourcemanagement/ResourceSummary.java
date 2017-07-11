@@ -39,11 +39,13 @@ public class ResourceSummary implements Serializable {
      * @param maxTimestamp
      *            the maximum timestamp of the reports combined to create this
      *            summary
-     * 
+     * @param demandEstimationWindow
+     *            the window size used for estimating demand
      */
     public ResourceSummary(@Nonnull final RegionIdentifier region,
             final long minTimestamp,
             final long maxTimestamp,
+            @Nonnull final ResourceReport.EstimationWindow demandEstimationWindow,
             @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
@@ -51,6 +53,7 @@ public class ResourceSummary implements Serializable {
         this.region = region;
         this.minTimestamp = minTimestamp;
         this.maxTimestamp = maxTimestamp;
+        this.demandEstimationWindow = demandEstimationWindow;
         this.serverLoad = serverLoad;
         this.serverCapacity = serverCapacity;
         this.networkCapacity = networkCapacity;
@@ -85,6 +88,16 @@ public class ResourceSummary implements Serializable {
      */
     public long getMaxTimestamp() {
         return maxTimestamp;
+    }
+
+    private final ResourceReport.EstimationWindow demandEstimationWindow;
+
+    /**
+     * @return the window over which the demand values are computed
+     */
+    @Nonnull
+    public ResourceReport.EstimationWindow getDemandEstimationWindow() {
+        return demandEstimationWindow;
     }
 
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad;
@@ -143,17 +156,20 @@ public class ResourceSummary implements Serializable {
      * 
      * @param region
      *            the region
+     * @param estimationWindow
+     *            the window over which demand is estimated
      * @return empty summary for a region
      */
-    public static ResourceSummary getNullSummary(@Nonnull final RegionIdentifier region) {
+    public static ResourceSummary getNullSummary(@Nonnull final RegionIdentifier region,
+            @Nonnull final ResourceReport.EstimationWindow estimationWindow) {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad = ImmutableMap
                 .of();
         final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = ImmutableMap.of();
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad = ImmutableMap.of();
 
-        return new ResourceSummary(region, ResourceReport.NULL_TIMESTAMP, ResourceReport.NULL_TIMESTAMP, serverCapacity,
-                serverLoad, networkLoad, networkCapacity);
+        return new ResourceSummary(region, ResourceReport.NULL_TIMESTAMP, ResourceReport.NULL_TIMESTAMP,
+                estimationWindow, serverCapacity, serverLoad, networkLoad, networkCapacity);
     }
 
     /**
@@ -166,12 +182,16 @@ public class ResourceSummary implements Serializable {
      * @return a newly created summary. Not null, but may be the result of
      *         {@link #getNullSummary(RegionIdentifier)}
      * @throws IllegalArgumentException
-     *             if the 2 summaries are not for the same region
+     *             if the 2 summaries are not for the same region or the 2
+     *             summarizes have different estimation windows
      */
     @Nonnull
     public static ResourceSummary merge(@Nonnull final ResourceSummary one, @Nonnull final ResourceSummary two) {
         if (!one.getRegion().equals(two.getRegion())) {
             throw new IllegalArgumentException("Cannot merge resource summaries from different regions");
+        }
+        if (!one.getDemandEstimationWindow().equals(two.getDemandEstimationWindow())) {
+            throw new IllegalArgumentException("Cannot merge resource summaries with different estimation windows");
         }
 
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad = mergeMaps3(
@@ -186,8 +206,8 @@ public class ResourceSummary implements Serializable {
 
         final long minTimestamp = Math.min(one.getMinTimestamp(), two.getMinTimestamp());
         final long maxTimestamp = Math.max(one.getMaxTimestamp(), two.getMaxTimestamp());
-        return new ResourceSummary(one.getRegion(), minTimestamp, maxTimestamp, serverCapacity, serverLoad,
-                networkCapacity, networkLoad);
+        return new ResourceSummary(one.getRegion(), minTimestamp, maxTimestamp, one.getDemandEstimationWindow(),
+                serverCapacity, serverLoad, networkCapacity, networkLoad);
     }
 
     /**
@@ -220,7 +240,7 @@ public class ResourceSummary implements Serializable {
         final RegionIdentifier reportRegion = (RegionIdentifier) nodeToRegion.getSample(report.getNodeName());
 
         final ResourceSummary summary = new ResourceSummary(reportRegion, report.getTimestamp(), report.getTimestamp(),
-                serverCapacity, serverLoad, networkCapacity, networkLoad);
+                report.getDemandEstimationWindow(), serverCapacity, serverLoad, networkCapacity, networkLoad);
         return summary;
     }
 
