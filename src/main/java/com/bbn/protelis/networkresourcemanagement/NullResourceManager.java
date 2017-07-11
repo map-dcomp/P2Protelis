@@ -2,6 +2,8 @@ package com.bbn.protelis.networkresourcemanagement;
 
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -24,8 +26,8 @@ public class NullResourceManager implements ResourceManager {
     }
 
     @Override
-    public ResourceReport getCurrentResourceReport() {
-        return ResourceReport.getNullReport(nodeId);
+    public ResourceReport getCurrentResourceReport(@Nonnull final ResourceReport.EstimationWindow demandWindow) {
+        return ResourceReport.getNullReport(nodeId, demandWindow);
     }
 
     @Override

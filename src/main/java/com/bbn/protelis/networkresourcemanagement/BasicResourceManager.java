@@ -192,12 +192,13 @@ public class BasicResourceManager implements ResourceManager {
     }
 
     @Override
-    public ResourceReport getCurrentResourceReport() {
+    public ResourceReport getCurrentResourceReport(@Nonnull final ResourceReport.EstimationWindow demandWindow) {
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkCapacity = node
                 .getNeighborLinkCapacity();
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkDemand = computeNeighborLinkDemand();
         final ResourceReport report = new ResourceReport(new StringNodeIdentifier(node.getName()),
-                System.currentTimeMillis(), this.serverCapacity, this.serverLoad, linkDemand, linkCapacity);
+                System.currentTimeMillis(), demandWindow, this.serverCapacity, this.serverLoad, this.serverLoad,
+                linkDemand, linkCapacity);
         return report;
     }
 

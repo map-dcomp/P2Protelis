@@ -35,7 +35,7 @@ public class BasicResourceReportTest {
         final int dummyBasePort = 5000;
         final NetworkServer node = new NetworkServer(new LocalNodeLookupService(dummyBasePort), program, nodeName);
         final BasicResourceManager manager = new BasicResourceManager(node, extraData);
-        final ResourceReport report = manager.getCurrentResourceReport();
+        final ResourceReport report = manager.getCurrentResourceReport(ResourceReport.EstimationWindow.SHORT);
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             try (ObjectOutputStream serializaer = new ObjectOutputStream(output)) {
                 serializaer.writeObject(report);
