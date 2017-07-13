@@ -68,8 +68,10 @@ public class NetworkState {
         switch (summary.getDemandEstimationWindow()) {
         case LONG:
             longRegionSummary = summary;
+            break;
         case SHORT:
             shortRegionSummary = summary;
+            break;
         default:
             throw new IllegalArgumentException("Unknown estimation window: " + summary.getDemandEstimationWindow());
         }
