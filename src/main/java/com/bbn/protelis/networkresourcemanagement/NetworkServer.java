@@ -89,7 +89,7 @@ public class NetworkServer extends AbstractExecutionContext
     private long sleepTime = DEFAULT_SLEEP_TIME_MS;
 
     /**
-     * @return How long between executions of the protelis program. Defaults to
+     * @return How many milliseconds between executions of the protelis program. Defaults to
      *         {@link #DEFAULT_SLEEP_TIME_MS}.
      */
     public final long getSleepTime() {
