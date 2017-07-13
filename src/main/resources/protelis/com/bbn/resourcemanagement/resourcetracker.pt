@@ -1,5 +1,7 @@
 module com:bbn:resourcemanagement:resourcetracker
 
+import com.bbn.protelis.networkresourcemanagement.ResourceReport.getShortEstimationWindow
+
 import protelis:coord:accumulation
 import protelis:coord:spreading
 import protelis:coord:meta
@@ -74,7 +76,8 @@ let s = multiRegion(rgn,(n) -> { rgn == n },countNodes,[]);
 //multiRegion(rgn,(n) -> { rgn == n },nbrRegions,[]);
 //multiRegion(rgn,(n) -> { rgn == n },() -> { [rgn, self.getDeviceUID()] },[]);
 
-let d = self.getResourceReport().getServerLoad();
-let c = self.getResourceReport().getServerCapacity();
+let report = self.getResourceReport(getShortEstimationWindow()); 
+let d = report.getServerLoad();
+let c = report.getServerCapacity();
 
 [d,c,s];

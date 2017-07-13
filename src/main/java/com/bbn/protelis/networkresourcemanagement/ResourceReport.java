@@ -26,6 +26,24 @@ public class ResourceReport implements Serializable {
         LONG
     }
 
+    /**
+     * This method exists because Protelis cannot access enum constants.
+     * 
+     * @return {@link EstimationWindow#SHORT}.
+     */
+    public static final EstimationWindow getShortEstimationWindow() {
+        return EstimationWindow.SHORT;
+    }
+
+    /**
+     * This method exists because Protelis cannot access enum constants.
+     * 
+     * @return {@link EstimationWindow#LONG}.
+     */
+    public static final EstimationWindow getLongEstimationWindow() {
+        return EstimationWindow.LONG;
+    }
+
     private static final long serialVersionUID = 1L;
 
     /**
