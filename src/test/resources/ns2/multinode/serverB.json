@@ -2,7 +2,7 @@
   "region": "B",
   "pool": true,
   "resource-report": {
-    "clientDemand": {
+    "serverLoad": {
       
     },
     "serverCapacity": {
@@ -10,7 +10,7 @@
       "MEMORY": 1000000000000,
       "DISK": 1000000
     },
-    "neighborLinkDemand": {
+    "networkLoad": {
       "*": {
         "DATARATE": 1000
       }

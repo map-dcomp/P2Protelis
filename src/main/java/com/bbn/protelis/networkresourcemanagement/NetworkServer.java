@@ -129,7 +129,7 @@ public class NetworkServer extends AbstractExecutionContext
     /**
      * @return link capacity to neighbors
      * @see #addNeighbor(NodeIdentifier, double)
-     * @see ResourceReport#getNeighborLinkCapacity()
+     * @see ResourceReport#getNetworkCapacity()
      */
     @Nonnull
     public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
@@ -405,10 +405,12 @@ public class NetworkServer extends AbstractExecutionContext
      * the {@link ResourceManager} to provide gather the information.
      * 
      * @return the latest resource report
+     * @param demandWindow
+     *            what window size to use for estimating demand
      */
     @Nonnull
-    public ResourceReport getResourceReport() {
-        return resourceManager.getCurrentResourceReport();
+    public ResourceReport getResourceReport(@Nonnull final ResourceReport.EstimationWindow demandWindow) {
+        return resourceManager.getCurrentResourceReport(demandWindow);
     }
 
     private RegionIdentifier region;

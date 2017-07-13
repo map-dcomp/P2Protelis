@@ -15,7 +15,8 @@ public class NetworkState {
      */
     public NetworkState(final RegionIdentifier region) {
         this.region = region;
-        this.regionSummary = ResourceSummary.getNullSummary(region);
+        this.shortRegionSummary = ResourceSummary.getNullSummary(region, ResourceReport.EstimationWindow.SHORT);
+        this.longRegionSummary = ResourceSummary.getNullSummary(region, ResourceReport.EstimationWindow.LONG);
         this.regionPlan = RegionPlan.getNullPlan(region);
     }
 
@@ -29,15 +30,24 @@ public class NetworkState {
         return region;
     }
 
-    private ResourceSummary regionSummary;
+    private ResourceSummary shortRegionSummary;
+    private ResourceSummary longRegionSummary;
 
     /**
-     * 
+     * @param estimationWindow
+     *            the estimation window for the demand
      * @return the summary for the region.
      */
     @Nonnull
-    public ResourceSummary getRegionSummary() {
-        return this.regionSummary;
+    public ResourceSummary getRegionSummary(@Nonnull final ResourceReport.EstimationWindow estimationWindow) {
+        switch (estimationWindow) {
+        case LONG:
+            return longRegionSummary;
+        case SHORT:
+            return shortRegionSummary;
+        default:
+            throw new IllegalArgumentException("Unknown estimation window: " + estimationWindow);
+        }
     }
 
     /**
@@ -55,7 +65,16 @@ public class NetworkState {
                     "Region summary must be for the same region as the network state object");
         }
 
-        regionSummary = summary;
+        switch (summary.getDemandEstimationWindow()) {
+        case LONG:
+            longRegionSummary = summary;
+            break;
+        case SHORT:
+            shortRegionSummary = summary;
+            break;
+        default:
+            throw new IllegalArgumentException("Unknown estimation window: " + summary.getDemandEstimationWindow());
+        }
     }
 
     private RegionPlan regionPlan;

@@ -11,6 +11,39 @@ import com.google.common.collect.ImmutableMap;
  */
 public class ResourceReport implements Serializable {
 
+    /**
+     * Used to specify the size of the time window that the demand is estimated
+     * over. The actual window sizes are application dependent.
+     */
+    public enum EstimationWindow {
+        /**
+         * A short window is used.
+         */
+        SHORT,
+        /**
+         * A long window is used.
+         */
+        LONG
+    }
+
+    /**
+     * This method exists because Protelis cannot access enum constants.
+     * 
+     * @return {@link EstimationWindow#SHORT}.
+     */
+    public static final EstimationWindow getShortEstimationWindow() {
+        return EstimationWindow.SHORT;
+    }
+
+    /**
+     * This method exists because Protelis cannot access enum constants.
+     * 
+     * @return {@link EstimationWindow#LONG}.
+     */
+    public static final EstimationWindow getLongEstimationWindow() {
+        return EstimationWindow.LONG;
+    }
+
     private static final long serialVersionUID = 1L;
 
     /**
@@ -24,27 +57,41 @@ public class ResourceReport implements Serializable {
      *            the name of the node that this report is from
      * @param timestamp
      *            the time that the ResourceReport was generated.
-     * @param clientDemand
-     *            the demand from the clients of the service
+     * @param serverLoad
+     *            the current load on this service and the region is load is
+     *            coming from
      * @param serverCapacity
      *            the server capacity for this service
-     * @param neighborLinkCapacity
+     * @param networkCapacity
      *            the network capacity to neighbors for this service
-     * @param neighborLinkDemand
-     *            the network demand to neighbors for this service
+     * @param networkLoad
+     *            the network load from neighbors for this service and the
+     *            region the load is coming from
+     * @param demandEstimationWindow
+     *            the window size used for estimating demand
+     * @param serverDemand
+     *            the estimated demand on the server
+     * @param networkDemand
+     *            the estimated demand on the network connected to the server
      */
     public ResourceReport(@Nonnull final NodeIdentifier nodeName,
             final long timestamp,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand,
+            @Nonnull final EstimationWindow demandEstimationWindow,
             @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkDemand) {
         this.nodeName = nodeName;
         this.timestamp = timestamp;
-        this.clientDemand = clientDemand;
+        this.demandEstimationWindow = demandEstimationWindow;
+        this.serverLoad = serverLoad;
         this.serverCapacity = serverCapacity;
-        this.neighborLinkCapacity = neighborLinkCapacity;
-        this.neighborLinkDemand = neighborLinkDemand;
+        this.serverDemand = serverDemand;
+        this.networkCapacity = networkCapacity;
+        this.networkLoad = networkLoad;
+        this.networkDemand = networkDemand;
 
     }
 
@@ -64,6 +111,16 @@ public class ResourceReport implements Serializable {
         return timestamp;
     }
 
+    private final EstimationWindow demandEstimationWindow;
+
+    /**
+     * @return the window over which the demand values are computed
+     */
+    @Nonnull
+    public EstimationWindow getDemandEstimationWindow() {
+        return demandEstimationWindow;
+    }
+
     private final NodeIdentifier nodeName;
 
     /**
@@ -73,17 +130,32 @@ public class ResourceReport implements Serializable {
         return nodeName;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad;
 
     /**
-     * Get client demand for this node. Key is the service name, value is the
-     * demand by {@link NodeAttribute}.
+     * Get server load for this node. Key is the service name, value is the load
+     * of each {@link NodeAttribute} by region.
      * 
-     * @return the summary information. Not null.
+     * @return the load information. Not null.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> getClientDemand() {
-        return clientDemand;
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>>
+            getServerLoad() {
+        return serverLoad;
+    }
+
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand;
+
+    /**
+     * Get estimated server demand for this node. Key is the service name, value
+     * is the load of each {@link NodeAttribute} by region.
+     * 
+     * @return the demand information. Not null.
+     */
+    @Nonnull
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>>
+            getServerDemand() {
+        return serverDemand;
     }
 
     private final ImmutableMap<NodeAttribute, Double> serverCapacity;
@@ -98,7 +170,7 @@ public class ResourceReport implements Serializable {
         return serverCapacity;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity;
 
     /**
      * Link capacity for neighboring nodes. Key is node name.
@@ -106,20 +178,32 @@ public class ResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
-        return neighborLinkCapacity;
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkCapacity() {
+        return networkCapacity;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad;
 
     /**
-     * Link demand for neighboring nodes. Key is node name.
+     * Network load to neighboring nodes. Key is node name.
      * 
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkDemand() {
-        return neighborLinkDemand;
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkLoad() {
+        return networkLoad;
+    }
+
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkDemand;
+
+    /**
+     * Network demand to neighboring nodes. Key is node name.
+     * 
+     * @return Not null.
+     */
+    @Nonnull
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkDemand() {
+        return networkDemand;
     }
 
     /**
@@ -129,16 +213,19 @@ public class ResourceReport implements Serializable {
      * @param nodeName
      *            the name of the node
      * @return empty report for a node
+     * @param demandWindow
+     *            the estimation window for this null report
      */
-    public static ResourceReport getNullReport(@Nonnull final NodeIdentifier nodeName) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> clientDemand = ImmutableMap.of();
-        final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkCapacity = ImmutableMap
+    public static ResourceReport getNullReport(@Nonnull final NodeIdentifier nodeName,
+            @Nonnull final ResourceReport.EstimationWindow demandWindow) {
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad = ImmutableMap
                 .of();
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = ImmutableMap.of();
+        final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = ImmutableMap.of();
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad = ImmutableMap.of();
 
-        return new ResourceReport(nodeName, NULL_TIMESTAMP, clientDemand, serverCapacity, neighborLinkCapacity,
-                neighborLinkDemand);
+        return new ResourceReport(nodeName, NULL_TIMESTAMP, demandWindow, serverCapacity, serverLoad, serverLoad,
+                networkCapacity, networkLoad, networkLoad);
     }
 
 }

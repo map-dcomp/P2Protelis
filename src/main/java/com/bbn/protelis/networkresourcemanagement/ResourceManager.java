@@ -16,9 +16,11 @@ public interface ResourceManager {
 
     /**
      * @return The current state of the device being managed. Not null.
+     * @param demandWindow
+     *            the window size that demand should be estimated over
      */
     @Nonnull
-    ResourceReport getCurrentResourceReport();
+    ResourceReport getCurrentResourceReport(@Nonnull ResourceReport.EstimationWindow demandWindow);
 
     /**
      * Reserve a container.
