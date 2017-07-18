@@ -15,48 +15,49 @@ public class LoadBalancerPlan implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * @param name
-     *            the name of the region
+     * @param region
+     *            the region
      * @return empty plan for a region
      */
-    public static LoadBalancerPlan getNullPlan(@Nonnull final String name) {
-        final ImmutableMap<String, ImmutableSet<String>> servicePlan = ImmutableMap.of();
-        return new LoadBalancerPlan(name, servicePlan);
+    @Nonnull
+    public static LoadBalancerPlan getNullPlan(@Nonnull final RegionIdentifier region) {
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan = ImmutableMap.of();
+        return new LoadBalancerPlan(region, servicePlan);
     }
 
     /**
      * 
-     * @param regionName
-     *            name of the region the plan is for
+     * @param region
+     *            the region the plan is for
      * @param servicePlan
      *            the service plan
      */
-    public LoadBalancerPlan(@Nonnull final String regionName,
-            @Nonnull final ImmutableMap<String, ImmutableSet<String>> servicePlan) {
-        this.regionName = regionName;
+    public LoadBalancerPlan(@Nonnull final RegionIdentifier region,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan) {
+        this.regionName = region;
         this.servicePlan = servicePlan;
     }
 
-    private final String regionName;
+    private final RegionIdentifier regionName;
 
     /**
      * 
      * @return the region that this plan is for
      */
     @Nonnull
-    public String getRegionName() {
+    public RegionIdentifier getRegion() {
         return this.regionName;
     }
 
-    private final ImmutableMap<String, ImmutableSet<String>> servicePlan;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan;
 
     /**
      * Plan for which services should run on which nodes.
      * 
-     * @return Nonn null. Key is node name, value is the list of services.
+     * @return the plan
      */
     @Nonnull
-    public ImmutableMap<String, ImmutableSet<String>> getServicePlan() {
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> getServicePlan() {
         return servicePlan;
     }
 
