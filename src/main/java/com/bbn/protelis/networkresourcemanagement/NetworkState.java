@@ -18,6 +18,7 @@ public class NetworkState {
         this.shortRegionSummary = ResourceSummary.getNullSummary(region, ResourceReport.EstimationWindow.SHORT);
         this.longRegionSummary = ResourceSummary.getNullSummary(region, ResourceReport.EstimationWindow.LONG);
         this.regionPlan = RegionPlan.getNullPlan(region);
+        this.loadBalancerPlan = LoadBalancerPlan.getNullPlan(region);
     }
 
     private final RegionIdentifier region;
@@ -96,11 +97,36 @@ public class NetworkState {
      */
     public void setRegionPlan(@Nonnull final RegionPlan plan) {
         if (!plan.getRegion().equals(this.region)) {
-            throw new IllegalArgumentException(
-                    "Region summary must be for the same region as the network state object");
+            throw new IllegalArgumentException("Region plan must be for the same region as the network state object");
         }
 
         this.regionPlan = plan;
+    }
+
+    private LoadBalancerPlan loadBalancerPlan;
+
+    /**
+     * @return the current plan for the region
+     */
+    @Nonnull
+    public LoadBalancerPlan getLoadBalancerPlan() {
+        return loadBalancerPlan;
+    }
+
+    /**
+     * 
+     * @param plan
+     *            the new plan for the region
+     * @throws IllegalArgumentException
+     *             if the plan is for a different region than the node
+     */
+    public void setLoadBalancerPlan(@Nonnull final LoadBalancerPlan plan) {
+        if (!plan.getRegion().equals(this.region)) {
+            throw new IllegalArgumentException(
+                    "Load balancer plan must be for the same region as the network state object");
+        }
+
+        this.loadBalancerPlan = plan;
     }
 
 }
