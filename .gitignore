@@ -4,3 +4,4 @@ target/
 build/
 bin/
 .classpath
+build_log.txt
