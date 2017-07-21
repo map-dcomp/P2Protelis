@@ -1,7 +1,23 @@
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
+import org.gradle.internal.os.OperatingSystem
+
+buildscript {
+  repositories {
+      mavenCentral()
+      jcenter()
+  }
+}
+
+// Plugins
+plugins {
+    id 'java'
+    id 'maven'
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'checkstyle'
+    id 'findbugs'
+}
+
 
 group = 'com.bbn'
 version = '0.14.0'
@@ -16,12 +32,6 @@ tasks.withType(JavaCompile) {
 
 
 
-buildscript {
-  repositories {
-      mavenCentral()
-      jcenter()
-  }
-}
 
 repositories {
 
@@ -56,14 +66,12 @@ task wrapper(type: Wrapper) {
      gradleVersion = '4.0'
 }
 
-apply plugin: 'checkstyle'
 checkstyle {
     config = resources.text.fromFile('style.xml', 'UTF-8')
     showViolations = true
     ignoreFailures = false
 }
 
-apply plugin: 'findbugs'
 findbugs {
     ignoreFailures = true
 }
