@@ -19,27 +19,21 @@ public class RegionPlan implements Serializable {
      * @return empty plan for a region
      */
     public static RegionPlan getNullPlan(@Nonnull final RegionIdentifier region) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverCapacity = ImmutableMap.of();
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand = ImmutableMap
-                .of();
-        return new RegionPlan(region, serverCapacity, neighborLinkDemand);
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan = ImmutableMap.of();
+        return new RegionPlan(region, plan);
     }
 
     /**
      * 
      * @param region
-     *            the region that the plan is for
-     * @param serverCapacity
-     *            the planned server capacity
-     * @param neighborLinkDemand
-     *            the planned link demand
+     *            see {@link #getRegion()}
+     * @param plan
+     *            see {@link #getPlan()}
      */
     public RegionPlan(@Nonnull final RegionIdentifier region,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverCapacity,
-            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand) {
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan) {
         this.region = region;
-        this.serverCapacity = serverCapacity;
-        this.neighborLinkDemand = neighborLinkDemand;
+        this.plan = plan;
     }
 
     private final RegionIdentifier region;
@@ -52,24 +46,15 @@ public class RegionPlan implements Serializable {
         return region;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> serverCapacity;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan;
 
     /**
      * 
-     * @return planned server capacity. Key is service name.
+     * @return the plan for the region
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeAttribute, Double>> getServerCapacity() {
-        return serverCapacity;
-    }
-
-    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> neighborLinkDemand;
-
-    /**
-     * @return Planned neighbor region link demand. Key is region name.
-     */
-    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkDemand() {
-        return neighborLinkDemand;
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> getPlan() {
+        return plan;
     }
 
 }
