@@ -77,9 +77,9 @@ public class ResourceReport implements Serializable {
     public ResourceReport(@Nonnull final NodeIdentifier nodeName,
             final long timestamp,
             @Nonnull final EstimationWindow demandEstimationWindow,
-            @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand,
+            @Nonnull final ImmutableMap<NodeAttribute<?>, Double> serverCapacity,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkDemand) {
@@ -130,7 +130,7 @@ public class ResourceReport implements Serializable {
         return nodeName;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad;
 
     /**
      * Get server load for this node. Key is the service name, value is the load
@@ -139,12 +139,12 @@ public class ResourceReport implements Serializable {
      * @return the load information. Not null.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>>
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
             getServerLoad() {
         return serverLoad;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand;
 
     /**
      * Get estimated server demand for this node. Key is the service name, value
@@ -153,12 +153,12 @@ public class ResourceReport implements Serializable {
      * @return the demand information. Not null.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>>
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
             getServerDemand() {
         return serverDemand;
     }
 
-    private final ImmutableMap<NodeAttribute, Double> serverCapacity;
+    private final ImmutableMap<NodeAttribute<?>, Double> serverCapacity;
 
     /**
      * Server capacity for the service on the node.
@@ -166,7 +166,7 @@ public class ResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeAttribute, Double> getServerCapacity() {
+    public ImmutableMap<NodeAttribute<?>, Double> getServerCapacity() {
         return serverCapacity;
     }
 
@@ -218,9 +218,9 @@ public class ResourceReport implements Serializable {
      */
     public static ResourceReport getNullReport(@Nonnull final NodeIdentifier nodeName,
             @Nonnull final ResourceReport.EstimationWindow demandWindow) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad = ImmutableMap
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = ImmutableMap
                 .of();
-        final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
+        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = ImmutableMap.of();
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = ImmutableMap.of();
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad = ImmutableMap.of();
 

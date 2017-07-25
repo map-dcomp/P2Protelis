@@ -51,9 +51,9 @@ public class ResourceSummary implements Serializable {
             final long minTimestamp,
             final long maxTimestamp,
             @Nonnull final ResourceReport.EstimationWindow demandEstimationWindow,
-            @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand,
+            @Nonnull final ImmutableMap<NodeAttribute<?>, Double> serverCapacity,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkDemand) {
@@ -109,7 +109,7 @@ public class ResourceSummary implements Serializable {
         return demandEstimationWindow;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad;
 
     /**
      * Get server load for this region. Key is the service name, value is the
@@ -118,12 +118,12 @@ public class ResourceSummary implements Serializable {
      * @return the summary information. Not null.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>>
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
             getServerLoad() {
         return serverLoad;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand;
 
     /**
      * Get server demand for this region. Key is the service name, value is the
@@ -132,12 +132,12 @@ public class ResourceSummary implements Serializable {
      * @return the demand information. Not null.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>>
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
             getServerDemand() {
         return serverDemand;
     }
 
-    private final ImmutableMap<NodeAttribute, Double> serverCapacity;
+    private final ImmutableMap<NodeAttribute<?>, Double> serverCapacity;
 
     /**
      * Server capacity for this region.
@@ -145,7 +145,7 @@ public class ResourceSummary implements Serializable {
      * @return the summary information. Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeAttribute, Double> getServerCapacity() {
+    public ImmutableMap<NodeAttribute<?>, Double> getServerCapacity() {
         return serverCapacity;
     }
 
@@ -197,9 +197,9 @@ public class ResourceSummary implements Serializable {
      */
     public static ResourceSummary getNullSummary(@Nonnull final RegionIdentifier region,
             @Nonnull final ResourceReport.EstimationWindow estimationWindow) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad = ImmutableMap
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = ImmutableMap
                 .of();
-        final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
+        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = ImmutableMap.of();
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = ImmutableMap.of();
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad = ImmutableMap.of();
 
@@ -229,12 +229,12 @@ public class ResourceSummary implements Serializable {
             throw new IllegalArgumentException("Cannot merge resource summaries with different estimation windows");
         }
 
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad = mergeMaps3(
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = mergeMaps3(
                 one.getServerLoad(), two.getServerLoad());
-        final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeDoubleMapViaSum(one.getServerCapacity(),
+        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = mergeDoubleMapViaSum(one.getServerCapacity(),
                 two.getServerCapacity());
 
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand = mergeMaps3(
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = mergeMaps3(
                 one.getServerDemand(), two.getServerDemand());
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = mergeMaps2(
@@ -267,10 +267,10 @@ public class ResourceSummary implements Serializable {
     @Nonnull
     public static ResourceSummary convertToSummary(@Nonnull final ResourceReport report,
             @Nonnull final Field nodeToRegion) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad = report
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = report
                 .getServerLoad();
-        final ImmutableMap<NodeAttribute, Double> serverCapacity = report.getServerCapacity();
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand = report
+        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = report.getServerCapacity();
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = report
                 .getServerDemand();
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = convertNodeToRegion(

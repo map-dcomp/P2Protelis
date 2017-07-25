@@ -1,27 +1,19 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.io.Serializable;
+
 /**
- * Used to specify the type of information being reported for capacity or usage
- * of a {@link NetworkServer}.
+ * Attributes for metrics on a node. Implementations should be immutable and
+ * must be {@link Comparable}.
  * 
+ * @param <T>
+ *            see {@link #getIdentifier()}
  */
-public enum NodeAttribute {
+public interface NodeAttribute<T> extends Serializable {
 
     /**
-     * CPU information. Measured in number of cores.
+     * @return the object being wrapped or itself
      */
-    CPU,
-    /**
-     * Amount of memory in bytes.
-     */
-    MEMORY,
-    /**
-     * Amount of disk in bytes.
-     */
-    DISK,
-    /**
-     * Measured in units of standard small containers.
-     */
-    TASK_CONTAINERS
+    T getAttribute();
 
 }
