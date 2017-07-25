@@ -89,8 +89,8 @@ public class NetworkServer extends AbstractExecutionContext
     private long sleepTime = DEFAULT_SLEEP_TIME_MS;
 
     /**
-     * @return How many milliseconds between executions of the protelis program. Defaults to
-     *         {@link #DEFAULT_SLEEP_TIME_MS}.
+     * @return How many milliseconds between executions of the protelis program.
+     *         Defaults to {@link #DEFAULT_SLEEP_TIME_MS}.
      */
     public final long getSleepTime() {
         return sleepTime;
@@ -132,9 +132,9 @@ public class NetworkServer extends AbstractExecutionContext
      * @see ResourceReport#getNetworkCapacity()
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> getNeighborLinkCapacity() {
-        ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
-        neighbors.forEach((k, v) -> builder.put(k, ImmutableMap.of(LinkAttribute.DATARATE, v)));
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNeighborLinkCapacity() {
+        ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> builder = ImmutableMap.builder();
+        neighbors.forEach((k, v) -> builder.put(k, ImmutableMap.of(LinkAttributeEnum.DATARATE, v)));
         return builder.build();
     }
 

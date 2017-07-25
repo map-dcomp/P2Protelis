@@ -54,9 +54,9 @@ public class ResourceSummary implements Serializable {
             @Nonnull final ImmutableMap<NodeAttribute<?>, Double> serverCapacity,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand,
-            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
-            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad,
-            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkDemand) {
+            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
+            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad,
+            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand) {
         this.region = region;
         this.minTimestamp = minTimestamp;
         this.maxTimestamp = maxTimestamp;
@@ -149,7 +149,7 @@ public class ResourceSummary implements Serializable {
         return serverCapacity;
     }
 
-    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity;
+    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity;
 
     /**
      * Network capacity for neighboring regions. Key is region name.
@@ -157,11 +157,11 @@ public class ResourceSummary implements Serializable {
      * @return the summary information. Not null.
      */
     @Nonnull
-    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkCapacity() {
+    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkCapacity() {
         return networkCapacity;
     }
 
-    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad;
+    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
 
     /**
      * Network load for neighboring regions. Key is region name.
@@ -169,11 +169,11 @@ public class ResourceSummary implements Serializable {
      * @return the summary information. Not null.
      */
     @Nonnull
-    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkLoad() {
+    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkLoad() {
         return networkLoad;
     }
 
-    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkDemand;
+    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand;
 
     /**
      * Network demand for neighboring regions. Key is region name.
@@ -181,7 +181,7 @@ public class ResourceSummary implements Serializable {
      * @return the demand information. Not null.
      */
     @Nonnull
-    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkDemand() {
+    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkDemand() {
         return networkDemand;
     }
 
@@ -200,8 +200,8 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = ImmutableMap
                 .of();
         final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = ImmutableMap.of();
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = ImmutableMap.of();
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad = ImmutableMap.of();
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap.of();
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = ImmutableMap.of();
 
         return new ResourceSummary(region, ResourceReport.NULL_TIMESTAMP, ResourceReport.NULL_TIMESTAMP,
                 estimationWindow, serverCapacity, serverLoad, serverLoad, networkCapacity, networkLoad, networkLoad);
@@ -237,11 +237,11 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = mergeMaps3(
                 one.getServerDemand(), two.getServerDemand());
 
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = mergeMaps2(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = mergeMaps2(
                 one.getNetworkCapacity(), two.getNetworkCapacity());
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad = mergeMaps2(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = mergeMaps2(
                 one.getNetworkLoad(), two.getNetworkLoad());
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkDemand = mergeMaps2(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = mergeMaps2(
                 one.getNetworkDemand(), two.getNetworkDemand());
 
         final long minTimestamp = Math.min(one.getMinTimestamp(), two.getMinTimestamp());
@@ -273,13 +273,13 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = report
                 .getServerDemand();
 
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = convertNodeToRegion(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = convertNodeToRegion(
                 nodeToRegion, report.getNetworkCapacity());
 
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad = convertNodeToRegion(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = convertNodeToRegion(
                 nodeToRegion, report.getNetworkLoad());
 
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkDemand = convertNodeToRegion(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = convertNodeToRegion(
                 nodeToRegion, report.getNetworkDemand());
 
         final RegionIdentifier reportRegion = (RegionIdentifier) nodeToRegion.getSample(report.getNodeName());

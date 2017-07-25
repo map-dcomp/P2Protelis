@@ -45,7 +45,7 @@ public class BasicResourceManager implements ResourceManager {
 
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad;
     private final ImmutableMap<NodeAttribute<?>, Double> serverCapacity;
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> networkLoad;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
 
     /**
      * Construct a resource manager for the specified node.
@@ -97,14 +97,14 @@ public class BasicResourceManager implements ResourceManager {
     }
 
     @Nonnull
-    private ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>>
+    private ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>>
             parseNeighborLinkDemand(@Nonnull final Map<String, Object> resourceReportValues) {
         final Object specifiedDemandRaw = resourceReportValues.get(NETWORK_LOAD_KEY);
         if (null != specifiedDemandRaw && specifiedDemandRaw instanceof Map) {
             // found something specified in the extra data
 
             // this will contain the new demand
-            ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap.builder();
+            ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> builder = ImmutableMap.builder();
 
             @SuppressWarnings("unchecked")
             final Map<String, Object> specifiedDemand = (Map<String, Object>) specifiedDemandRaw;
@@ -115,7 +115,7 @@ public class BasicResourceManager implements ResourceManager {
 
                     @SuppressWarnings("unchecked")
                     final Map<String, Object> individualDemand = (Map<String, Object>) v;
-                    final ImmutableMap<LinkAttribute, Double> serviceDemand = parseLinkAttributeDoubleMap(
+                    final ImmutableMap<LinkAttribute<?>, Double> serviceDemand = parseLinkAttributeDoubleMap(
                             individualDemand);
                     builder.put(new StringNodeIdentifier(nodeName), serviceDemand);
                 } else {
@@ -191,13 +191,13 @@ public class BasicResourceManager implements ResourceManager {
     }
 
     @Nonnull
-    private ImmutableMap<LinkAttribute, Double>
+    private ImmutableMap<LinkAttribute<?>, Double>
             parseLinkAttributeDoubleMap(@Nonnull final Map<String, Object> sourceMap) {
-        ImmutableMap.Builder<LinkAttribute, Double> builder = ImmutableMap.builder();
+        ImmutableMap.Builder<LinkAttribute<?>, Double> builder = ImmutableMap.builder();
 
         sourceMap.forEach((attrStr, valueObj) -> {
             try {
-                final LinkAttribute attr = Enum.valueOf(LinkAttribute.class, attrStr);
+                final LinkAttributeEnum attr = Enum.valueOf(LinkAttributeEnum.class, attrStr);
                 if (valueObj instanceof Number) {
                     final double value = ((Number) valueObj).doubleValue();
                     builder.put(attr, value);
@@ -213,9 +213,9 @@ public class BasicResourceManager implements ResourceManager {
 
     @Override
     public ResourceReport getCurrentResourceReport(@Nonnull final ResourceReport.EstimationWindow demandWindow) {
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkCapacity = node
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> linkCapacity = node
                 .getNeighborLinkCapacity();
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> linkDemand = computeNeighborLinkDemand();
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> linkDemand = computeNeighborLinkDemand();
         final ResourceReport report = new ResourceReport(new StringNodeIdentifier(node.getName()),
                 System.currentTimeMillis(), demandWindow, this.serverCapacity, this.serverLoad, this.serverLoad,
                 linkCapacity, linkDemand, linkDemand);
@@ -223,8 +223,8 @@ public class BasicResourceManager implements ResourceManager {
     }
 
     @Nonnull
-    private ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> computeNeighborLinkDemand() {
-        final ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap
+    private ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> computeNeighborLinkDemand() {
+        final ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> builder = ImmutableMap
                 .builder();
         this.node.getNeighbors().forEach(neighborId -> {
             if (this.networkLoad.containsKey(neighborId)) {

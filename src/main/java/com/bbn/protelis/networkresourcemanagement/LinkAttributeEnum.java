@@ -5,11 +5,16 @@ package com.bbn.protelis.networkresourcemanagement;
  * for a {@link NetworkLink}.
  * 
  */
-public enum LinkAttribute {
+public enum LinkAttributeEnum implements LinkAttribute<LinkAttributeEnum> {
 
     /**
      * Capacity or usage in bits per second.
      */
-    DATARATE
+    DATARATE;
+
+    @Override
+    public LinkAttributeEnum getAttribute() {
+        return this;
+    }
 
 }
