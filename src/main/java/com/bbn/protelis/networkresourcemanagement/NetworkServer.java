@@ -106,7 +106,8 @@ public class NetworkServer extends AbstractExecutionContext
     }
 
     /**
-     * The neighboring nodes.
+     * The neighboring nodes. Key is the neighbor, value is the datarate in
+     * bytes per second.
      */
     private final Map<NodeIdentifier, Double> neighbors = new HashMap<>();
 
@@ -127,14 +128,18 @@ public class NetworkServer extends AbstractExecutionContext
     }
 
     /**
+     * @param bandwidthLinkAttribute
+     *            the {@link LinkAttribute} to associate with each bandwidth
+     *            value
      * @return link capacity to neighbors
      * @see #addNeighbor(NodeIdentifier, double)
      * @see ResourceReport#getNetworkCapacity()
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNeighborLinkCapacity() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>>
+            getNeighborLinkCapacity(final LinkAttribute<?> bandwidthLinkAttribute) {
         ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> builder = ImmutableMap.builder();
-        neighbors.forEach((k, v) -> builder.put(k, ImmutableMap.of(LinkAttributeEnum.DATARATE, v)));
+        neighbors.forEach((k, v) -> builder.put(k, ImmutableMap.of(bandwidthLinkAttribute, v)));
         return builder.build();
     }
 
