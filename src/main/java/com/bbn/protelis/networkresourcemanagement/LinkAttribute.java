@@ -1,15 +1,19 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.io.Serializable;
+
 /**
- * Used to specify the type of information being reported for capacity or usage
- * for a {@link NetworkLink}.
+ * Attributes for metrics on a node. Implementations should be immutable and
+ * must be {@link Comparable}.
  * 
+ * @param <T>
+ *            see {@link #getIdentifier()}
  */
-public enum LinkAttribute {
+public interface LinkAttribute<T> extends Serializable {
 
     /**
-     * Capacity or usage in bits per second.
+     * @return the object being wrapped or itself
      */
-    DATARATE
+    T getAttribute();
 
 }

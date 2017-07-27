@@ -15,7 +15,7 @@ public class NetworkLink {
     public String getName() {
         return this.name;
     }
-    
+
     private final NetworkNode left;
 
     /**
@@ -40,7 +40,7 @@ public class NetworkLink {
 
     /**
      * 
-     * @return bandwidth in bits per second
+     * @return bandwidth in bytes per second
      */
     public double getBandwidth() {
         return this.bandwidth;
@@ -50,13 +50,13 @@ public class NetworkLink {
      * Create a link.
      * 
      * @param name
-     *            the name
+     *            see {@link #getName()}
      * @param left
-     *            the left node
+     *            see {@link #getLeft()}
      * @param right
-     *            the right node
+     *            see {@link #getRight()}
      * @param bandwidth
-     *            in bits per second
+     *            see {@link #getBandwidth()}
      */
     public NetworkLink(final String name, final NetworkNode left, final NetworkNode right, final double bandwidth) {
         this.name = name;
