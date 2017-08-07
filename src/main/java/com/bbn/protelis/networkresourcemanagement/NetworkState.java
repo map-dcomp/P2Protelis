@@ -97,7 +97,8 @@ public class NetworkState {
      */
     public void setRegionPlan(@Nonnull final RegionPlan plan) {
         if (!plan.getRegion().equals(this.region)) {
-            throw new IllegalArgumentException("Region plan must be for the same region as the network state object");
+            throw new IllegalArgumentException("Region plan (" + plan.getRegion()
+                    + ") must be for the same region as the network state object (" + getRegion() + ")");
         }
 
         this.regionPlan = plan;
@@ -122,8 +123,8 @@ public class NetworkState {
      */
     public void setLoadBalancerPlan(@Nonnull final LoadBalancerPlan plan) {
         if (!plan.getRegion().equals(this.region)) {
-            throw new IllegalArgumentException(
-                    "Load balancer plan must be for the same region as the network state object");
+            throw new IllegalArgumentException("Load balancer plan (" + plan.getRegion()
+                    + ") must be for the same region as the network state object (" + getRegion() + ")");
         }
 
         this.loadBalancerPlan = plan;
