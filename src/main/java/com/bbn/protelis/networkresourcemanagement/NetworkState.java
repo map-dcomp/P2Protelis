@@ -17,8 +17,8 @@ public class NetworkState {
         this.region = region;
         this.shortRegionSummary = ResourceSummary.getNullSummary(region, ResourceReport.EstimationWindow.SHORT);
         this.longRegionSummary = ResourceSummary.getNullSummary(region, ResourceReport.EstimationWindow.LONG);
-        this.regionPlan = RegionPlan.getNullPlan(region);
-        this.loadBalancerPlan = LoadBalancerPlan.getNullPlan(region);
+        this.regionPlan = RegionPlan.getNullRegionPlan(region);
+        this.loadBalancerPlan = LoadBalancerPlan.getNullLoadBalancerPlan(region);
     }
 
     private final RegionIdentifier region;
