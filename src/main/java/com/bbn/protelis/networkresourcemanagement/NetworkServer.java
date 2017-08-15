@@ -309,7 +309,7 @@ public class NetworkServer extends AbstractExecutionContext
      * Execute the protolis program.
      */
     private void run() {
-        while (!Thread.interrupted()) {
+        while (running) {
             try {
                 preRunCycle();
 
@@ -320,13 +320,17 @@ public class NetworkServer extends AbstractExecutionContext
 
                 Thread.sleep(sleepTime);
             } catch (final InterruptedException e) {
-                LOGGER.debug("Node " + getName() + " got interrupted, time to quit", e);
-                break;
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Node " + getName() + " got interrupted, waking up to check if it's time to exit", e);
+                }
             } catch (final Exception e) {
                 LOGGER.error("Exception thrown: terminating Protelis on node: " + getName(), e);
                 programLoopException = e;
                 break;
             }
+        }
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Exiting Protelis loop on node: " + getName());
         }
     }
 
