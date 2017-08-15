@@ -1,7 +1,5 @@
 package com.bbn.protelis.networkresourcemanagement;
 
-import static org.junit.Assert.fail;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.protelis.lang.datatype.Field;
@@ -89,7 +87,6 @@ public class ResourceSummaryTest {
      */
     @Test
     public void testMergeWithNull() {
-        final NodeIdentifier nodeName = new StringNodeIdentifier("testNode");
         final long minTimestamp = 0;
         final long maxTimestamp = 10;
         final EstimationWindow estimationWindow = EstimationWindow.SHORT;
