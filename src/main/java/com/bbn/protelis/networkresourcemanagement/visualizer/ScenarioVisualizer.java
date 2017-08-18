@@ -75,6 +75,17 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     private final NetworkVisualizerFactory<DN, DL> visFactory;
 
     private VisualizationViewer<DN, DL> vv;
+
+    /**
+     * Access to the viewer so that one can change behavior.
+     * 
+     * @return the current viewer, may be null
+     * @see #setScenario(Scenario)
+     */
+    public VisualizationViewer<DN, DL> getViewer() {
+        return vv;
+    }
+
     private Timer refresher;
 
     private final Graph<DN, DL> g = new SparseMultigraph<>();
@@ -118,6 +129,7 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
      * 
      * @param scenario
      *            the scenario to display
+     * @see #getViewer()
      */
     public void setScenario(final Scenario<N, L, C> scenario) {
         if (null != vv) {
