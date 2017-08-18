@@ -70,7 +70,7 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     /**
      * How often to redraw the graph in milliseconds.
      */
-    private static final int REFRESH_RATE = 100;// 500
+    public static final int REFRESH_RATE = 100;// 500
     private final Object closeLock = new Object();
     private final NetworkVisualizerFactory<DN, DL> visFactory;
 
