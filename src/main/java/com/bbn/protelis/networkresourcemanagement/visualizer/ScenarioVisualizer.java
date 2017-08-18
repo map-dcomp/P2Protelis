@@ -36,6 +36,7 @@ import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.SparseMultigraph;
+import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
@@ -113,6 +114,8 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     }
 
     /**
+     * Sets the scenario and configures the visualization viewer.
+     * 
      * @param scenario
      *            the scenario to display
      */
@@ -127,7 +130,9 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
         // Add the nodes and edges
         createGraphFromNetwork();
         configureGraphRendering();
-        this.add(vv);
+        
+        final GraphZoomScrollPane gzsp = new GraphZoomScrollPane(vv);
+        this.add(gzsp);
     }
 
     private void createGraphFromNetwork() {
