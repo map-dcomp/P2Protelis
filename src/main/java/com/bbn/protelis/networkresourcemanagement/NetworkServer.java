@@ -32,7 +32,7 @@ public class NetworkServer extends AbstractExecutionContext
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkServer.class);
 
     /** Device numerical identifier */
-    private final StringNodeIdentifier uid;
+    private final NodeIdentifier uid;
 
     /** The Protelis VM to be executed by the device */
     private final ProtelisVM vm;
