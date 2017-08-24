@@ -16,9 +16,6 @@ public class LoadBalancerPlan implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The timestamp for the null plan is {@link Long#MIN_VALUE} to ensure it's
-     * older than another other plan.
-     * 
      * @param region
      *            the region
      * @return empty plan for a region
@@ -26,39 +23,20 @@ public class LoadBalancerPlan implements Serializable {
     @Nonnull
     public static LoadBalancerPlan getNullLoadBalancerPlan(@Nonnull final RegionIdentifier region) {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan = ImmutableMap.of();
-        return new LoadBalancerPlan(Long.MIN_VALUE, region, servicePlan);
+        return new LoadBalancerPlan(region, servicePlan);
     }
 
     /**
      * 
-     * @param timestamp
-     *            when the plan wa
      * @param region
      *            the region the plan is for
      * @param servicePlan
      *            the service plan
      */
-    public LoadBalancerPlan(final long timestamp,
-            @Nonnull final RegionIdentifier region,
+    public LoadBalancerPlan(@Nonnull final RegionIdentifier region,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan) {
         this.regionName = region;
         this.servicePlan = servicePlan;
-        this.timestamp = timestamp;
-    }
-
-    private final long timestamp;
-
-    /**
-     * The units of the timestamp are determinted by the clock used for the
-     * network. Possible examples may be milliseconds since the epoch or
-     * milliseconds since the start of the application. It is not expected that
-     * this time be converted to a date time for display to the user. This value
-     * is used to determine which is the newest plan.
-     * 
-     * @return when the plan was generated
-     */
-    public long getTimestamp() {
-        return timestamp;
     }
 
     private final RegionIdentifier regionName;
@@ -86,7 +64,7 @@ public class LoadBalancerPlan implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(timestamp, regionName, servicePlan);
+        return Objects.hash(regionName, servicePlan);
     }
 
     @Override
@@ -95,7 +73,7 @@ public class LoadBalancerPlan implements Serializable {
             return true;
         } else if (o instanceof LoadBalancerPlan) {
             final LoadBalancerPlan other = (LoadBalancerPlan) o;
-            return getTimestamp() == other.getTimestamp() && Objects.equals(getRegion(), other.getRegion())
+            return Objects.equals(getRegion(), other.getRegion())
                     && Objects.equals(getServicePlan(), other.getServicePlan());
         } else {
             return false;
@@ -116,7 +94,7 @@ public class LoadBalancerPlan implements Serializable {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + " [" + " timestamp: " + timestamp + " region: " + regionName
-                + " servicePlan: " + servicePlan + " ]";
+        return this.getClass().getSimpleName() + " [" + " region: " + regionName + " servicePlan: " + servicePlan
+                + " ]";
     }
 }
