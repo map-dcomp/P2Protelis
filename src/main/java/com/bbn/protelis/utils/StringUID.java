@@ -2,7 +2,8 @@ package com.bbn.protelis.utils;
 
 import org.protelis.lang.datatype.DeviceUID;
 
-/** Simple string UIDs. */
+/** Simple string UIDs. Will be replaced by next Protelis release */
+@Deprecated
 public class StringUID implements DeviceUID, Comparable<StringUID> {
     private static final long serialVersionUID = 1L;
     private final String uid;

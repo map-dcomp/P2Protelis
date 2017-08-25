@@ -2,7 +2,8 @@ package com.bbn.protelis.utils;
 
 import org.protelis.lang.datatype.DeviceUID;
 
-/** Simple long UIDs. */
+/** Simple long UIDs. Will be replaced by next Protelis release */
+@Deprecated
 public class LongUID implements DeviceUID, Comparable<LongUID> {
     private static final long serialVersionUID = 1L;
     private final long uid;

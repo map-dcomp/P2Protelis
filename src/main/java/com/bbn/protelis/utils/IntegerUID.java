@@ -2,7 +2,8 @@ package com.bbn.protelis.utils;
 
 import org.protelis.lang.datatype.DeviceUID;
 
-/** Simple integer UIDs. */
+/** Simple integer UIDs. Will be replaced by next Protelis release */
+@Deprecated
 public class IntegerUID implements DeviceUID, Comparable<IntegerUID> {
     private static final long serialVersionUID = 1L;
     private final int uid;
