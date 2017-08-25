@@ -3,6 +3,8 @@ package com.bbn.protelis.networkresourcemanagement;
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Some tests for {@link StringNodeIdentifier}.
  * 
@@ -17,6 +19,7 @@ public class StringNodeIdentifierTest {
      * reference produce {@link StringNodeIdentifier} objects that are equal.
      */
     @Test
+    @SuppressFBWarnings(value = "DM_STRING_CTOR", justification = "Intentionally want 2 distinct String objects with the same value")
     public void testEquals() {
         final String expectedName = new String("one");
         final String compareName = new String("one");
