@@ -10,11 +10,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import javax.annotation.Nonnull;
+
 import org.protelis.lang.datatype.DeviceUID;
+import org.protelis.lang.datatype.Tuple;
 import org.protelis.vm.NetworkManager;
 import org.protelis.vm.util.CodePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Network manager for a {@link NetworkServer}.
@@ -52,6 +57,67 @@ public class NodeNetworkManager implements NetworkManager {
         return retval;
     }
 
+    private static void unwrapAndLog(final int depth, final Object o) {
+        if (o instanceof Tuple) {
+            final Tuple t = (Tuple) o;
+            for (final Object oo : t.toArray()) {
+                unwrapAndLog(depth + 1, oo);
+            }
+        } else {
+            final StringBuilder message = new StringBuilder();
+            message.append("Sharing object of type: ");
+            if (null == o) {
+                message.append("NULL");
+            } else {
+                message.append(o.getClass().toString());
+            }
+            message.append(" depth: ");
+            message.append(depth);
+
+            if (o instanceof ResourceSummary) {
+                final ResourceSummary rs = (ResourceSummary) o;
+                message.append(" sc.size: " + rs.getServerCapacity().size());
+                message.append(" sl.size: " + rs.getServerLoad().size());
+                rs.getServerLoad().forEach((service, serviceMap) -> {
+                    message.append(" sl.size.size: " + serviceMap.size());
+                    serviceMap.forEach((region, regionMap) -> {
+                        message.append(" sl.size.size.size: " + regionMap.size());
+                    });
+                });
+
+                message.append(" sd.size: " + rs.getServerDemand().size());
+                rs.getServerDemand().forEach((service, serviceMap) -> {
+                    message.append(" sd.size.size: " + serviceMap.size());
+                    serviceMap.forEach((region, regionMap) -> {
+                        message.append(" sd.size.size.size: " + regionMap.size());
+                    });
+                });
+
+                message.append(" nc.size: " + rs.getNetworkCapacity().size());
+                rs.getNetworkCapacity().forEach((region, regionMap) -> {
+                    message.append(" nc.size.size: " + regionMap.size());
+                });
+                message.append(" nl.size: " + rs.getNetworkLoad().size());
+                rs.getNetworkLoad().forEach((region, regionMap) -> {
+                    message.append(" nl.size.size: " + regionMap.size());
+                });
+                message.append(" nd.size: " + rs.getNetworkDemand().size());
+                rs.getNetworkDemand().forEach((region, regionMap) -> {
+                    message.append(" nd.size.size: " + regionMap.size());
+                });
+
+            } else if (o instanceof LoadBalancerPlan) {
+                final LoadBalancerPlan p = (LoadBalancerPlan) o;
+                message.append(" size: " + p.getServicePlan().size());
+            } else if (o instanceof RegionPlan) {
+                final RegionPlan p = (RegionPlan) o;
+                message.append(" size: " + p.getPlan().size());
+            }
+
+            LOGGER.trace(message.toString());
+        }
+    }
+
     @Override
     public void shareState(final Map<CodePath, Object> toSend) {
         // copy the list so that we don't hold the lock while sending all of the
@@ -59,6 +125,12 @@ public class NodeNetworkManager implements NetworkManager {
         final Map<DeviceUID, NetworkNeighbor> nbrsCopy = new HashMap<>();
         synchronized (lock) {
             nbrsCopy.putAll(nbrs);
+        }
+
+        if (LOGGER.isTraceEnabled()) {
+            toSend.forEach((code, o) -> {
+                unwrapAndLog(0, o);
+            });
         }
 
         final Map<DeviceUID, NetworkNeighbor> toRemove = new HashMap<>();
