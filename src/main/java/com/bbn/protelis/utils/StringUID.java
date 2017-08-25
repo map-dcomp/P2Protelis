@@ -28,7 +28,8 @@ public class StringUID implements DeviceUID, Comparable<StringUID> {
         if (this == alt) {
             return true;
         } else if (alt instanceof StringUID) {
-            return this.uid == ((StringUID) alt).uid;
+            final StringUID other = (StringUID) alt;
+            return this.uid.equals(other.uid);
         } else {
             return false;
         }
