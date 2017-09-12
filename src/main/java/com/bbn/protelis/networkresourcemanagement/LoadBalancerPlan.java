@@ -27,7 +27,9 @@ public class LoadBalancerPlan implements Serializable {
     @Nonnull
     public static LoadBalancerPlan getNullLoadBalancerPlan(@Nonnull final RegionIdentifier region) {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan = ImmutableMap.of();
-        return new LoadBalancerPlan(region, servicePlan);
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overloadPlan = ImmutableMap
+                .of();
+        return new LoadBalancerPlan(region, servicePlan, overloadPlan);
     }
 
     /**
@@ -36,11 +38,15 @@ public class LoadBalancerPlan implements Serializable {
      *            see {@link #getRegion()}
      * @param servicePlan
      *            see {@link #getServicePlan()}
+     * @param overloadPlan
+     *            see {@link #getOverloadPlan()}
      */
     public LoadBalancerPlan(@Nonnull final RegionIdentifier region,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan) {
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overloadPlan) {
         this.regionName = region;
         this.servicePlan = servicePlan;
+        this.overloadPlan = overloadPlan;
     }
 
     private final RegionIdentifier regionName;
@@ -65,9 +71,25 @@ public class LoadBalancerPlan implements Serializable {
         return servicePlan;
     }
 
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overloadPlan;
+
+    /**
+     * Plan for handling overload. This is usually based on
+     * {@link RegionPlan#getPlan()} and the current load in the region.
+     * 
+     * @return the plan. service -> region to send traffic to -> value, ideally
+     *         a value between 0 and 1 that represents a percentage of traffic
+     *         to send to the other region
+     * @see RegionPlan#getPlan()
+     */
+    @Nonnull
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> getOverloadPlan() {
+        return overloadPlan;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(regionName, servicePlan);
+        return Objects.hash(regionName, servicePlan, overloadPlan);
     }
 
     @Override
@@ -77,7 +99,8 @@ public class LoadBalancerPlan implements Serializable {
         } else if (o instanceof LoadBalancerPlan) {
             final LoadBalancerPlan other = (LoadBalancerPlan) o;
             return Objects.equals(getRegion(), other.getRegion())
-                    && Objects.equals(getServicePlan(), other.getServicePlan());
+                    && Objects.equals(getServicePlan(), other.getServicePlan())
+                    && Objects.equals(getOverloadPlan(), other.getOverloadPlan());
         } else {
             return false;
         }
@@ -86,6 +109,6 @@ public class LoadBalancerPlan implements Serializable {
     @Override
     public String toString() {
         return this.getClass().getSimpleName() + " [" + " region: " + regionName + " servicePlan: " + servicePlan
-                + " ]";
+                + " overloadPlan: " + overloadPlan + " ]";
     }
 }
