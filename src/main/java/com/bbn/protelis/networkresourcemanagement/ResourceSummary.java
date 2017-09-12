@@ -21,31 +21,25 @@ public class ResourceSummary implements Serializable {
     /**
      * 
      * @param region
-     *            the name of this region
+     *            see {@link ResourceSummary#getRegion()}
      * @param serverLoad
-     *            the load for services from this region. Key is service name,
-     *            value is map of attribute to value
+     *            see {@link #getServerLoad()}
      * @param serverCapacity
-     *            the capacity of the servers in this region
+     *            see {@link #getServerCapacity()}
      * @param networkCapacity
-     *            the capacity of the links to the neighboring regions (key is
-     *            region name)
+     *            see {@link #getNetworkCapacity()}
      * @param networkLoad
-     *            the load on the links to the neighboring regions (key is
-     *            region name)
+     *            see {@link #getNetworkLoad()}
      * @param networkDemand
-     *            the estimated demand on the links to the neighboring regions
-     *            (key is region name)
+     *            see {@link #getNetworkDemand()}
      * @param serverDemand
-     *            the estimated demand on the server (key is region name)
+     *            see {@link #getServerDemand()}
      * @param minTimestamp
-     *            the minimum timestamp of the reports combined to create this
-     *            summary
+     *            see {@link #getMinTimestamp()}
      * @param maxTimestamp
-     *            the maximum timestamp of the reports combined to create this
-     *            summary
+     *            see {@link #getMaxTimestamp()}
      * @param demandEstimationWindow
-     *            the window size used for estimating demand
+     *            see {@link #getDemandEstimationWindow()}
      */
     public ResourceSummary(@Nonnull final RegionIdentifier region,
             final long minTimestamp,
@@ -72,7 +66,7 @@ public class ResourceSummary implements Serializable {
     private final RegionIdentifier region;
 
     /**
-     * @return the name of the region
+     * @return the region that this summary information is for
      */
     @Nonnull
     public final RegionIdentifier getRegion() {
@@ -84,6 +78,7 @@ public class ResourceSummary implements Serializable {
     /**
      * @return the minimum timestamp of the reports combined to create this
      *         summary
+     * @see ResourceReport#getTimestamp()
      */
     public long getMinTimestamp() {
         return minTimestamp;
@@ -94,6 +89,7 @@ public class ResourceSummary implements Serializable {
     /**
      * @return the maximum timestamp of the reports combined to create this
      *         summary
+     * @see ResourceReport#getTimestamp()
      */
     public long getMaxTimestamp() {
         return maxTimestamp;
@@ -103,6 +99,8 @@ public class ResourceSummary implements Serializable {
 
     /**
      * @return the window over which the demand values are computed
+     * @see #getServerDemand()
+     * @see #getNetworkDemand()
      */
     @Nonnull
     public ResourceReport.EstimationWindow getDemandEstimationWindow() {
@@ -112,10 +110,11 @@ public class ResourceSummary implements Serializable {
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad;
 
     /**
-     * Get server load for this region. Key is the service name, value is the
-     * load by {@link NodeAttribute}.
+     * Get server load for this region. This is a measured value. service ->
+     * source region of the load -> measured attribute -> value.
      * 
      * @return the summary information. Not null.
+     * @see ResourceReport#getServerLoad()
      */
     @Nonnull
     public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
@@ -126,10 +125,11 @@ public class ResourceSummary implements Serializable {
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand;
 
     /**
-     * Get server demand for this region. Key is the service name, value is the
-     * load by {@link NodeAttribute}.
+     * Get server estimated demand for this region. service -> source region for
+     * the demand -> attribute -> value.
      * 
      * @return the demand information. Not null.
+     * @see ResourceReport#getServerDemand()
      */
     @Nonnull
     public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
@@ -143,6 +143,7 @@ public class ResourceSummary implements Serializable {
      * Server capacity for this region.
      * 
      * @return the summary information. Not null.
+     * @see ResourceReport#getServerCapacity()
      */
     @Nonnull
     public ImmutableMap<NodeAttribute<?>, Double> getServerCapacity() {
@@ -152,9 +153,11 @@ public class ResourceSummary implements Serializable {
     private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity;
 
     /**
-     * Network capacity for neighboring regions. Key is region name.
+     * Network capacity for neighboring regions. neighbor region -> attribute ->
+     * value. Only direct neighbors are reported.
      * 
      * @return the summary information. Not null.
+     * @see ResourceReport#getNetworkCapacity()
      */
     @Nonnull
     public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkCapacity() {
@@ -164,9 +167,11 @@ public class ResourceSummary implements Serializable {
     private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
 
     /**
-     * Network load for neighboring regions. Key is region name.
+     * Network load for neighboring regions. neighboring region -> attribute ->
+     * value. Only direct neighbors are reported.
      * 
      * @return the summary information. Not null.
+     * @see ResourceReport#getNetworkLoad()
      */
     @Nonnull
     public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkLoad() {
@@ -176,9 +181,11 @@ public class ResourceSummary implements Serializable {
     private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand;
 
     /**
-     * Network demand for neighboring regions. Key is region name.
+     * Network demand for neighboring regions. neighboring region -> attribute
+     * -> value. Only direct neighbors are reported.
      * 
      * @return the demand information. Not null.
+     * @see ResourceReport#getNetworkDemand()
      */
     @Nonnull
     public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkDemand() {
@@ -186,7 +193,9 @@ public class ResourceSummary implements Serializable {
     }
 
     /**
-     * Uses {@link ResourceReport#NULL_TIMESTAMP} as the minimum and maximum
+     * Create a null summary object. This is used by Protelis as the base object
+     * when creating a regional summary. Uses
+     * {@link ResourceReport#NULL_TIMESTAMP} as the minimum and maximum
      * timestamps.
      * 
      * @param region
@@ -200,7 +209,8 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = ImmutableMap
                 .of();
         final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = ImmutableMap.of();
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap.of();
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap
+                .of();
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = ImmutableMap.of();
 
         return new ResourceSummary(region, ResourceReport.NULL_TIMESTAMP, ResourceReport.NULL_TIMESTAMP,
@@ -208,7 +218,8 @@ public class ResourceSummary implements Serializable {
     }
 
     /**
-     * Merge two summaries.
+     * Merge two summaries. This is used by Protelis when building up the
+     * summary for a region.
      * 
      * @param one
      *            the first summary to merge. Not null.
@@ -252,7 +263,8 @@ public class ResourceSummary implements Serializable {
 
     /**
      * Convert a {@link ResourceReport} into a {@link ResourceSummary} to be
-     * merged later.
+     * merged later. This is used by Protelis when building up the summary for a
+     * region.
      * 
      * @param report
      *            the report to convert
@@ -336,7 +348,8 @@ public class ResourceSummary implements Serializable {
     }
 
     /**
-     * Create a new map that sums the values of the inner map for matching keys.
+     * Create a new map that sums the values of the inner-most map for matching
+     * keys.
      * 
      * @param one
      *            the first map to combine

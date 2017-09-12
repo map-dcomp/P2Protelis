@@ -54,25 +54,23 @@ public class ResourceReport implements Serializable {
     /**
      * 
      * @param nodeName
-     *            the name of the node that this report is from
+     *            see {@link #getNodeName()}
      * @param timestamp
-     *            the time that the ResourceReport was generated.
+     *            see {@link #getTimestamp()}
      * @param serverLoad
-     *            the current load on this service and the region is load is
-     *            coming from
+     *            see {@link #getServerLoad()}
      * @param serverCapacity
-     *            the server capacity for this service
+     *            see {@link #getServerCapacity()}
      * @param networkCapacity
-     *            the network capacity to neighbors for this service
+     *            see {@link #getNetworkCapacity()}
      * @param networkLoad
-     *            the network load from neighbors for this service and the
-     *            region the load is coming from
+     *            see {@link #getNetworkLoad()}
      * @param demandEstimationWindow
-     *            the window size used for estimating demand
+     *            see {#link {@link #getDemandEstimationWindow()}
      * @param serverDemand
-     *            the estimated demand on the server
+     *            see {@link #getServerDemand()}
      * @param networkDemand
-     *            the estimated demand on the network connected to the server
+     *            see {@link #getNetworkDemand()}
      */
     public ResourceReport(@Nonnull final NodeIdentifier nodeName,
             final long timestamp,
@@ -98,7 +96,7 @@ public class ResourceReport implements Serializable {
     private final long timestamp;
 
     /**
-     * The units of the timestamp are determinted by the clock used for the
+     * The units of the timestamp are determined by the clock used for the
      * network. Possible examples may be milliseconds since the epoch or
      * milliseconds since the start of the application. It is not expected that
      * this time be converted to a date time for display to the user. This value
@@ -115,6 +113,8 @@ public class ResourceReport implements Serializable {
 
     /**
      * @return the window over which the demand values are computed
+     * @see #getNetworkDemand()
+     * @see #getServerDemand()
      */
     @Nonnull
     public EstimationWindow getDemandEstimationWindow() {
@@ -133,8 +133,9 @@ public class ResourceReport implements Serializable {
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad;
 
     /**
-     * Get server load for this node. Key is the service name, value is the load
-     * of each {@link NodeAttribute} by region.
+     * Get server load for this node. This is a measured value. server -> region
+     * load is coming from -> {@link NodeAttribute} specifying the thing being
+     * measured -> value.
      * 
      * @return the load information. Not null.
      */
@@ -147,8 +148,9 @@ public class ResourceReport implements Serializable {
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand;
 
     /**
-     * Get estimated server demand for this node. Key is the service name, value
-     * is the load of each {@link NodeAttribute} by region.
+     * Get estimated server demand for this node. The meanings of the keys and
+     * values match those from {@link #getServerLoad()}, except that this is
+     * referring to estimated demand rather than measured load.
      * 
      * @return the demand information. Not null.
      */
@@ -161,7 +163,7 @@ public class ResourceReport implements Serializable {
     private final ImmutableMap<NodeAttribute<?>, Double> serverCapacity;
 
     /**
-     * Server capacity for the service on the node.
+     * Server capacity for each attribute of a node.
      * 
      * @return Not null.
      */
@@ -173,7 +175,8 @@ public class ResourceReport implements Serializable {
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity;
 
     /**
-     * Link capacity for neighboring nodes. Key is node name.
+     * Link capacity for neighboring nodes. neighbor node -> attribute -> value.
+     * Each key in the list is the identifier of a neighboring node.
      * 
      * @return Not null.
      */
@@ -185,7 +188,8 @@ public class ResourceReport implements Serializable {
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
 
     /**
-     * Network load to neighboring nodes. Key is node name.
+     * Network load to neighboring nodes. See {@link #getNetworkCapacity()} for
+     * details on the map definition.
      * 
      * @return Not null.
      */
@@ -197,7 +201,8 @@ public class ResourceReport implements Serializable {
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand;
 
     /**
-     * Network demand to neighboring nodes. Key is node name.
+     * Network demand to neighboring nodes. See {@link #getNetworkCapacity()}
+     * for details on the map definition.
      * 
      * @return Not null.
      */
