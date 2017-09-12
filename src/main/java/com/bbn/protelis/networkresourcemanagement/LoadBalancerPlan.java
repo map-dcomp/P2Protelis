@@ -9,15 +9,19 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Plan for balancing services.
+ * Plan for balancing services in a region. The load balancer should look at the
+ * {@link ResourceReport} and {@link RegionPlan} objects for the current region
+ * to come up with a detailed plan of which services should run on which nodes.
  */
 public class LoadBalancerPlan implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /**
+     * This is used as the default plan by Protelis.
+     * 
      * @param region
-     *            the region
+     *            see {@link #getRegion()}
      * @return empty plan for a region
      */
     @Nonnull
@@ -29,9 +33,9 @@ public class LoadBalancerPlan implements Serializable {
     /**
      * 
      * @param region
-     *            the region the plan is for
+     *            see {@link #getRegion()}
      * @param servicePlan
-     *            the service plan
+     *            see {@link #getServicePlan()}
      */
     public LoadBalancerPlan(@Nonnull final RegionIdentifier region,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan) {
@@ -42,7 +46,6 @@ public class LoadBalancerPlan implements Serializable {
     private final RegionIdentifier regionName;
 
     /**
-     * 
      * @return the region that this plan is for
      */
     @Nonnull
@@ -55,7 +58,7 @@ public class LoadBalancerPlan implements Serializable {
     /**
      * Plan for which services should run on which nodes.
      * 
-     * @return the plan
+     * @return the plan. service -> list of nodes that shoudl run the service
      */
     @Nonnull
     public ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> getServicePlan() {
@@ -78,18 +81,6 @@ public class LoadBalancerPlan implements Serializable {
         } else {
             return false;
         }
-    }
-
-    /**
-     * Compare 2 plans ignoring the timestamp.
-     * 
-     * @param other
-     *            the plan to compare against this plan
-     * @return if the 2 plans are equivalent
-     */
-    public boolean equivalentTo(final LoadBalancerPlan other) {
-        return Objects.equals(getRegion(), other.getRegion())
-                && Objects.equals(getServicePlan(), other.getServicePlan());
     }
 
     @Override

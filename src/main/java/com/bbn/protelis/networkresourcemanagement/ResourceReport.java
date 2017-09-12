@@ -8,6 +8,17 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * Information about a node at a particular point in time.
+ * 
+ * Capacity is a measured value that state how much of a particular resource a
+ * server or network link has. The units are specified by the
+ * {@link NodeAttribute} or {@link LinkAttribute} that is associted with the
+ * value.
+ * 
+ * Load is a measured value stating how much of a particular resource is being
+ * used.
+ * 
+ * Demand is an estimated value predicting how much a particular resource will
+ * be used over the window specified by {@Link #getDemandEstimationWindow()}.
  */
 public class ResourceReport implements Serializable {
 

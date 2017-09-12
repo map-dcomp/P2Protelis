@@ -8,15 +8,18 @@ import javax.annotation.Nonnull;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Plan for the network.
+ * Plan for the network. This specifies a recommendation on how traffic should
+ * be pushed from the {@link #getRegion()} to it's neighboring regions.
  */
 public class RegionPlan implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /**
+     * This is used as the default object by Protelis.
+     * 
      * @param region
-     *            the the region
+     *            see {@link #getRegion()}
      * @return empty plan for a region
      */
     public static RegionPlan getNullRegionPlan(@Nonnull final RegionIdentifier region) {
@@ -40,7 +43,7 @@ public class RegionPlan implements Serializable {
     private final RegionIdentifier region;
 
     /**
-     * @return the region
+     * @return the region that this plan is for.
      */
     @Nonnull
     public RegionIdentifier getRegion() {
@@ -50,8 +53,11 @@ public class RegionPlan implements Serializable {
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan;
 
     /**
+     * This specifies how much traffic for each service should be pushed from
+     * this region to neighboring regions. The value ideally should be a number
+     * between 0 and 1 and represent a percentage.
      * 
-     * @return the plan for the region
+     * @return the plan for the region. service -> neighbor region -> value.
      */
     @Nonnull
     public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> getPlan() {
@@ -73,17 +79,6 @@ public class RegionPlan implements Serializable {
         } else {
             return false;
         }
-    }
-
-    /**
-     * Compare 2 plans ignoring the timestamp.
-     * 
-     * @param other
-     *            the plan to compare against this plan
-     * @return if the 2 plans are equivalent
-     */
-    public boolean equivalentTo(final RegionPlan other) {
-        return Objects.equals(getRegion(), other.getRegion()) && Objects.equals(getPlan(), other.getPlan());
     }
 
     @Override

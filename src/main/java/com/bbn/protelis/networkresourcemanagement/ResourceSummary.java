@@ -11,7 +11,8 @@ import org.protelis.lang.datatype.Field;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Summary information about the resources in a region.
+ * Summary information about the resources in a region. See
+ * {@link ResourceReport} for information about capacity vs. load vs. demand.
  * 
  */
 public class ResourceSummary implements Serializable {
