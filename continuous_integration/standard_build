@@ -13,14 +13,17 @@ git_branch=$(git show -s --pretty=%d HEAD | awk -F, '{print $2}' | awk -F')' '{p
 git_version=$(git describe --always)
 log "BRANCH: ${git_branch} GIT_VERSION: ${git_version}"
 
+LOCAL_REPO="${mydir}"/.gradle-repo
+LOCAL_MAVEN_REPO="${mydir}"/.maven-repo
+
 env
 
 log "Java is: $(type -p java)"
 log "Javac is: $(type -p javac)"
 
-LOCAL_REPO="${mydir}"/.gradle-repo
 mkdir -p "${LOCAL_REPO}"
+mkdir -p "${LOCAL_MAVEN_REPO}"
 
 cd "${mydir}"/..
-try ./gradlew --gradle-user-home "${LOCAL_REPO}" clean build check
+try ./gradlew --gradle-user-home "${LOCAL_REPO}" -Dmaven.repo.local=${LOCAL_MAVEN_REPO}  clean build check
 
