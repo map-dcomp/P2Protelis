@@ -27,9 +27,9 @@ public class LoadBalancerPlan implements Serializable {
     @Nonnull
     public static LoadBalancerPlan getNullLoadBalancerPlan(@Nonnull final RegionIdentifier region) {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan = ImmutableMap.of();
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overloadPlan = ImmutableMap
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan = ImmutableMap
                 .of();
-        return new LoadBalancerPlan(region, servicePlan, overloadPlan);
+        return new LoadBalancerPlan(region, servicePlan, overflowPlan);
     }
 
     /**
@@ -38,15 +38,15 @@ public class LoadBalancerPlan implements Serializable {
      *            see {@link #getRegion()}
      * @param servicePlan
      *            see {@link #getServicePlan()}
-     * @param overloadPlan
-     *            see {@link #getOverloadPlan()}
+     * @param overflowPlan
+     *            see {@link #getOverflowPlan()}
      */
     public LoadBalancerPlan(@Nonnull final RegionIdentifier region,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overloadPlan) {
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan) {
         this.regionName = region;
         this.servicePlan = servicePlan;
-        this.overloadPlan = overloadPlan;
+        this.overflowPlan = overflowPlan;
     }
 
     private final RegionIdentifier regionName;
@@ -71,11 +71,15 @@ public class LoadBalancerPlan implements Serializable {
         return servicePlan;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overloadPlan;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan;
 
     /**
-     * Plan for handling overload. This is usually based on
+     * Plan for handling overflow. This is usually based on
      * {@link RegionPlan#getPlan()} and the current load in the region.
+     * 
+     * An empty map means all traffic stays local. If the overflow plan is
+     * populated and the current region isn't included in the plan, this means
+     * that ALL traffic should be sent to other regions.
      * 
      * @return the plan. service -> region to send traffic to -> value, ideally
      *         a value between 0 and 1 that represents a percentage of traffic
@@ -83,13 +87,13 @@ public class LoadBalancerPlan implements Serializable {
      * @see RegionPlan#getPlan()
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> getOverloadPlan() {
-        return overloadPlan;
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> getOverflowPlan() {
+        return overflowPlan;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(regionName, servicePlan, overloadPlan);
+        return Objects.hash(regionName, servicePlan, overflowPlan);
     }
 
     @Override
@@ -100,7 +104,7 @@ public class LoadBalancerPlan implements Serializable {
             final LoadBalancerPlan other = (LoadBalancerPlan) o;
             return Objects.equals(getRegion(), other.getRegion())
                     && Objects.equals(getServicePlan(), other.getServicePlan())
-                    && Objects.equals(getOverloadPlan(), other.getOverloadPlan());
+                    && Objects.equals(getOverflowPlan(), other.getOverflowPlan());
         } else {
             return false;
         }
@@ -109,6 +113,6 @@ public class LoadBalancerPlan implements Serializable {
     @Override
     public String toString() {
         return this.getClass().getSimpleName() + " [" + " region: " + regionName + " servicePlan: " + servicePlan
-                + " overloadPlan: " + overloadPlan + " ]";
+                + " overflowPlan: " + overflowPlan + " ]";
     }
 }

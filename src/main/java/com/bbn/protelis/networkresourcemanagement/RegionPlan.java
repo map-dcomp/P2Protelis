@@ -57,6 +57,11 @@ public class RegionPlan implements Serializable {
      * this region to neighboring regions. The value ideally should be a number
      * between 0 and 1 and represent a percentage.
      * 
+     * An empty map means all traffic stays local. If the plan is populated and
+     * the current region isn't included in the plan, this means that ALL
+     * traffic should be sent to other regions.
+     * 
+     * 
      * @return the plan for the region. service -> neighbor region -> value.
      */
     @Nonnull
