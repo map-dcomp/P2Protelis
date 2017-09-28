@@ -380,10 +380,13 @@ public class NetworkServer extends AbstractExecutionContext
      */
     public final void stopExecuting() {
         if (isExecuting()) {
+            synchronized (lock) {
+                running = false;
+            }
+
             preStopExecuting();
 
             synchronized (lock) {
-                running = false;
                 if (null != executeThread) {
                     executeThread.interrupt();
                     try {
