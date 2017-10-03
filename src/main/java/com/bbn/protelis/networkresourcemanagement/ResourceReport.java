@@ -82,6 +82,8 @@ public class ResourceReport implements Serializable {
      *            see {@link #getServerDemand()}
      * @param networkDemand
      *            see {@link #getNetworkDemand()}
+     * @param serverAverageProcessingTime
+     *            see {@Link #getServerAverageProcessingTime()}
      */
     public ResourceReport(@Nonnull final NodeIdentifier nodeName,
             final long timestamp,
@@ -89,6 +91,7 @@ public class ResourceReport implements Serializable {
             @Nonnull final ImmutableMap<NodeAttribute<?>, Double> serverCapacity,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTime,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand) {
@@ -98,6 +101,7 @@ public class ResourceReport implements Serializable {
         this.serverLoad = serverLoad;
         this.serverCapacity = serverCapacity;
         this.serverDemand = serverDemand;
+        this.serverAverageProcessingTime = serverAverageProcessingTime;
         this.networkCapacity = networkCapacity;
         this.networkLoad = networkLoad;
         this.networkDemand = networkDemand;
@@ -139,6 +143,18 @@ public class ResourceReport implements Serializable {
      */
     public final NodeIdentifier getNodeName() {
         return nodeName;
+    }
+
+    private final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTime;
+
+    /**
+     * 
+     * @return the average time it takes the server to process a request for
+     *         each service
+     */
+    @Nonnull
+    public ImmutableMap<ServiceIdentifier<?>, Double> getServerAverageProcessingTime() {
+        return serverAverageProcessingTime;
     }
 
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad;
@@ -236,12 +252,13 @@ public class ResourceReport implements Serializable {
             @Nonnull final ResourceReport.EstimationWindow demandWindow) {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = ImmutableMap
                 .of();
+        final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTime = ImmutableMap.of();
         final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = ImmutableMap.of();
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap.of();
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = ImmutableMap.of();
 
         return new ResourceReport(nodeName, NULL_TIMESTAMP, demandWindow, serverCapacity, serverLoad, serverLoad,
-                networkCapacity, networkLoad, networkLoad);
+                serverAverageProcessingTime, networkCapacity, networkLoad, networkLoad);
     }
 
 }

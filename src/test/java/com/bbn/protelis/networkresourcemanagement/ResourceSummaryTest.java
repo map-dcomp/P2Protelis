@@ -38,6 +38,7 @@ public class ResourceSummaryTest {
                 .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverLoadValue)));
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = ImmutableMap
                 .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverDemandValue)));
+        final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTime = ImmutableMap.of(service, 30000D);
 
         final LinkAttribute<?> linkAttribute = LinkAttributeEnum.DATARATE;
         final double networkCapacityValue = 20;
@@ -51,7 +52,7 @@ public class ResourceSummaryTest {
                 .of(nodeName, ImmutableMap.of(linkAttribute, networkDemandValue));
 
         final ResourceReport report = new ResourceReport(nodeName, timestamp, estimationWindow, serverCapacity,
-                serverLoad, serverDemand, networkCapacity, networkLoad, networkDemand);
+                serverLoad, serverDemand, serverAverageProcessingTime, networkCapacity, networkLoad, networkDemand);
 
         final Field nodeToRegion = new FieldMapImpl(1, 1);
         nodeToRegion.addSample(nodeName, region);
@@ -66,6 +67,7 @@ public class ResourceSummaryTest {
         Assert.assertEquals(serverCapacity, summary.getServerCapacity());
         Assert.assertEquals(serverLoad, summary.getServerLoad());
         Assert.assertEquals(serverDemand, summary.getServerDemand());
+        Assert.assertEquals(serverAverageProcessingTime, summary.getServerAverageProcessingTime());
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> expectedNetworkCapacity = ImmutableMap
                 .of(region, ImmutableMap.of(linkAttribute, networkCapacityValue));
@@ -104,6 +106,10 @@ public class ResourceSummaryTest {
                 .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverLoadValue)));
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = ImmutableMap
                 .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverDemandValue)));
+        final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTimeSum = ImmutableMap.of(service,
+                30000D);
+        final ImmutableMap<ServiceIdentifier<?>, Integer> serverAverageProcessingTimeCount = ImmutableMap.of(service,
+                1);
 
         final LinkAttribute<?> linkAttribute = LinkAttributeEnum.DATARATE;
         final double networkCapacityValue = 20;
@@ -117,7 +123,8 @@ public class ResourceSummaryTest {
                 .of(region, ImmutableMap.of(linkAttribute, networkDemandValue));
 
         final ResourceSummary sourceSummary = new ResourceSummary(region, minTimestamp, maxTimestamp, estimationWindow,
-                serverCapacity, serverLoad, serverDemand, networkCapacity, networkLoad, networkDemand);
+                serverCapacity, serverLoad, serverDemand, serverAverageProcessingTimeCount,
+                serverAverageProcessingTimeSum, networkCapacity, networkLoad, networkDemand);
         final ResourceSummary nullSummary = ResourceSummary.getNullSummary(region, estimationWindow);
 
         final ResourceSummary resultSummary = ResourceSummary.merge(sourceSummary, nullSummary);
@@ -130,6 +137,8 @@ public class ResourceSummaryTest {
         Assert.assertEquals(sourceSummary.getServerCapacity(), resultSummary.getServerCapacity());
         Assert.assertEquals(sourceSummary.getServerLoad(), resultSummary.getServerLoad());
         Assert.assertEquals(sourceSummary.getServerDemand(), resultSummary.getServerDemand());
+        Assert.assertEquals(sourceSummary.getServerAverageProcessingTime(),
+                resultSummary.getServerAverageProcessingTime());
 
         Assert.assertEquals(sourceSummary.getNetworkCapacity(), resultSummary.getNetworkCapacity());
         Assert.assertEquals(sourceSummary.getNetworkLoad(), resultSummary.getNetworkLoad());
@@ -161,6 +170,10 @@ public class ResourceSummaryTest {
                 .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverLoadValue)));
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = ImmutableMap
                 .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverDemandValue)));
+        final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTimeSum = ImmutableMap.of(service,
+                30000D);
+        final ImmutableMap<ServiceIdentifier<?>, Integer> serverAverageProcessingTimeCount = ImmutableMap.of(service,
+                1);
 
         final LinkAttribute<?> linkAttribute = LinkAttributeEnum.DATARATE;
         final double networkCapacityValue = 20;
@@ -174,7 +187,8 @@ public class ResourceSummaryTest {
                 .of(region, ImmutableMap.of(linkAttribute, networkDemandValue));
 
         final ResourceSummary sourceSummary = new ResourceSummary(region, minTimestamp, maxTimestamp, estimationWindow,
-                serverCapacity, serverLoad, serverDemand, networkCapacity, networkLoad, networkDemand);
+                serverCapacity, serverLoad, serverDemand, serverAverageProcessingTimeCount,
+                serverAverageProcessingTimeSum, networkCapacity, networkLoad, networkDemand);
 
         final Field nodeToRegion = new FieldMapImpl(1, 1);
         nodeToRegion.addSample(nodeName, region);
@@ -198,6 +212,7 @@ public class ResourceSummaryTest {
         Assert.assertEquals(expectedServerCapacity, resultSummary.getServerCapacity());
         Assert.assertEquals(expectedServerLoad, resultSummary.getServerLoad());
         Assert.assertEquals(expectedServerDemand, resultSummary.getServerDemand());
+        Assert.assertEquals(serverAverageProcessingTimeSum, resultSummary.getServerAverageProcessingTime());
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> expectedNetworkCapacity = ImmutableMap
                 .of(region, ImmutableMap.of(linkAttribute, networkCapacityValue + networkCapacityValue));

@@ -41,6 +41,11 @@ public class ResourceSummary implements Serializable {
      *            see {@link #getMaxTimestamp()}
      * @param demandEstimationWindow
      *            see {@link #getDemandEstimationWindow()}
+     * @param serverAverageProcessingTimeCount
+     *            Used to compute {@link #getServerAverageProcessingTime()}
+     * @param serverAverageProcessingTimeSum
+     *            Used to compute {@link #getServerAverageProcessingTime()}
+     * 
      */
     public ResourceSummary(@Nonnull final RegionIdentifier region,
             final long minTimestamp,
@@ -49,6 +54,8 @@ public class ResourceSummary implements Serializable {
             @Nonnull final ImmutableMap<NodeAttribute<?>, Double> serverCapacity,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, Integer> serverAverageProcessingTimeCount,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTimeSum,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad,
             @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand) {
@@ -59,6 +66,17 @@ public class ResourceSummary implements Serializable {
         this.serverLoad = serverLoad;
         this.serverDemand = serverDemand;
         this.serverCapacity = serverCapacity;
+        this.serverAverageProcessingTimeCount = serverAverageProcessingTimeCount;
+        this.serverAverageProcessingTimeSum = serverAverageProcessingTimeSum;
+
+        final ImmutableMap.Builder<ServiceIdentifier<?>, Double> avgProcTime = ImmutableMap.builder();
+        serverAverageProcessingTimeCount.forEach((service, count) -> {
+            final double sum = serverAverageProcessingTimeSum.getOrDefault(service, 0D);
+            final double average = sum / count;
+            avgProcTime.put(service, average);
+        });
+        this.serverAverageProcessingTime = avgProcTime.build();
+
         this.networkCapacity = networkCapacity;
         this.networkLoad = networkLoad;
         this.networkDemand = networkDemand;
@@ -106,6 +124,39 @@ public class ResourceSummary implements Serializable {
     @Nonnull
     public ResourceReport.EstimationWindow getDemandEstimationWindow() {
         return demandEstimationWindow;
+    }
+
+    private final ImmutableMap<ServiceIdentifier<?>, Integer> serverAverageProcessingTimeCount;
+
+    /**
+     * Used to compute {@link #getServerAverageProcessingTime()} when executing
+     * {@link #merge(ResourceSummary, ResourceSummary)}
+     */
+    @Nonnull
+    private ImmutableMap<ServiceIdentifier<?>, Integer> getServerAverageProcessingTimeCount() {
+        return serverAverageProcessingTimeCount;
+    }
+
+    private final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTimeSum;
+
+    /**
+     * Used to compute {@link #getServerAverageProcessingTime()} when executing
+     * {@link #merge(ResourceSummary, ResourceSummary)}
+     */
+    @Nonnull
+    private ImmutableMap<ServiceIdentifier<?>, Double> getServerAverageProcessingTimeSum() {
+        return serverAverageProcessingTimeSum;
+    }
+
+    private final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTime;
+
+    /**
+     * 
+     * @return the average processing time for services in this region
+     */
+    @Nonnull
+    public ImmutableMap<ServiceIdentifier<?>, Double> getServerAverageProcessingTime() {
+        return serverAverageProcessingTime;
     }
 
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad;
@@ -215,7 +266,8 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = ImmutableMap.of();
 
         return new ResourceSummary(region, ResourceReport.NULL_TIMESTAMP, ResourceReport.NULL_TIMESTAMP,
-                estimationWindow, serverCapacity, serverLoad, serverLoad, networkCapacity, networkLoad, networkLoad);
+                estimationWindow, serverCapacity, serverLoad, serverLoad, ImmutableMap.of(), ImmutableMap.of(),
+                networkCapacity, networkLoad, networkLoad);
     }
 
     /**
@@ -249,6 +301,18 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = mergeMaps3(
                 one.getServerDemand(), two.getServerDemand());
 
+        final Map<ServiceIdentifier<?>, Double> serverAvgProcTimeSum = new HashMap<>(
+                one.getServerAverageProcessingTimeSum());
+        two.getServerAverageProcessingTimeSum().forEach((service, sum) -> {
+            serverAvgProcTimeSum.merge(service, sum, Double::sum);
+        });
+
+        final Map<ServiceIdentifier<?>, Integer> serverAvgProcTimeCount = new HashMap<>(
+                one.getServerAverageProcessingTimeCount());
+        two.getServerAverageProcessingTimeCount().forEach((service, count) -> {
+            serverAvgProcTimeCount.merge(service, count, Integer::sum);
+        });
+
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = mergeMaps2(
                 one.getNetworkCapacity(), two.getNetworkCapacity());
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = mergeMaps2(
@@ -259,7 +323,8 @@ public class ResourceSummary implements Serializable {
         final long minTimestamp = Math.min(one.getMinTimestamp(), two.getMinTimestamp());
         final long maxTimestamp = Math.max(one.getMaxTimestamp(), two.getMaxTimestamp());
         return new ResourceSummary(one.getRegion(), minTimestamp, maxTimestamp, one.getDemandEstimationWindow(),
-                serverCapacity, serverLoad, serverDemand, networkCapacity, networkLoad, networkDemand);
+                serverCapacity, serverLoad, serverDemand, ImmutableMap.copyOf(serverAvgProcTimeCount),
+                ImmutableMap.copyOf(serverAvgProcTimeSum), networkCapacity, networkLoad, networkDemand);
     }
 
     /**
@@ -286,6 +351,13 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = report
                 .getServerDemand();
 
+        // sum of single node is the value
+        final ImmutableMap<ServiceIdentifier<?>, Double> serverAvgProcTimeSum = report.getServerAverageProcessingTime();
+        final ImmutableMap.Builder<ServiceIdentifier<?>, Integer> serverAvgProcTimeCount = ImmutableMap.builder();
+        serverAvgProcTimeSum.forEach((service, sum) -> {
+            serverAvgProcTimeCount.put(service, 1);
+        });
+
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = convertNodeToRegion(
                 nodeToRegion, report.getNetworkCapacity());
 
@@ -298,8 +370,8 @@ public class ResourceSummary implements Serializable {
         final RegionIdentifier reportRegion = (RegionIdentifier) nodeToRegion.getSample(report.getNodeName());
 
         final ResourceSummary summary = new ResourceSummary(reportRegion, report.getTimestamp(), report.getTimestamp(),
-                report.getDemandEstimationWindow(), serverCapacity, serverLoad, serverDemand, networkCapacity,
-                networkLoad, networkDemand);
+                report.getDemandEstimationWindow(), serverCapacity, serverLoad, serverDemand,
+                serverAvgProcTimeCount.build(), serverAvgProcTimeSum, networkCapacity, networkLoad, networkDemand);
         return summary;
     }
 

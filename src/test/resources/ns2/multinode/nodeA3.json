@@ -8,6 +8,10 @@
         "DISK": 1000
       }
     },
+    "serverAverageProcessingTime": {
+      "service1": 30000,
+      "service2": 45000
+    },
     "serverCapacity": {
       "CPU": 1,
       "MEMORY": 10000000000,

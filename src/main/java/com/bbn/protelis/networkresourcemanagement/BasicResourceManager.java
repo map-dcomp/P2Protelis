@@ -38,6 +38,11 @@ public class BasicResourceManager implements ResourceManager {
      */
     public static final String SERVER_CAPACITY_KEY = "serverCapacity";
     /**
+     * Used to find the server average processing time per service in
+     * {@link #EXTRA_DATA_RESOURCE_REPORT_KEY}.
+     */
+    public static final String SERVER_AVG_PROC_TIME_KEY = "serverAverageProcessingTime";
+    /**
      * Used to find network load in
      * {@link BasicResourceManager#EXTRA_DATA_RESOURCE_REPORT_KEY}.
      */
@@ -45,6 +50,7 @@ public class BasicResourceManager implements ResourceManager {
 
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad;
     private final ImmutableMap<NodeAttribute<?>, Double> serverCapacity;
+    private final ImmutableMap<ServiceIdentifier<?>, Double> serverAvgProcTime;
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
 
     /**
@@ -68,12 +74,15 @@ public class BasicResourceManager implements ResourceManager {
 
             this.serverLoad = parseClientDemand(resourceReportValues);
             this.serverCapacity = parseServerCapacity(resourceReportValues);
+            this.serverAvgProcTime = parseServerAverageProcessingTime(resourceReportValues);
             this.networkLoad = parseNeighborLinkDemand(resourceReportValues);
         } else {
             this.serverLoad = ImmutableMap.of();
             this.serverCapacity = ImmutableMap.of();
+            this.serverAvgProcTime = ImmutableMap.of();
             this.networkLoad = ImmutableMap.of();
         }
+
     }
 
     private final NetworkServer node;
@@ -104,7 +113,8 @@ public class BasicResourceManager implements ResourceManager {
             // found something specified in the extra data
 
             // this will contain the new demand
-            ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> builder = ImmutableMap.builder();
+            ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> builder = ImmutableMap
+                    .builder();
 
             @SuppressWarnings("unchecked")
             final Map<String, Object> specifiedDemand = (Map<String, Object>) specifiedDemandRaw;
@@ -170,6 +180,30 @@ public class BasicResourceManager implements ResourceManager {
     }
 
     @Nonnull
+    private ImmutableMap<ServiceIdentifier<?>, Double>
+            parseServerAverageProcessingTime(@Nonnull final Map<String, Object> resourceReportValues) {
+        final Object avgProcTimeRaw = resourceReportValues.get(SERVER_LOAD_KEY);
+        if (null != avgProcTimeRaw && avgProcTimeRaw instanceof Map) {
+            // found something specified in the extra data
+
+            final ImmutableMap.Builder<ServiceIdentifier<?>, Double> builder = ImmutableMap.builder();
+
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> avgProcTime = (Map<String, Object>) avgProcTimeRaw;
+            avgProcTime.forEach((serviceName, avgObj) -> {
+
+                if (avgObj instanceof Number) {
+                    final double value = ((Number) avgObj).doubleValue();
+                    builder.put(new StringServiceIdentifier(serviceName), value);
+                }
+            });
+            return builder.build();
+        } else {
+            return ImmutableMap.of();
+        }
+    }
+
+    @Nonnull
     private ImmutableMap<NodeAttribute<?>, Double>
             parseNodeAttributeDoubleMap(@Nonnull final Map<String, Object> sourceMap) {
         ImmutableMap.Builder<NodeAttribute<?>, Double> builder = ImmutableMap.builder();
@@ -218,7 +252,7 @@ public class BasicResourceManager implements ResourceManager {
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> linkDemand = computeNeighborLinkDemand();
         final ResourceReport report = new ResourceReport(new StringNodeIdentifier(node.getName()),
                 System.currentTimeMillis(), demandWindow, this.serverCapacity, this.serverLoad, this.serverLoad,
-                linkCapacity, linkDemand, linkDemand);
+                this.serverAvgProcTime, linkCapacity, linkDemand, linkDemand);
         return report;
     }
 
