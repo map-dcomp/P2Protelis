@@ -39,7 +39,7 @@ pipeline {
                     junit "**/build/test-results/**/*.xml"
                     
 			emailext recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'CulpritsRecipientProvider']], 
-					to: 'jon.schewe@raytheon.com',
+					to: 'map-bbn-commits@rlist.app.ray.com',
 					subject: '$DEFAULT_SUBJECT', 
 					body: '''${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}
 
