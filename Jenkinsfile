@@ -15,9 +15,11 @@ pipeline {
 		
 		stage('Build and Test') {
 			steps {
+                          wrap([$class: 'Xvfb']) {                          
 				timestamps {
                                     sh "./continuous_integration/standard_build"
 				}
+                          }
 			}
 		}
                 
