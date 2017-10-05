@@ -43,8 +43,6 @@ pipeline {
 					subject: '$DEFAULT_SUBJECT', 
 					body: '''${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}
 
-Branch: ${GIT_BRANCH}
-
 Changes:
 ${CHANGES}
 
