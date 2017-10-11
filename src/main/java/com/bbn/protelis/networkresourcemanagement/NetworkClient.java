@@ -7,12 +7,23 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Represents a set of clients of for services in the network. Clients are an
  * endpoint in a network topology. Clients can only connect to nodes, they
  * cannot connect to other clients.
  */
 public class NetworkClient implements NetworkNode {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkClient.class);
+
+    /**
+     * The key into extra data passed to {@link #processExtraData(Map)} that
+     * specifies the number of clients that this object represents.
+     */
+    public static final String EXTRA_DATA_NUM_CLIENTS_KEY = "numClients";
 
     /**
      * Create a client with the specified name.
@@ -62,6 +73,29 @@ public class NetworkClient implements NetworkNode {
             final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
             this.setRegion(region);
         }
+
+        final Object numClientsValue = extraData.get(EXTRA_DATA_NUM_CLIENTS_KEY);
+        if (null != numClientsValue) {
+            try {
+                final int numClients = Integer.parseInt(numClientsValue.toString());
+                setNumClients(numClients);
+            } catch (final NumberFormatException e) {
+                LOGGER.warn("Unable to parse {} as an integer: {}", numClientsValue, e.getMessage());
+            }
+        }
+    }
+
+    private int numClients = 1;
+
+    /**
+     * @return the number of clients that this object represents, defaults to 1.
+     */
+    public int getNumClients() {
+        return numClients;
+    }
+
+    private void setNumClients(final int v) {
+        numClients = v;
     }
 
     private RegionIdentifier region;
