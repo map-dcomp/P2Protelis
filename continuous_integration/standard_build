@@ -25,5 +25,5 @@ mkdir -p "${LOCAL_REPO}"
 mkdir -p "${LOCAL_MAVEN_REPO}"
 
 cd "${mydir}"/..
-try ./gradlew --gradle-user-home "${LOCAL_REPO}" -Dmaven.repo.local=${LOCAL_MAVEN_REPO}  clean build check
+try ./gradlew --no-daemon --gradle-user-home "${LOCAL_REPO}" -Dmaven.repo.local=${LOCAL_MAVEN_REPO}  clean build check
 
