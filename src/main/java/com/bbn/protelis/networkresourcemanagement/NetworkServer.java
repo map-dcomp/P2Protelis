@@ -385,6 +385,9 @@ public class NetworkServer extends AbstractExecutionContext
             }
 
             preStopExecuting();
+            
+            // stop all network communication
+            accessNetworkManager().stop();
 
             synchronized (lock) {
                 if (null != executeThread) {
