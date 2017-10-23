@@ -391,9 +391,17 @@ public class NetworkServer extends AbstractExecutionContext
 
             synchronized (lock) {
                 if (null != executeThread) {
+                    if(LOGGER.isTraceEnabled()) {
+                        LOGGER.trace("Interrupting and then joining node: {}", getNodeIdentifier());
+                    }
                     executeThread.interrupt();
+                    
                     try {
                         executeThread.join(); // may want to have a timeout here
+
+                        if(LOGGER.isTraceEnabled()) {
+                            LOGGER.trace("Node finished: {}", getNodeIdentifier());
+                        }
                     } catch (final InterruptedException e) {
                         LOGGER.debug("Got interrupted waiting for join, probably just time to shutdown", e);
                     }
