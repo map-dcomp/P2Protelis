@@ -306,7 +306,7 @@ public class NodeNetworkManager implements NetworkManager {
             } // while running, restart listen
 
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Existing thread: " + Thread.currentThread().getName());
+                LOGGER.info("Exiting thread: " + Thread.currentThread().getName());
             }
         }, "Node: " + node.getName() + " server thread").start();
 
