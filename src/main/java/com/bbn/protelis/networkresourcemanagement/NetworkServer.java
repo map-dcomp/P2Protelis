@@ -311,13 +311,34 @@ public class NetworkServer extends AbstractExecutionContext
     private void run() {
         while (running) {
             try {
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("{}: Executing preRunCycle", getNodeIdentifier());
+                }
                 preRunCycle();
+                if (!running) {
+                    break;
+                }
 
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("{}: runCycle", getNodeIdentifier());
+                }
                 getVM().runCycle(); // execute the Protelis program
                 incrementExecutionCount();
+                if (!running) {
+                    break;
+                }
 
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("{}: Executing postRunCycle", getNodeIdentifier());
+                }
                 postRunCycle();
+                if (!running) {
+                    break;
+                }
 
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("{}: sleep", getNodeIdentifier());
+                }
                 Thread.sleep(sleepTime);
             } catch (final InterruptedException e) {
                 if (LOGGER.isDebugEnabled()) {
@@ -380,36 +401,36 @@ public class NetworkServer extends AbstractExecutionContext
      */
     public final void stopExecuting() {
         if (isExecuting()) {
-            if(LOGGER.isTraceEnabled()) {
+            if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("Before lock in stopExecuting on node: {}", getNodeIdentifier());
             }
-            
+
             synchronized (lock) {
                 running = false;
             }
 
-            if(LOGGER.isTraceEnabled()) {
+            if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("Executing preStopExecuting on node: {}", getNodeIdentifier());
             }
             preStopExecuting();
-            
+
             // stop all network communication
-            if(LOGGER.isTraceEnabled()) {
+            if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("Stopping network manager on node: {}", getNodeIdentifier());
             }
             accessNetworkManager().stop();
 
             synchronized (lock) {
                 if (null != executeThread) {
-                    if(LOGGER.isTraceEnabled()) {
+                    if (LOGGER.isTraceEnabled()) {
                         LOGGER.trace("Interrupting and then joining node: {}", getNodeIdentifier());
                     }
                     executeThread.interrupt();
-                    
+
                     try {
                         executeThread.join(); // may want to have a timeout here
 
-                        if(LOGGER.isTraceEnabled()) {
+                        if (LOGGER.isTraceEnabled()) {
                             LOGGER.trace("Node finished: {}", getNodeIdentifier());
                         }
                     } catch (final InterruptedException e) {
