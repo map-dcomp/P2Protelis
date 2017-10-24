@@ -380,13 +380,23 @@ public class NetworkServer extends AbstractExecutionContext
      */
     public final void stopExecuting() {
         if (isExecuting()) {
+            if(LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Before lock in stopExecuting on node: {}", getNodeIdentifier());
+            }
+            
             synchronized (lock) {
                 running = false;
             }
 
+            if(LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Executing preStopExecuting on node: {}", getNodeIdentifier());
+            }
             preStopExecuting();
             
             // stop all network communication
+            if(LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Stopping network manager on node: {}", getNodeIdentifier());
+            }
             accessNetworkManager().stop();
 
             synchronized (lock) {
