@@ -26,7 +26,7 @@ public class LoadBalancerPlan implements Serializable {
      */
     @Nonnull
     public static LoadBalancerPlan getNullLoadBalancerPlan(@Nonnull final RegionIdentifier region) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan = ImmutableMap.of();
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, Integer>> servicePlan = ImmutableMap.of();
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan = ImmutableMap
                 .of();
         return new LoadBalancerPlan(region, servicePlan, overflowPlan);
@@ -42,7 +42,7 @@ public class LoadBalancerPlan implements Serializable {
      *            see {@link #getOverflowPlan()}
      */
     public LoadBalancerPlan(@Nonnull final RegionIdentifier region,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, Integer>> servicePlan,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan) {
         this.regionName = region;
         this.servicePlan = servicePlan;
@@ -59,15 +59,16 @@ public class LoadBalancerPlan implements Serializable {
         return this.regionName;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> servicePlan;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, Integer>> servicePlan;
 
     /**
      * Plan for which services should run on which nodes.
      * 
-     * @return the plan. service -> list of nodes that shoudl run the service
+     * @return the plan. service -> mapping of node and how many instances of
+     *         the service
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableSet<NodeIdentifier>> getServicePlan() {
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, Integer>> getServicePlan() {
         return servicePlan;
     }
 
