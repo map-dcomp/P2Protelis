@@ -452,6 +452,15 @@ public class NetworkServer extends AbstractExecutionContext
     public void setResourceManager(@Nonnull final ResourceManager resourceManager) {
         this.resourceManager = resourceManager;
     }
+    
+    /**
+     * 
+     * @return the resource manager for this node
+     */
+    @Nonnull
+    public ResourceManager getResourceManager() {
+        return resourceManager;
+    }
 
     /**
      * Get the latest resource report. This method should be called once per

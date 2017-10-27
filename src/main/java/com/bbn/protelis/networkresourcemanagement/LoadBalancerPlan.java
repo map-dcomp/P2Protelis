@@ -6,7 +6,6 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Plan for balancing services in a region. The load balancer should look at the

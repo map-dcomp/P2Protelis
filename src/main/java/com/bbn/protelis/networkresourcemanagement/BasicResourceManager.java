@@ -1,15 +1,17 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Basic {@link ResourceManager} that expects to get report values from the
@@ -271,30 +273,50 @@ public class BasicResourceManager implements ResourceManager {
     }
 
     @Override
-    public boolean reserveContainer(final String name, final Map<String, String> arguments) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean reserveContainer(@Nonnull final NodeIdentifier name,
+            @Nonnull final ImmutableMap<String, String> arguments) {
+        LOGGER.info("Reserved container {} with arguments {}", name, arguments);
+        return true;
     }
 
     @Override
-    public boolean releaseContainer(final String name) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean releaseContainer(@Nonnull final NodeIdentifier name) {
+        LOGGER.info("Released container {}", name);
+        return true;
+    }
+
+    private final Map<NodeIdentifier, Set<ServiceIdentifier<?>>> runningServices = new HashMap<>();
+
+    @Override
+    public boolean startService(@Nonnull final NodeIdentifier containerName,
+            @Nonnull final ServiceIdentifier<?> service) {
+        LOGGER.info("Started service {} in container {}", service, containerName);
+        final Set<ServiceIdentifier<?>> containerServices = runningServices.computeIfAbsent(containerName,
+                c -> new HashSet<>());
+        return containerServices.add(service);
     }
 
     @Override
-    public boolean startTask(final String containerName,
-            final String taskName,
-            final ImmutableList<String> arguments,
-            final ImmutableMap<String, String> environment) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean stopService(@Nonnull final NodeIdentifier containerName,
+            @Nonnull final ServiceIdentifier<?> service) {
+        LOGGER.info("Stopped service {} in container {}", service, containerName);
+        final Set<ServiceIdentifier<?>> containerServices = runningServices.getOrDefault(containerName,
+                new HashSet<>());
+        return containerServices.remove(service);
     }
 
     @Override
-    public boolean stopTask(final String containerName, final String taskName) {
-        // TODO Auto-generated method stub
-        return false;
+    public ImmutableMap<NodeIdentifier, ImmutableSet<ServiceIdentifier<?>>> getRunningServices() {
+        final ImmutableMap.Builder<NodeIdentifier, ImmutableSet<ServiceIdentifier<?>>> builder = ImmutableMap.builder();
+        runningServices.forEach((name, services) -> {
+            builder.put(name, ImmutableSet.copyOf(services));
+        });
+        return builder.build();
+    }
+
+    @Override
+    public ImmutableMap<NodeAttribute<?>, Double> getServerCapacity() {
+        return serverCapacity;
     }
 
 }
