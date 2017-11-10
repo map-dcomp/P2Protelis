@@ -52,7 +52,8 @@ public class ResourceSummaryTest {
                 .of(nodeName, ImmutableMap.of(linkAttribute, networkDemandValue));
 
         final ResourceReport report = new ResourceReport(nodeName, timestamp, estimationWindow, serverCapacity,
-                serverLoad, serverDemand, serverAverageProcessingTime, networkCapacity, networkLoad, networkDemand);
+                serverLoad, serverDemand, serverAverageProcessingTime, networkCapacity, networkLoad, networkDemand,
+                ImmutableMap.of());
 
         final Field nodeToRegion = new FieldMapImpl(1, 1);
         nodeToRegion.addSample(nodeName, region);

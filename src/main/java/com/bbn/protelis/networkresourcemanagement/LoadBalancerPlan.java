@@ -6,6 +6,7 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Plan for balancing services in a region. The load balancer should look at the
@@ -25,10 +26,10 @@ public class LoadBalancerPlan implements Serializable {
      */
     @Nonnull
     public static LoadBalancerPlan getNullLoadBalancerPlan(@Nonnull final RegionIdentifier region) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, Integer>> servicePlan = ImmutableMap.of();
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan = ImmutableMap
-                .of();
-        return new LoadBalancerPlan(region, servicePlan, overflowPlan);
+        return new LoadBalancerPlan(region, ImmutableMap.of(), // servicePlan
+                ImmutableMap.of(), // overflowPlan
+                ImmutableMap.of(), // stopTrafficTo
+                ImmutableMap.of()); // stopContainers
     }
 
     /**
@@ -39,13 +40,21 @@ public class LoadBalancerPlan implements Serializable {
      *            see {@link #getServicePlan()}
      * @param overflowPlan
      *            see {@link #getOverflowPlan()}
+     * @param stopTrafficTo
+     *            see {@link #getStopTrafficTo()}
+     * @param stopContainers
+     *            see {@link #getStopContainers()}
      */
     public LoadBalancerPlan(@Nonnull final RegionIdentifier region,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, Integer>> servicePlan,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan) {
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopTrafficTo,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopContainers) {
         this.regionName = region;
         this.servicePlan = servicePlan;
         this.overflowPlan = overflowPlan;
+        this.stopTrafficTo = stopTrafficTo;
+        this.stopContainers = stopContainers;
     }
 
     private final RegionIdentifier regionName;
@@ -91,6 +100,35 @@ public class LoadBalancerPlan implements Serializable {
         return overflowPlan;
     }
 
+    private final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopTrafficTo;
+
+    /**
+     * Specify which containers to stop sending traffic to. The services running
+     * in these containers will continue to run, but there will be no new
+     * connections to these containers. This can be used to allow a container to
+     * catch up processing or to prepare it for shutdown.
+     * 
+     * @return node -> containers on node
+     */
+    @Nonnull
+    public ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> getStopTrafficTo() {
+        return stopTrafficTo;
+    }
+
+    private final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopContainers;
+
+    /**
+     * The containers to stop on each node. These containers implicitly have
+     * traffic to them stopped. It is ok to list the containers in both this
+     * property and in {@Link #getStopTrafficTo()}.
+     * 
+     * @return node -> containers on node
+     */
+    @Nonnull
+    public ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> getStopContainers() {
+        return stopContainers;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(regionName, servicePlan, overflowPlan);
@@ -104,7 +142,9 @@ public class LoadBalancerPlan implements Serializable {
             final LoadBalancerPlan other = (LoadBalancerPlan) o;
             return Objects.equals(getRegion(), other.getRegion())
                     && Objects.equals(getServicePlan(), other.getServicePlan())
-                    && Objects.equals(getOverflowPlan(), other.getOverflowPlan());
+                    && Objects.equals(getOverflowPlan(), other.getOverflowPlan())
+                    && Objects.equals(getStopTrafficTo(), other.getStopTrafficTo())
+                    && Objects.equals(getStopContainers(), other.getStopContainers());
         } else {
             return false;
         }
@@ -112,7 +152,11 @@ public class LoadBalancerPlan implements Serializable {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + " [" + " region: " + regionName + " servicePlan: " + servicePlan
-                + " overflowPlan: " + overflowPlan + " ]";
+        return this.getClass().getSimpleName() + " [" + " region: " + regionName //
+                + " servicePlan: " + servicePlan //
+                + " overflowPlan: " + overflowPlan //
+                + " stopTrafficTo: " + stopTrafficTo //
+                + " stopContainers: " + stopContainers //
+                + " ]";
     }
 }

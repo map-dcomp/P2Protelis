@@ -3,7 +3,6 @@ package com.bbn.protelis.networkresourcemanagement;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * This is the interface the {@link NetworkServer} is using to collect
@@ -21,57 +20,54 @@ public interface ResourceManager {
     ResourceReport getCurrentResourceReport(@Nonnull ResourceReport.EstimationWindow demandWindow);
 
     /**
+     * @return information about the services running on the node
+     */
+    @Nonnull
+    ServiceReport getServiceReport();
+
+    /**
      * Reserve a container.
      * 
-     * @param name
-     *            the name of the container to reserve.
      * @param arguments
      *            key/value pairs of arguments to pass to the container
-     * @return if the reserve was successful
+     * @return the container that has been reserved, will be null if the
+     *         container could not be reserved
      */
-    boolean reserveContainer(@Nonnull NodeIdentifier name, @Nonnull ImmutableMap<String, String> arguments);
+    ContainerIdentifier reserveContainer(@Nonnull ImmutableMap<String, String> arguments);
 
     /**
      * Release the container reserved with
-     * {@link #reserveContainer(NodeIdentifier, ImmutableMap)}.
+     * {@link #reserveContainer(ImmutableMap)}.
      * 
      * @param name
-     *            the name used to reserve the container
+     *            the value returned from reserving the container
      * @return if the release was successfully
      */
-    boolean releaseContainer(@Nonnull NodeIdentifier name);
+    boolean releaseContainer(@Nonnull ContainerIdentifier name);
 
     /**
      * Start a service in a container.
      * 
      * @param containerName
      *            the identifier for the container used with
-     *            {@link #reserveContainer(NodeIdentifier, ImmutableMap)}
+     *            {@link #reserveContainer(ImmutableMap)}
      * @param service
      *            the service to start
      * @return if the service was started, will fail if the service is already
      *         running in this container
      */
-    boolean startService(@Nonnull NodeIdentifier containerName, @Nonnull ServiceIdentifier<?> service);
+    boolean startService(@Nonnull ContainerIdentifier containerName, @Nonnull ServiceIdentifier<?> service);
 
     /**
      * @param containerName
      *            the identifier for the container used with
-     *            {@link #reserveContainer(NodeIdentifier, ImmutableMap)}
+     *            {@link #reserveContainer(ImmutableMap)}
      * @param service
      *            the service to stop
      * @return if the service was stopped, will fail if the service is not
      *         running in this container
      */
-    boolean stopService(@Nonnull NodeIdentifier containerName, @Nonnull ServiceIdentifier<?> service);
-
-    /**
-     * Get the current set of services running on each container in this node.
-     * 
-     * @return container name -> [running services]
-     */
-    @Nonnull
-    ImmutableMap<NodeIdentifier, ImmutableSet<ServiceIdentifier<?>>> getRunningServices();
+    boolean stopService(@Nonnull ContainerIdentifier containerName, @Nonnull ServiceIdentifier<?> service);
 
     /**
      * The capacity of the server.

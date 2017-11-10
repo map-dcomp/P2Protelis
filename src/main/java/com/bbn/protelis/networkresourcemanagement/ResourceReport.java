@@ -83,7 +83,7 @@ public class ResourceReport implements Serializable {
      * @param networkDemand
      *            see {@link #getNetworkDemand()}
      * @param serverAverageProcessingTime
-     *            see {@Link #getServerAverageProcessingTime()}
+     *            see {@link #getServerAverageProcessingTime()}
      */
     public ResourceReport(@Nonnull final NodeIdentifier nodeName,
             final long timestamp,
@@ -105,7 +105,6 @@ public class ResourceReport implements Serializable {
         this.networkCapacity = networkCapacity;
         this.networkLoad = networkLoad;
         this.networkDemand = networkDemand;
-
     }
 
     private final long timestamp;
@@ -141,6 +140,7 @@ public class ResourceReport implements Serializable {
     /**
      * @return the identifier of the node that the report came from
      */
+    @Nonnull
     public final NodeIdentifier getNodeName() {
         return nodeName;
     }
@@ -250,15 +250,15 @@ public class ResourceReport implements Serializable {
      */
     public static ResourceReport getNullReport(@Nonnull final NodeIdentifier nodeName,
             @Nonnull final ResourceReport.EstimationWindow demandWindow) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = ImmutableMap
-                .of();
-        final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTime = ImmutableMap.of();
-        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = ImmutableMap.of();
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap.of();
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = ImmutableMap.of();
 
-        return new ResourceReport(nodeName, NULL_TIMESTAMP, demandWindow, serverCapacity, serverLoad, serverLoad,
-                serverAverageProcessingTime, networkCapacity, networkLoad, networkLoad);
+        return new ResourceReport(nodeName, NULL_TIMESTAMP, demandWindow, //
+                ImmutableMap.of(), // serverCapacity
+                ImmutableMap.of(), // serverLoad
+                ImmutableMap.of(), // serverDemand
+                ImmutableMap.of(), // serverAverageProcessingTime
+                ImmutableMap.of(), // networkCapacity
+                ImmutableMap.of(), // networkLoad
+                ImmutableMap.of()); // networkDemand
     }
 
 }

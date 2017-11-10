@@ -3,7 +3,6 @@ package com.bbn.protelis.networkresourcemanagement;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * {@link ResourceManager} that always returns an empty report and fails to do
@@ -29,38 +28,37 @@ public class NullResourceManager implements ResourceManager {
     }
 
     @Override
-    public boolean reserveContainer(@Nonnull final NodeIdentifier name,
-            @Nonnull final ImmutableMap<String, String> arguments) {
+    public ContainerIdentifier reserveContainer(@Nonnull final ImmutableMap<String, String> arguments) {
+        return null;
+    }
+
+    @Override
+    public boolean releaseContainer(@Nonnull final ContainerIdentifier name) {
         return true;
     }
 
     @Override
-    public boolean releaseContainer(@Nonnull final NodeIdentifier name) {
-        return true;
-    }
-
-    @Override
-    public boolean startService(@Nonnull final NodeIdentifier containerName,
+    public boolean startService(@Nonnull final ContainerIdentifier containerName,
             @Nonnull final ServiceIdentifier<?> service) {
         return true;
     }
 
     @Override
-    public boolean stopService(@Nonnull final NodeIdentifier containerName,
+    public boolean stopService(@Nonnull final ContainerIdentifier containerName,
             @Nonnull final ServiceIdentifier<?> service) {
         return true;
-    }
-
-    @Override
-    @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableSet<ServiceIdentifier<?>>> getRunningServices() {
-        return ImmutableMap.of();
     }
 
     @Override
     @Nonnull
     public ImmutableMap<NodeAttribute<?>, Double> getServerCapacity() {
         return ImmutableMap.of();
+    }
+
+    @Override
+    @Nonnull
+    public ServiceReport getServiceReport() {
+        return new ServiceReport(nodeId, ImmutableMap.of());
     }
 
 }

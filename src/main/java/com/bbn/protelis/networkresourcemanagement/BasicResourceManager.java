@@ -1,9 +1,8 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
@@ -11,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Basic {@link ResourceManager} that expects to get report values from the
@@ -272,51 +270,78 @@ public class BasicResourceManager implements ResourceManager {
         return builder.build();
     }
 
-    @Override
-    public boolean reserveContainer(@Nonnull final NodeIdentifier name,
-            @Nonnull final ImmutableMap<String, String> arguments) {
-        LOGGER.info("Reserved container {} with arguments {}", name, arguments);
-        return true;
+    private int containerCounter = 0;
+
+    private synchronized ContainerIdentifier getNextContainerName() {
+        final ContainerIdentifier id = new StringNodeIdentifier("Container-" + containerCounter);
+        ++containerCounter;
+        return id;
     }
 
     @Override
-    public boolean releaseContainer(@Nonnull final NodeIdentifier name) {
+    public ContainerIdentifier reserveContainer(@Nonnull final ImmutableMap<String, String> arguments) {
+        final ContainerIdentifier name = getNextContainerName();
+        LOGGER.info("Reserved container {} with arguments {}", name, arguments);
+        return name;
+    }
+
+    @Override
+    public boolean releaseContainer(@Nonnull final ContainerIdentifier name) {
         LOGGER.info("Released container {}", name);
         return true;
     }
 
-    private final Map<NodeIdentifier, Set<ServiceIdentifier<?>>> runningServices = new HashMap<>();
+    private final Map<ContainerIdentifier, ServiceIdentifier<?>> runningServices = new HashMap<>();
 
     @Override
-    public boolean startService(@Nonnull final NodeIdentifier containerName,
+    public boolean startService(@Nonnull final ContainerIdentifier containerName,
             @Nonnull final ServiceIdentifier<?> service) {
-        LOGGER.info("Started service {} in container {}", service, containerName);
-        final Set<ServiceIdentifier<?>> containerServices = runningServices.computeIfAbsent(containerName,
-                c -> new HashSet<>());
-        return containerServices.add(service);
+        if (runningServices.containsKey(containerName)) {
+            LOGGER.warn("startService failed: container {} is already running a service", containerName);
+            return false;
+        } else {
+            LOGGER.info("Started service {} in container {}", service, containerName);
+            runningServices.put(containerName, service);
+            return true;
+        }
     }
 
     @Override
-    public boolean stopService(@Nonnull final NodeIdentifier containerName,
+    public boolean stopService(@Nonnull final ContainerIdentifier containerName,
             @Nonnull final ServiceIdentifier<?> service) {
-        LOGGER.info("Stopped service {} in container {}", service, containerName);
-        final Set<ServiceIdentifier<?>> containerServices = runningServices.getOrDefault(containerName,
-                new HashSet<>());
-        return containerServices.remove(service);
+        final ServiceIdentifier<?> existingService = runningServices.get(containerName);
+        if (!Objects.equals(service, existingService)) {
+            LOGGER.warn("stopService failed: container {} is not running service {}, it is running service {}.",
+                    containerName, service, existingService);
+            return false;
+        } else {
+            LOGGER.info("Stopped service {} in container {}", service, containerName);
+            runningServices.remove(containerName);
+            return true;
+        }
     }
 
-    @Override
-    public ImmutableMap<NodeIdentifier, ImmutableSet<ServiceIdentifier<?>>> getRunningServices() {
-        final ImmutableMap.Builder<NodeIdentifier, ImmutableSet<ServiceIdentifier<?>>> builder = ImmutableMap.builder();
-        runningServices.forEach((name, services) -> {
-            builder.put(name, ImmutableSet.copyOf(services));
+    private ImmutableMap<ContainerIdentifier, ServiceState> computeServiceState() {
+        final ImmutableMap.Builder<ContainerIdentifier, ServiceState> builder = ImmutableMap.builder();
+        runningServices.forEach((name, service) -> {
+            final ServiceState s = new ServiceState(service, ServiceState.Status.RUNNING);
+            builder.put(name, s);
         });
-        return builder.build();
+        final ImmutableMap<ContainerIdentifier, ServiceState> serviceState = builder.build();
+        return serviceState;
     }
 
     @Override
+    @Nonnull
     public ImmutableMap<NodeAttribute<?>, Double> getServerCapacity() {
         return serverCapacity;
+    }
+
+    @Override
+    @Nonnull
+    public ServiceReport getServiceReport() {
+        final ServiceReport report = new ServiceReport(node.getNodeIdentifier(), computeServiceState());
+        return report;
     }
 
 }
