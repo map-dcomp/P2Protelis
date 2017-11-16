@@ -1,6 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
@@ -49,6 +50,25 @@ public class ServiceReport implements Serializable {
     @Nonnull
     public ImmutableMap<ContainerIdentifier, ServiceState> getServiceState() {
         return serviceState;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (null == o) {
+            return false;
+        } else if (o == this) {
+            return true;
+        } else if (o.getClass().equals(getClass())) {
+            final ServiceReport other = (ServiceReport) o;
+            return getNodeName().equals(other.getNodeName()) && getServiceState().equals(other.getServiceState());
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getNodeName(), getServiceState());
     }
 
 }

@@ -1,6 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * The state of a service in a container.
@@ -67,6 +68,25 @@ public class ServiceState implements Serializable {
      */
     public Status getStatus() {
         return status;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (o == this) {
+            return true;
+        } else if (o == null) {
+            return false;
+        } else if (o.getClass().equals(this.getClass())) {
+            final ServiceState other = (ServiceState) o;
+            return getService().equals(other.getService()) && getStatus().equals(other.getStatus());
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getService(), getStatus());
     }
 
 }

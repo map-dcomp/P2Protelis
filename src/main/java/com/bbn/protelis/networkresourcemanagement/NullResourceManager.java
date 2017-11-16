@@ -28,24 +28,12 @@ public class NullResourceManager implements ResourceManager {
     }
 
     @Override
-    public ContainerIdentifier reserveContainer(@Nonnull final ImmutableMap<String, String> arguments) {
+    public ContainerIdentifier startService(@Nonnull final ServiceIdentifier<?> service) {
         return null;
     }
 
     @Override
-    public boolean releaseContainer(@Nonnull final ContainerIdentifier name) {
-        return true;
-    }
-
-    @Override
-    public boolean startService(@Nonnull final ContainerIdentifier containerName,
-            @Nonnull final ServiceIdentifier<?> service) {
-        return true;
-    }
-
-    @Override
-    public boolean stopService(@Nonnull final ContainerIdentifier containerName,
-            @Nonnull final ServiceIdentifier<?> service) {
+    public boolean stopService(@Nonnull final ContainerIdentifier containerName) {
         return true;
     }
 

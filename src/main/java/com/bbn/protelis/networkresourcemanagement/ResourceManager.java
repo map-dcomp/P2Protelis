@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableMap;
  * This is the interface the {@link NetworkServer} is using to collect
  * information from. This interface is used to retrieve {@link ResourceReport}s
  * and to make changes to the {@link NetworkServer}.
+ * 
+ * This interface assumes that each containern runs only a single service.
  */
 public interface ResourceManager {
 
@@ -26,48 +28,28 @@ public interface ResourceManager {
     ServiceReport getServiceReport();
 
     /**
-     * Reserve a container.
-     * 
-     * @param arguments
-     *            key/value pairs of arguments to pass to the container
-     * @return the container that has been reserved, will be null if the
-     *         container could not be reserved
-     */
-    ContainerIdentifier reserveContainer(@Nonnull ImmutableMap<String, String> arguments);
-
-    /**
-     * Release the container reserved with
-     * {@link #reserveContainer(ImmutableMap)}.
-     * 
-     * @param name
-     *            the value returned from reserving the container
-     * @return if the release was successfully
-     */
-    boolean releaseContainer(@Nonnull ContainerIdentifier name);
-
-    /**
      * Start a service in a container.
      * 
-     * @param containerName
-     *            the identifier for the container used with
-     *            {@link #reserveContainer(ImmutableMap)}
      * @param service
      *            the service to start
-     * @return if the service was started, will fail if the service is already
-     *         running in this container
+     * @return the identifier of the container that the service was started in,
+     *         null if there was an error finding a container or starting the
+     *         service
      */
-    boolean startService(@Nonnull ContainerIdentifier containerName, @Nonnull ServiceIdentifier<?> service);
+    // at some point this will have container parameters
+    ContainerIdentifier startService(@Nonnull ServiceIdentifier<?> service);
 
     /**
+     * Stop the service running in the specified container. This method will
+     * return immediately after telling the service to stop. Once the service
+     * has shutdown the container will be cleaned up by the implementation.
+     * 
      * @param containerName
      *            the identifier for the container used with
-     *            {@link #reserveContainer(ImmutableMap)}
-     * @param service
-     *            the service to stop
-     * @return if the service was stopped, will fail if the service is not
-     *         running in this container
+     *            {@link #startService(ServiceIdentifier)}
+     * @return if the service was able to be notified to stop
      */
-    boolean stopService(@Nonnull ContainerIdentifier containerName, @Nonnull ServiceIdentifier<?> service);
+    boolean stopService(@Nonnull ContainerIdentifier containerName);
 
     /**
      * The capacity of the server.
