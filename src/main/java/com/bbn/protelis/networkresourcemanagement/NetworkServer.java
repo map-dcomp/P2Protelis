@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nonnull;
 
 import org.protelis.lang.datatype.DeviceUID;
+import org.protelis.lang.datatype.Tuple;
 import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
 import org.protelis.vm.impl.AbstractExecutionContext;
@@ -17,12 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * A server in the network.
  */
 public class NetworkServer extends AbstractExecutionContext
-        implements NetworkStateProvider, RegionNodeStateProvider, NetworkNode {
+        implements NetworkStateProvider, RegionNodeStateProvider, RegionServiceStateProvider, NetworkNode {
 
     /**
      * Used when there is no region name.
@@ -452,7 +454,7 @@ public class NetworkServer extends AbstractExecutionContext
     public void setResourceManager(@Nonnull final ResourceManager resourceManager) {
         this.resourceManager = resourceManager;
     }
-    
+
     /**
      * 
      * @return the resource manager for this node
@@ -474,6 +476,16 @@ public class NetworkServer extends AbstractExecutionContext
     @Nonnull
     public ResourceReport getResourceReport(@Nonnull final ResourceReport.EstimationWindow demandWindow) {
         return resourceManager.getCurrentResourceReport(demandWindow);
+    }
+
+    /**
+     * Get the latest service report.
+     * 
+     * @return the lastest service report
+     */
+    @Nonnull
+    public ServiceReport getServiceReport() {
+        return resourceManager.getServiceReport();
     }
 
     private RegionIdentifier region;
@@ -544,9 +556,73 @@ public class NetworkServer extends AbstractExecutionContext
     }
     // ---- end RegionNodeStateProvider
 
+    // --- RegionServiceStateProvider
+    private RegionServiceState regionServiceState;
+
+    @Override
+    @Nonnull
+    public RegionServiceState getRegionServiceState() {
+        return regionServiceState;
+    }
+    // --- end RegionServiceStateProvider
+
     @Override
     public String toString() {
         return getName();
+    }
+
+    /**
+     * This method is used by AP to call
+     * {@link RegionNodeState#setResourceReports(com.google.common.collect.ImmutableSet)}.
+     * 
+     * @param tuple
+     *            the list of reports as a tuple
+     */
+    public void setRegionResourceReports(final Tuple tuple) {
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Setting region resource reports. Region: " + getRegionIdentifier());
+        }
+
+        final ImmutableSet.Builder<ResourceReport> builder = ImmutableSet.builder();
+        for (final Object entry : tuple) {
+            final ResourceReport report = (ResourceReport) entry;
+            builder.add(report);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Adding report for " + report.getNodeName());
+            }
+        }
+        getRegionNodeState().setResourceReports(builder.build());
+
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Finished setting region resource reports.");
+        }
+    }
+
+    /**
+     * This method is used by AP to call
+     * {@link RegionServiceState#setServiceReports(ImmutableSet)}.
+     * 
+     * @param tuple
+     *            the list of reports as a tuple
+     */
+    public void setRegionServiceReports(final Tuple tuple) {
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Setting region service reports. Region: " + getRegionIdentifier());
+        }
+
+        final ImmutableSet.Builder<ServiceReport> builder = ImmutableSet.builder();
+        for (final Object entry : tuple) {
+            final ServiceReport report = (ServiceReport) entry;
+            builder.add(report);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Adding report for " + report.getNodeName());
+            }
+        }
+        getRegionServiceState().setServiceReports(builder.build());
+
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Finished setting region service reports.");
+        }
     }
 
 }
