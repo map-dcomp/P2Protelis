@@ -163,6 +163,7 @@ public class NetworkServer extends AbstractExecutionContext
         this.region = NULL_REGION;
         this.networkState = new NetworkState(this.region);
         this.regionNodeState = new RegionNodeState(this.region);
+        this.regionServiceState = new RegionServiceState(this.region);
         this.resourceManager = new NullResourceManager(this.uid);
 
         // Finish making the new device and add it to our collection
