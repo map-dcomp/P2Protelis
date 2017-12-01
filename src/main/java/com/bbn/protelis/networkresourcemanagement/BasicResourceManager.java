@@ -47,8 +47,8 @@ public class BasicResourceManager implements ResourceManager {
      */
     public static final String NETWORK_LOAD_KEY = "networkLoad";
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad;
-    private final ImmutableMap<NodeAttribute<?>, Double> serverCapacity;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> computeLoad;
+    private final ImmutableMap<NodeAttribute<?>, Double> computeCapacity;
     private final ImmutableMap<ServiceIdentifier<?>, Double> serverAvgProcTime;
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
 
@@ -71,13 +71,13 @@ public class BasicResourceManager implements ResourceManager {
             @SuppressWarnings("unchecked")
             final Map<String, Object> resourceReportValues = (Map<String, Object>) resourceReportValuesRaw;
 
-            this.serverLoad = parseClientDemand(resourceReportValues);
-            this.serverCapacity = parseServerCapacity(resourceReportValues);
+            this.computeLoad = parseClientDemand(resourceReportValues);
+            this.computeCapacity = parseServerCapacity(resourceReportValues);
             this.serverAvgProcTime = parseServerAverageProcessingTime(resourceReportValues);
             this.networkLoad = parseNeighborLinkDemand(resourceReportValues);
         } else {
-            this.serverLoad = ImmutableMap.of();
-            this.serverCapacity = ImmutableMap.of();
+            this.computeLoad = ImmutableMap.of();
+            this.computeCapacity = ImmutableMap.of();
             this.serverAvgProcTime = ImmutableMap.of();
             this.networkLoad = ImmutableMap.of();
         }
@@ -253,7 +253,7 @@ public class BasicResourceManager implements ResourceManager {
         // final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>,
         // Double>> linkDemand = computeNeighborLinkDemand();
         final ResourceReport report = new ResourceReport(new StringNodeIdentifier(node.getName()),
-                System.currentTimeMillis(), demandWindow, this.serverCapacity,
+                System.currentTimeMillis(), demandWindow, this.computeCapacity,
                 node.getNeighborLinkCapacity(LinkAttributeEnum.DATARATE), ImmutableMap.of());
         return report;
     }
@@ -322,8 +322,8 @@ public class BasicResourceManager implements ResourceManager {
 
     @Override
     @Nonnull
-    public ImmutableMap<NodeAttribute<?>, Double> getServerCapacity() {
-        return serverCapacity;
+    public ImmutableMap<NodeAttribute<?>, Double> getComputeCapacity() {
+        return computeCapacity;
     }
 
     @Override

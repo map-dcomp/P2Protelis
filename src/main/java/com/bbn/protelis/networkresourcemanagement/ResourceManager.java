@@ -59,6 +59,6 @@ public interface ResourceManager {
      * @return attribute -> value
      */
     @Nonnull
-    ImmutableMap<NodeAttribute<?>, Double> getServerCapacity();
+    ImmutableMap<NodeAttribute<?>, Double> getComputeCapacity();
 
 }

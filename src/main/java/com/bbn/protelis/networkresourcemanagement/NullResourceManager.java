@@ -40,7 +40,7 @@ public class NullResourceManager implements ResourceManager {
 
     @Override
     @Nonnull
-    public ImmutableMap<NodeAttribute<?>, Double> getServerCapacity() {
+    public ImmutableMap<NodeAttribute<?>, Double> getComputeCapacity() {
         return ImmutableMap.of();
     }
 
