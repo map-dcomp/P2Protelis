@@ -51,8 +51,9 @@ public class ResourceSummaryTest {
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = ImmutableMap
                 .of(nodeName, ImmutableMap.of(linkAttribute, networkDemandValue));
 
+        // FIXME needs container resource reports
         final ResourceReport report = new ResourceReport(nodeName, timestamp, estimationWindow, serverCapacity,
-                serverLoad, serverDemand, serverAverageProcessingTime, networkCapacity, networkLoad, networkDemand);
+                networkCapacity, ImmutableMap.of());
 
         final Field nodeToRegion = new FieldMapImpl(1, 1);
         nodeToRegion.addSample(nodeName, region);

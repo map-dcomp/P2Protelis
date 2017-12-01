@@ -35,9 +35,11 @@ public interface ResourceManager {
      * @return the identifier of the container that the service was started in,
      *         null if there was an error finding a container or starting the
      *         service
+     * @param parameters
+     *            the parameters for starting the service container
+     * @see ContainerResourceReport
      */
-    // at some point this will have container parameters
-    ContainerIdentifier startService(@Nonnull ServiceIdentifier<?> service);
+    ContainerIdentifier startService(@Nonnull ServiceIdentifier<?> service, @Nonnull ContainerParameters parameters);
 
     /**
      * Stop the service running in the specified container. This method will

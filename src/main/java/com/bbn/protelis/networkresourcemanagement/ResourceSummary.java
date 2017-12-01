@@ -166,7 +166,7 @@ public class ResourceSummary implements Serializable {
      * source region of the load -> measured attribute -> value.
      * 
      * @return the summary information. Not null.
-     * @see ResourceReport#getServerLoad()
+     * @see ResourceReport#getComputeLoad()
      */
     @Nonnull
     public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
@@ -181,7 +181,7 @@ public class ResourceSummary implements Serializable {
      * the demand -> attribute -> value.
      * 
      * @return the demand information. Not null.
-     * @see ResourceReport#getServerDemand()
+     * @see ResourceReport#getComputeDemand()
      */
     @Nonnull
     public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
@@ -195,7 +195,7 @@ public class ResourceSummary implements Serializable {
      * Server capacity for this region.
      * 
      * @return the summary information. Not null.
-     * @see ResourceReport#getServerCapacity()
+     * @see ResourceReport#getComputeCapacity()
      */
     @Nonnull
     public ImmutableMap<NodeAttribute<?>, Double> getServerCapacity() {
@@ -346,13 +346,13 @@ public class ResourceSummary implements Serializable {
     public static ResourceSummary convertToSummary(@Nonnull final ResourceReport report,
             @Nonnull final Field nodeToRegion) {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = report
-                .getServerLoad();
-        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = report.getServerCapacity();
+                .getComputeLoad();
+        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = report.getNodeComputeCapacity();
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = report
-                .getServerDemand();
+                .getComputeDemand();
 
         // sum of single node is the value
-        final ImmutableMap<ServiceIdentifier<?>, Double> serverAvgProcTimeSum = report.getServerAverageProcessingTime();
+        final ImmutableMap<ServiceIdentifier<?>, Double> serverAvgProcTimeSum = report.getAverageProcessingTime();
         final ImmutableMap.Builder<ServiceIdentifier<?>, Integer> serverAvgProcTimeCount = ImmutableMap.builder();
         serverAvgProcTimeSum.forEach((service, sum) -> {
             serverAvgProcTimeCount.put(service, 1);

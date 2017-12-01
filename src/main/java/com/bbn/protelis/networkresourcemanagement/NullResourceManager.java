@@ -28,7 +28,8 @@ public class NullResourceManager implements ResourceManager {
     }
 
     @Override
-    public ContainerIdentifier startService(@Nonnull final ServiceIdentifier<?> service) {
+    public ContainerIdentifier startService(@Nonnull final ServiceIdentifier<?> service,
+            @Nonnull final ContainerParameters parmeters) {
         return null;
     }
 
