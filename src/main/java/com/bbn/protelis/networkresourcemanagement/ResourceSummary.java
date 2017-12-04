@@ -358,14 +358,16 @@ public class ResourceSummary implements Serializable {
             serverAvgProcTimeCount.put(service, 1);
         });
 
+        // use node network capacity as the summaries don't care about the
+        // containers
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = convertNodeToRegion(
-                nodeToRegion, report.getNetworkCapacity());
+                nodeToRegion, report.getNodeNetworkCapacity());
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = convertNodeToRegion(
-                nodeToRegion, report.getNetworkLoad());
+                nodeToRegion, report.getAggregateNetworkLoad());
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = convertNodeToRegion(
-                nodeToRegion, report.getNetworkDemand());
+                nodeToRegion, report.getAggregateNetworkDemand());
 
         final RegionIdentifier reportRegion = (RegionIdentifier) nodeToRegion.getSample(report.getNodeName());
 

@@ -354,7 +354,7 @@ public class ResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkCapacity() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getAllocatedNetworkCapacity() {
         if (null == allocatedNetworkCapacity) {
             final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> rrCapacity = new HashMap<>();
             containerReports.forEach((container, report) -> {
@@ -375,17 +375,17 @@ public class ResourceReport implements Serializable {
         return allocatedNetworkCapacity;
     }
 
-    private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = null;
+    private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> allContainerNetworkLoad = null;
 
     /**
-     * Network load to neighboring nodes. See {@link #getNetworkCapacity()} for
-     * details on the map definition.
+     * Network load to neighboring nodes summed across the containers. See
+     * {@link #getAllocatedNetworkCapacity()} for details on the map definition.
      * 
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkLoad() {
-        if (null == networkLoad) {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getAllContainerNetworkLoad() {
+        if (null == allContainerNetworkLoad) {
             // compute it
             final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> nload = new HashMap<>();
             containerReports.forEach((container, report) -> {
@@ -403,22 +403,22 @@ public class ResourceReport implements Serializable {
                 });
             });
 
-            networkLoad = ImmutableUtils.makeImmutableMap2(nload);
+            allContainerNetworkLoad = ImmutableUtils.makeImmutableMap2(nload);
         }
-        return networkLoad;
+        return allContainerNetworkLoad;
     }
 
-    private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = null;
+    private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> allContainerNetworkDemand = null;
 
     /**
-     * Network demand to neighboring nodes. See {@link #getNetworkCapacity()}
-     * for details on the map definition.
+     * Network demand to neighboring nodes summed across the containers. See
+     * {@link #getAllocatedNetworkCapacity()} for details on the map definition.
      * 
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkDemand() {
-        if (null == networkDemand) {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getAllContainerNetworkDemand() {
+        if (null == allContainerNetworkDemand) {
             // compute it
             final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> nload = new HashMap<>();
             containerReports.forEach((container, report) -> {
@@ -436,9 +436,79 @@ public class ResourceReport implements Serializable {
                 });
             });
 
-            networkDemand = ImmutableUtils.makeImmutableMap2(nload);
+            allContainerNetworkDemand = ImmutableUtils.makeImmutableMap2(nload);
         }
-        return networkDemand;
+        return allContainerNetworkDemand;
+    }
+
+    private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> aggregateNetworkLoad = null;
+
+    /**
+     * Sum of {@link #getNodeNetworkLoad()} and
+     * {@link #getAllContainerNetworkLoad()}.
+     * 
+     * @return the summed value
+     */
+    @Nonnull
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getAggregateNetworkLoad() {
+        if (null == aggregateNetworkLoad) {
+            // compute it
+            final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> nload = new HashMap<>();
+
+            // start with the node load
+            getNodeNetworkLoad().forEach((srcNode, load) -> {
+                final Map<LinkAttribute<?>, Double> reportLoad = nload.getOrDefault(srcNode, new HashMap<>());
+                load.forEach((attr, value) -> {
+                    reportLoad.merge(attr, value, Double::sum);
+                });
+            });
+
+            // add in the container load
+            getAllContainerNetworkLoad().forEach((srcNode, load) -> {
+                final Map<LinkAttribute<?>, Double> reportLoad = nload.getOrDefault(srcNode, new HashMap<>());
+                load.forEach((attr, value) -> {
+                    reportLoad.merge(attr, value, Double::sum);
+                });
+            });
+
+            aggregateNetworkLoad = ImmutableUtils.makeImmutableMap2(nload);
+        }
+        return aggregateNetworkLoad;
+    }
+
+    private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> aggregateNetworkDemand = null;
+
+    /**
+     * Sum of {@link #getNodeNetworkDemand()} and
+     * {@link #getAllContainerNetworkDemand()}.
+     * 
+     * @return the summed value
+     */
+    @Nonnull
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getAggregateNetworkDemand() {
+        if (null == aggregateNetworkDemand) {
+            // compute it
+            final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> nload = new HashMap<>();
+
+            // start with the node demand
+            getNodeNetworkDemand().forEach((srcNode, load) -> {
+                final Map<LinkAttribute<?>, Double> reportLoad = nload.getOrDefault(srcNode, new HashMap<>());
+                load.forEach((attr, value) -> {
+                    reportLoad.merge(attr, value, Double::sum);
+                });
+            });
+
+            // add in the container demand
+            getAllContainerNetworkDemand().forEach((srcNode, load) -> {
+                final Map<LinkAttribute<?>, Double> reportLoad = nload.getOrDefault(srcNode, new HashMap<>());
+                load.forEach((attr, value) -> {
+                    reportLoad.merge(attr, value, Double::sum);
+                });
+            });
+
+            aggregateNetworkDemand = ImmutableUtils.makeImmutableMap2(nload);
+        }
+        return aggregateNetworkDemand;
     }
 
     /**
