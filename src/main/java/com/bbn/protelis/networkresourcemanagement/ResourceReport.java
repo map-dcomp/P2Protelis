@@ -76,9 +76,13 @@ public class ResourceReport implements Serializable {
      * @param nodeNetworkCapacity
      *            see {@link #getNodeNetworkCapacity()}
      * @param demandEstimationWindow
-     *            see {#link {@link #getDemandEstimationWindow()}
+     *            see {@link #getDemandEstimationWindow()}
      * @param containerReports
      *            the reports for the individual containers on this node
+     * @param nodeNetworkLoad
+     *            see {@link #getNodeNetworkLoad()}
+     * @param nodeNetworkDemand
+     *            see {@link #getNodeNetworkDemand()}
      * @throws IllegalArgumentException
      *             if any of the container reports don't have the same demand
      *             estimation window as specified in this constructor
@@ -88,12 +92,16 @@ public class ResourceReport implements Serializable {
             @Nonnull final EstimationWindow demandEstimationWindow,
             @Nonnull final ImmutableMap<NodeAttribute<?>, Double> nodeComputeCapacity,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkCapacity,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkLoad,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkDemand,
             @Nonnull final ImmutableMap<ContainerIdentifier, ContainerResourceReport> containerReports) {
         this.nodeName = nodeName;
         this.timestamp = timestamp;
         this.demandEstimationWindow = demandEstimationWindow;
         this.nodeComputeCapacity = nodeComputeCapacity;
         this.nodeNetworkCapacity = nodeNetworkCapacity;
+        this.nodeNetworkLoad = nodeNetworkLoad;
+        this.nodeNetworkDemand = nodeNetworkDemand;
         this.containerReports = containerReports;
 
         // verify everything has the same demand estimation window
@@ -160,6 +168,31 @@ public class ResourceReport implements Serializable {
     @Nonnull
     public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNodeNetworkCapacity() {
         return nodeNetworkCapacity;
+    }
+
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkLoad;
+
+    /**
+     * The network load on a node is the network traffic going through the node,
+     * but not stopping at a container on the node.
+     * 
+     * @return the network load passing through this node
+     */
+    @Nonnull
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNodeNetworkLoad() {
+        return nodeNetworkLoad;
+    }
+
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkDemand;
+
+    /**
+     * 
+     * @return the network demand for traffic passing through this node
+     * @see #getNodeNetworkLoad()
+     */
+    @Nonnull
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNodeNetworkDemand() {
+        return nodeNetworkDemand;
     }
 
     private final EstimationWindow demandEstimationWindow;
@@ -424,6 +457,8 @@ public class ResourceReport implements Serializable {
         return new ResourceReport(nodeName, NULL_TIMESTAMP, demandWindow, //
                 ImmutableMap.of(), // nodeServerCapacity
                 ImmutableMap.of(), // nodeNetworkCapacity
+                ImmutableMap.of(), // nodeNetworkLoad
+                ImmutableMap.of(), // nodeNetworkDemand
                 ImmutableMap.of()); // container reports
     }
 

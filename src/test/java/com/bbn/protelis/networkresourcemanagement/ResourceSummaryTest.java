@@ -53,7 +53,7 @@ public class ResourceSummaryTest {
 
         // FIXME needs container resource reports
         final ResourceReport report = new ResourceReport(nodeName, timestamp, estimationWindow, serverCapacity,
-                networkCapacity, ImmutableMap.of());
+                networkCapacity, ImmutableMap.of(), ImmutableMap.of(), ImmutableMap.of());
 
         final Field nodeToRegion = new FieldMapImpl(1, 1);
         nodeToRegion.addSample(nodeName, region);
