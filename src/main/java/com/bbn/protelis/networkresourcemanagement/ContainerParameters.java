@@ -26,7 +26,7 @@ public final class ContainerParameters implements Serializable {
      *            see {@link #getNetworkCapacity()}
      */
     public ContainerParameters(final @Nonnull ImmutableMap<NodeAttribute<?>, Double> computeCapacity,
-            final @Nonnull ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity) {
+            final @Nonnull ImmutableMap<LinkAttribute<?>, Double> networkCapacity) {
         this.computeCapacity = computeCapacity;
         this.networkCapacity = networkCapacity;
     }
@@ -42,14 +42,15 @@ public final class ContainerParameters implements Serializable {
         return computeCapacity;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity;
+    private final ImmutableMap<LinkAttribute<?>, Double> networkCapacity;
 
     /**
      * 
-     * @return the network capacity for the container
+     * @return the network capacity for the container. The values are applied to
+     *         all directly connected nodes.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkCapacity() {
+    public ImmutableMap<LinkAttribute<?>, Double> getNetworkCapacity() {
         return networkCapacity;
     }
 }
