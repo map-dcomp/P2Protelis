@@ -364,10 +364,10 @@ public class ResourceSummary implements Serializable {
                 nodeToRegion, report.getNodeNetworkCapacity());
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = convertNodeToRegion(
-                nodeToRegion, report.getAggregateNetworkLoad());
+                nodeToRegion, report.getAllNetworkLoad());
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = convertNodeToRegion(
-                nodeToRegion, report.getAggregateNetworkDemand());
+                nodeToRegion, report.getAllNetworkDemand());
 
         final RegionIdentifier reportRegion = (RegionIdentifier) nodeToRegion.getSample(report.getNodeName());
 
