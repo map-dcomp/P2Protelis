@@ -46,10 +46,10 @@ public class ResourceSummaryTest {
         final double networkDemandValue = 13;
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap
                 .of(nodeName, ImmutableMap.of(linkAttribute, networkCapacityValue));
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = ImmutableMap
-                .of(nodeName, ImmutableMap.of(linkAttribute, networkLoadValue));
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = ImmutableMap
-                .of(nodeName, ImmutableMap.of(linkAttribute, networkDemandValue));
+//        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = ImmutableMap
+//                .of(nodeName, ImmutableMap.of(linkAttribute, networkLoadValue));
+//        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = ImmutableMap
+//                .of(nodeName, ImmutableMap.of(linkAttribute, networkDemandValue));
 
         // FIXME needs container resource reports
         final ResourceReport report = new ResourceReport(nodeName, timestamp, estimationWindow, serverCapacity,
