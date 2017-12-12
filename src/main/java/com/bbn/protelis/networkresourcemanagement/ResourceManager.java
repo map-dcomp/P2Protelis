@@ -1,16 +1,15 @@
 package com.bbn.protelis.networkresourcemanagement;
 
-import java.util.Map;
-
 import javax.annotation.Nonnull;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
  * This is the interface the {@link NetworkServer} is using to collect
  * information from. This interface is used to retrieve {@link ResourceReport}s
  * and to make changes to the {@link NetworkServer}.
+ * 
+ * This interface assumes that each containern runs only a single service.
  */
 public interface ResourceManager {
 
@@ -23,55 +22,43 @@ public interface ResourceManager {
     ResourceReport getCurrentResourceReport(@Nonnull ResourceReport.EstimationWindow demandWindow);
 
     /**
-     * Reserve a container.
-     * 
-     * @param name
-     *            the name of the container to reserve.
-     * @param arguments
-     *            key/value pairs of arguments to pass to the container
-     * @return if the reserve was successful
+     * @return information about the services running on the node
      */
-    boolean reserveContainer(@Nonnull String name, @Nonnull Map<String, String> arguments);
+    @Nonnull
+    ServiceReport getServiceReport();
 
     /**
-     * Release the container reserved with
-     * {@link #reserveContainer(String, Map)}.
+     * Start a service in a container.
      * 
-     * @param name
-     *            the name used to reserve the container
-     * @return if the release was successfully
+     * @param service
+     *            the service to start
+     * @return the identifier of the container that the service was started in,
+     *         null if there was an error finding a container or starting the
+     *         service
+     * @param parameters
+     *            the parameters for starting the service container
+     * @see ContainerResourceReport
      */
-    boolean releaseContainer(@Nonnull String name);
+    ContainerIdentifier startService(@Nonnull ServiceIdentifier<?> service, @Nonnull ContainerParameters parameters);
 
     /**
-     * Start a task in a container.
+     * Stop the service running in the specified container. This method will
+     * return immediately after telling the service to stop. Once the service
+     * has shutdown the container will be cleaned up by the implementation.
      * 
      * @param containerName
-     *            the container to start in, used with
-     *            {@link #reserveContainer(String, Map)}
-     * @param taskName
-     *            the name of the task to start
-     * @param arguments
-     *            the arguments for the task
-     * @param environment
-     *            the environment for the task
-     * @return if the start was successfull
+     *            the identifier for the container used with
+     *            {@link #startService(ServiceIdentifier)}
+     * @return if the service was able to be notified to stop
      */
-    boolean startTask(@Nonnull String containerName,
-            @Nonnull String taskName,
-            @Nonnull ImmutableList<String> arguments,
-            @Nonnull ImmutableMap<String, String> environment);
+    boolean stopService(@Nonnull ContainerIdentifier containerName);
 
     /**
-     * Stop a task.
+     * The capacity of the server.
      * 
-     * @param containerName
-     *            the container that the task is running in
-     * @param taskName
-     *            the name of the task from
-     *            {@link #startTask(String, String, ImmutableList, ImmutableMap)}
-     * @return if the stop was successfull
+     * @return attribute -> value
      */
-    boolean stopTask(@Nonnull String containerName, @Nonnull String taskName);
+    @Nonnull
+    ImmutableMap<NodeAttribute<?>, Double> getComputeCapacity();
 
 }

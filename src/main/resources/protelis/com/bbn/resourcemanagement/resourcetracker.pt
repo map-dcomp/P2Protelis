@@ -77,7 +77,7 @@ let s = multiRegion(rgn,(n) -> { rgn == n },countNodes,[]);
 //multiRegion(rgn,(n) -> { rgn == n },() -> { [rgn, self.getDeviceUID()] },[]);
 
 let report = self.getResourceReport(getShortEstimationWindow()); 
-let d = report.getServerLoad();
-let c = report.getServerCapacity();
+let d = report.getComputeLoad();
+let c = report.getNodeComputeCapacity();
 
 [d,c,s];

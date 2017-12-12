@@ -1,10 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
-import java.util.Map;
-
 import javax.annotation.Nonnull;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -31,26 +28,26 @@ public class NullResourceManager implements ResourceManager {
     }
 
     @Override
-    public boolean reserveContainer(final String name, final Map<String, String> arguments) {
-        return false;
+    public ContainerIdentifier startService(@Nonnull final ServiceIdentifier<?> service,
+            @Nonnull final ContainerParameters parmeters) {
+        return null;
     }
 
     @Override
-    public boolean releaseContainer(final String name) {
-        return false;
+    public boolean stopService(@Nonnull final ContainerIdentifier containerName) {
+        return true;
     }
 
     @Override
-    public boolean startTask(final String containerName,
-            final String taskName,
-            final ImmutableList<String> arguments,
-            final ImmutableMap<String, String> environment) {
-        return false;
+    @Nonnull
+    public ImmutableMap<NodeAttribute<?>, Double> getComputeCapacity() {
+        return ImmutableMap.of();
     }
 
     @Override
-    public boolean stopTask(final String containerName, final String taskName) {
-        return false;
+    @Nonnull
+    public ServiceReport getServiceReport() {
+        return new ServiceReport(nodeId, ImmutableMap.of());
     }
 
 }

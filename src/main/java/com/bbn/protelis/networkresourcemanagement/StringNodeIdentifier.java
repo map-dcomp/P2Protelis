@@ -7,7 +7,7 @@ import com.bbn.protelis.utils.StringUID;
 /**
  * Identifier for a node that just uses a string name.
  */
-public class StringNodeIdentifier extends StringUID implements NodeIdentifier {
+public class StringNodeIdentifier extends StringUID implements ContainerIdentifier {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -18,7 +18,7 @@ public class StringNodeIdentifier extends StringUID implements NodeIdentifier {
     public StringNodeIdentifier(@Nonnull final String name) {
         super(name);
     }
-    
+
     @Override
     public String getName() {
         return this.toString();

@@ -8,7 +8,6 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -48,8 +47,8 @@ public class BasicResourceManager implements ResourceManager {
      */
     public static final String NETWORK_LOAD_KEY = "networkLoad";
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad;
-    private final ImmutableMap<NodeAttribute<?>, Double> serverCapacity;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> computeLoad;
+    private final ImmutableMap<NodeAttribute<?>, Double> computeCapacity;
     private final ImmutableMap<ServiceIdentifier<?>, Double> serverAvgProcTime;
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
 
@@ -72,13 +71,13 @@ public class BasicResourceManager implements ResourceManager {
             @SuppressWarnings("unchecked")
             final Map<String, Object> resourceReportValues = (Map<String, Object>) resourceReportValuesRaw;
 
-            this.serverLoad = parseClientDemand(resourceReportValues);
-            this.serverCapacity = parseServerCapacity(resourceReportValues);
+            this.computeLoad = parseClientDemand(resourceReportValues);
+            this.computeCapacity = parseServerCapacity(resourceReportValues);
             this.serverAvgProcTime = parseServerAverageProcessingTime(resourceReportValues);
             this.networkLoad = parseNeighborLinkDemand(resourceReportValues);
         } else {
-            this.serverLoad = ImmutableMap.of();
-            this.serverCapacity = ImmutableMap.of();
+            this.computeLoad = ImmutableMap.of();
+            this.computeCapacity = ImmutableMap.of();
             this.serverAvgProcTime = ImmutableMap.of();
             this.networkLoad = ImmutableMap.of();
         }
@@ -247,12 +246,16 @@ public class BasicResourceManager implements ResourceManager {
 
     @Override
     public ResourceReport getCurrentResourceReport(@Nonnull final ResourceReport.EstimationWindow demandWindow) {
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> linkCapacity = node
-                .getNeighborLinkCapacity(LinkAttributeEnum.DATARATE);
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> linkDemand = computeNeighborLinkDemand();
+        // final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>,
+        // Double>> linkCapacity = node
+        // .getNeighborLinkCapacity(LinkAttributeEnum.DATARATE);
+        // FIXME hacked to have empty list of container resource reports
+        // final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>,
+        // Double>> linkDemand = computeNeighborLinkDemand();
         final ResourceReport report = new ResourceReport(new StringNodeIdentifier(node.getName()),
-                System.currentTimeMillis(), demandWindow, this.serverCapacity, this.serverLoad, this.serverLoad,
-                this.serverAvgProcTime, linkCapacity, linkDemand, linkDemand);
+                System.currentTimeMillis(), demandWindow, this.computeCapacity,
+                node.getNeighborLinkCapacity(LinkAttributeEnum.DATARATE), ImmutableMap.of(), ImmutableMap.of(),
+                ImmutableMap.of());
         return report;
     }
 
@@ -270,31 +273,65 @@ public class BasicResourceManager implements ResourceManager {
         return builder.build();
     }
 
+    private int containerCounter = 0;
+
+    private synchronized ContainerIdentifier getNextContainerName() {
+        final ContainerIdentifier id = new StringNodeIdentifier("Container-" + containerCounter);
+        ++containerCounter;
+        return id;
+    }
+
+    private final Map<ContainerIdentifier, ServiceIdentifier<?>> runningServices = new HashMap<>();
+
     @Override
-    public boolean reserveContainer(final String name, final Map<String, String> arguments) {
-        // TODO Auto-generated method stub
-        return false;
+    public ContainerIdentifier startService(@Nonnull final ServiceIdentifier<?> service,
+            @Nonnull final ContainerParameters parameters) {
+        final ContainerIdentifier containerName = getNextContainerName();
+
+        if (runningServices.containsKey(containerName)) {
+            LOGGER.warn("startService failed: container {} is already running a service", containerName);
+            return null;
+        } else {
+            LOGGER.info("Started service {} in container {}", service, containerName);
+            runningServices.put(containerName, service);
+            return containerName;
+        }
     }
 
     @Override
-    public boolean releaseContainer(final String name) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean stopService(@Nonnull final ContainerIdentifier containerName) {
+        final ServiceIdentifier<?> existingService = runningServices.get(containerName);
+        if (null == existingService) {
+            LOGGER.warn("stopService failed: container {} is not running a service.", containerName);
+            return false;
+        } else {
+            LOGGER.info("Stopped service {} in container {}", existingService, containerName);
+            runningServices.remove(containerName);
+            return true;
+        }
+    }
+
+    private ImmutableMap<ContainerIdentifier, ServiceState> computeServiceState() {
+        final ImmutableMap.Builder<ContainerIdentifier, ServiceState> builder = ImmutableMap.builder();
+        runningServices.forEach((name, service) -> {
+            final ServiceState s = new ServiceState(service, ServiceState.Status.RUNNING);
+            builder.put(name, s);
+        });
+        final ImmutableMap<ContainerIdentifier, ServiceState> serviceState = builder.build();
+        return serviceState;
     }
 
     @Override
-    public boolean startTask(final String containerName,
-            final String taskName,
-            final ImmutableList<String> arguments,
-            final ImmutableMap<String, String> environment) {
-        // TODO Auto-generated method stub
-        return false;
+    @Nonnull
+    public ImmutableMap<NodeAttribute<?>, Double> getComputeCapacity() {
+        return computeCapacity;
     }
 
     @Override
-    public boolean stopTask(final String containerName, final String taskName) {
-        // TODO Auto-generated method stub
-        return false;
+    @Nonnull
+    public ServiceReport getServiceReport() {
+        final ServiceReport report = new ServiceReport(node.getNodeIdentifier(), computeServiceState());
+        return report;
     }
 
 }

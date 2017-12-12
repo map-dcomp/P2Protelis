@@ -20,7 +20,7 @@ plugins {
 
 
 group = 'com.bbn'
-version = '0.21.2'
+version = '0.22.0'
 
 description = """Protelis Testbed"""
 
@@ -70,6 +70,10 @@ checkstyle {
     config = resources.text.fromFile('style.xml', 'UTF-8')
     showViolations = true
     ignoreFailures = false
+}
+
+test {
+    testLogging.showStandardStreams = true
 }
 
 findbugs {
