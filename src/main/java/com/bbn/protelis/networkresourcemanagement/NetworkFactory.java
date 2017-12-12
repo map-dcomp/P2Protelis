@@ -44,7 +44,7 @@ public interface NetworkFactory<N extends NetworkServer, L extends NetworkLink, 
      * @param right
      *            the right node
      * @param bandwidth
-     *            the bandwidth for the link
+     *            the bandwidth for the link in mega bits per second
      * @return the link. Not null.
      */
     @Nonnull

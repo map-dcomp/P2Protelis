@@ -19,7 +19,7 @@
     },
     "networkLoad": {
       "*": {
-        "DATARATE": 1000
+        "DATARATE": 1
       }
     }
   }

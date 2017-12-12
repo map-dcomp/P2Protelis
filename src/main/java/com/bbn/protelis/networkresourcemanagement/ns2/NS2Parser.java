@@ -49,8 +49,7 @@ public final class NS2Parser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NS2Parser.class);
 
-    private static final long BYTES_IN_KILOBYTE = 1024;
-    private static final long BYTES_IN_MEGABYTE = BYTES_IN_KILOBYTE * 1024;
+    private static final double MEGABITS_IN_KILOBIT = 1 / 1000D;
 
     /**
      * Extra data key to specify if a client should be created or a node. If
@@ -188,9 +187,11 @@ public final class NS2Parser {
                                     final String bandwidthUnits = bandwidthMatch.group(2);
                                     final double bandwidthMultiplier;
                                     if ("mb".equalsIgnoreCase(bandwidthUnits)) {
-                                        bandwidthMultiplier = BYTES_IN_MEGABYTE;
+                                        // megabits per second
+                                        bandwidthMultiplier = 1;
                                     } else if ("kb".equalsIgnoreCase(bandwidthUnits)) {
-                                        bandwidthMultiplier = BYTES_IN_KILOBYTE;
+                                        // kilobits per second
+                                        bandwidthMultiplier = MEGABITS_IN_KILOBIT;
                                     } else {
                                         throw new NS2FormatException("Unknown bandwidth units: " + bandwidthUnits);
                                     }

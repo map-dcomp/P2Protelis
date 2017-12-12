@@ -47,8 +47,8 @@ public interface NetworkNode {
      * @param v
      *            the UID of the neighbor node
      * @param bandwidth
-     *            capacity to the neighbor in bytes per second. Infinity can be
-     *            used for unknown.
+     *            capacity to the neighbor in mega bits per second. Infinity can
+     *            be used for unknown.
      */
     void addNeighbor(@Nonnull NodeIdentifier v, double bandwidth);
 

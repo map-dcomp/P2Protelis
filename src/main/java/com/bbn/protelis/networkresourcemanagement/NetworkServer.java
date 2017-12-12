@@ -109,7 +109,7 @@ public class NetworkServer extends AbstractExecutionContext
 
     /**
      * The neighboring nodes. Key is the neighbor, value is the datarate in
-     * bytes per second.
+     * megabits per second.
      */
     private final Map<NodeIdentifier, Double> neighbors = new HashMap<>();
 
@@ -133,7 +133,7 @@ public class NetworkServer extends AbstractExecutionContext
      * @param bandwidthLinkAttribute
      *            the {@link LinkAttribute} to associate with each bandwidth
      *            value
-     * @return link capacity to neighbors
+     * @return link capacity to neighbors in megabits per second
      * @see #addNeighbor(NodeIdentifier, double)
      * @see ResourceReport#getNetworkCapacity()
      */

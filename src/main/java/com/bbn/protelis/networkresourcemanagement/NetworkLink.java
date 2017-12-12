@@ -40,7 +40,7 @@ public class NetworkLink {
 
     /**
      * 
-     * @return bandwidth in bytes per second
+     * @return bandwidth in megabits per second
      */
     public double getBandwidth() {
         return this.bandwidth;
