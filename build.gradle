@@ -72,6 +72,10 @@ checkstyle {
     ignoreFailures = false
 }
 
+test {
+    testLogging.showStandardStreams = true
+}
+
 findbugs {
     ignoreFailures = true
 }
