@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import javax.annotation.Nonnull;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -25,8 +26,8 @@ public final class ContainerParameters implements Serializable {
      * @param networkCapacity
      *            see {@link #getNetworkCapacity()}
      */
-    public ContainerParameters(final @Nonnull ImmutableMap<NodeAttribute<?>, Double> computeCapacity,
-            final @Nonnull ImmutableMap<LinkAttribute<?>, Double> networkCapacity) {
+    public ContainerParameters(@JsonProperty("computeCapacity") final @Nonnull ImmutableMap<NodeAttribute<?>, Double> computeCapacity,
+            @JsonProperty("networkCapacity") final @Nonnull ImmutableMap<LinkAttribute<?>, Double> networkCapacity) {
         this.computeCapacity = computeCapacity;
         this.networkCapacity = networkCapacity;
     }
