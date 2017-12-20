@@ -265,8 +265,9 @@ public class ResourceReport implements Serializable {
     private transient ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTime = null;
 
     /**
+     * This is computed from the container resource reports.
      * 
-     * @return the average time it takes to process a request for each service
+     * @return The average time it takes to process a request for each service.
      */
     @Nonnull
     public ImmutableMap<ServiceIdentifier<?>, Double> getAverageProcessingTime() {
@@ -276,9 +277,10 @@ public class ResourceReport implements Serializable {
             containerReports.forEach((container, report) -> {
                 final ServiceIdentifier<?> service = report.getService();
                 final double time = report.getAverageProcessingTime();
-
-                rrProcTimeSum.merge(service, time, Double::sum);
-                rrProcTimeCount.merge(service, 1D, Double::sum);
+                if (!Double.isNaN(time)) {
+                    rrProcTimeSum.merge(service, time, Double::sum);
+                    rrProcTimeCount.merge(service, 1D, Double::sum);
+                }
             });
 
             ImmutableMap.Builder<ServiceIdentifier<?>, Double> avg = ImmutableMap.builder();
