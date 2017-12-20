@@ -120,8 +120,9 @@ public class ContainerResourceReport implements Serializable {
     private final double averageProcessingTime;
 
     /**
+     * If no requests have completed for the service in this container this value will be NaN.
      * 
-     * @return the average time it takes to process a request for the service
+     * @return The average time it takes to process a request for the service.  
      */
     @Nonnull
     public double getAverageProcessingTime() {
