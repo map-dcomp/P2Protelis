@@ -251,6 +251,11 @@ public class NodeNetworkManager implements NetworkManager {
     private void listenForNeighbors() {
 
         final InetSocketAddress addr = lookupService.getInetAddressForNode(node.getNodeIdentifier());
+        if(null == addr) {
+            LOGGER.error("Unable to find this node '{}' in the lookup service, unable to listen for neighbor connections", node.getNodeIdentifier());
+            return;
+        }
+        
         final int port = addr.getPort();
         new Thread(() -> {
 
@@ -321,9 +326,7 @@ public class NodeNetworkManager implements NetworkManager {
     private void connectToNeighbor(final DeviceUID neighborUID) {
         final InetSocketAddress addr = lookupService.getInetAddressForNode(neighborUID);
         if (null == addr) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(neighborUID + " is not found in the lookup service, assuming this is a client");
-            }
+            LOGGER.warn(neighborUID + " is not found in the lookup service, not connecting to this neighbor for AP sharing");
             return;
         }
 
