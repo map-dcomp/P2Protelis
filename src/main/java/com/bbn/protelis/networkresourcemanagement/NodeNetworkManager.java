@@ -251,17 +251,22 @@ public class NodeNetworkManager implements NetworkManager {
     private void listenForNeighbors() {
 
         final InetSocketAddress addr = lookupService.getInetAddressForNode(node.getNodeIdentifier());
-        if(null == addr) {
-            LOGGER.error("Unable to find this node '{}' in the lookup service, unable to listen for neighbor connections", node.getNodeIdentifier());
+        if (null == addr) {
+            LOGGER.error(
+                    "Unable to find this node '{}' in the lookup service, unable to listen for neighbor connections",
+                    node.getNodeIdentifier());
             return;
         }
-        
+
         final int port = addr.getPort();
         new Thread(() -> {
 
             while (running) {
                 try {
-                    server = new ServerSocket(port);
+                    synchronized (lock) {
+                        server = new ServerSocket(port);
+                    }
+
                     server.setReuseAddress(true);
                     LOGGER.info("Node: " + node.getName() + " Daemon listening for neighbors on port " + port);
                     while (running) {
@@ -298,16 +303,18 @@ public class NodeNetworkManager implements NetworkManager {
                     }
                 }
 
-                try {
-                    if (null != server) {
-                        server.close();
+                synchronized (lock) {
+                    try {
+                        if (null != server) {
+                            server.close();
+                        }
+                    } catch (final IOException e) {
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("Error closing server socket", e);
+                        }
                     }
-                } catch (final IOException e) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Error closing server socket", e);
-                    }
+                    server = null;
                 }
-                server = null;
             } // while running, restart listen
 
             if (LOGGER.isInfoEnabled()) {
@@ -326,7 +333,8 @@ public class NodeNetworkManager implements NetworkManager {
     private void connectToNeighbor(final DeviceUID neighborUID) {
         final InetSocketAddress addr = lookupService.getInetAddressForNode(neighborUID);
         if (null == addr) {
-            LOGGER.warn(neighborUID + " is not found in the lookup service, not connecting to this neighbor for AP sharing");
+            LOGGER.warn(neighborUID
+                    + " is not found in the lookup service, not connecting to this neighbor for AP sharing");
             return;
         }
 
