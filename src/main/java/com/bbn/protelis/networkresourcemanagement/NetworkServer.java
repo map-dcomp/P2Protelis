@@ -108,9 +108,16 @@ public class NetworkServer extends AbstractExecutionContext
     }
 
     /**
-     * The neighboring nodes. Key is the neighbor, value is the datarate in
-     * megabits per second.
+     * The neighboring nodes with the bandwidth to the neighbor.
+     * 
+     * @return Key is the neighbor, value is the datarate in megabits per
+     *         second.
+     * @see #addNeighbor(NodeIdentifier, double)
      */
+    public Map<NodeIdentifier, Double> getNeighborsWithBandwidth() {
+        return Collections.unmodifiableMap(neighbors);
+    }
+
     private final Map<NodeIdentifier, Double> neighbors = new HashMap<>();
 
     @Override
