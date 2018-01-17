@@ -295,29 +295,29 @@ public class ResourceReport implements Serializable {
         return serverAverageProcessingTime;
     }
 
-    private transient ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> computeLoad = null;
+    private transient ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> computeLoad = null;
 
     /**
-     * Get compute load for this node. This is a measured value. service ->
-     * region load is coming from -> {@link NodeAttribute} specifying the thing
-     * being measured -> value.
+     * Get compute load for this node. This is a measured value. service -> node
+     * load is coming from -> {@link NodeAttribute} specifying the thing being
+     * measured -> value.
      * 
      * @return the load information. Not null.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
             getComputeLoad() {
         if (null == computeLoad) {
             // compute it
-            final Map<ServiceIdentifier<?>, Map<RegionIdentifier, Map<NodeAttribute<?>, Double>>> sload = new HashMap<>();
+            final Map<ServiceIdentifier<?>, Map<NodeIdentifier, Map<NodeAttribute<?>, Double>>> sload = new HashMap<>();
             containerReports.forEach((container, report) -> {
-                final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> cload = report
+                final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> cload = report
                         .getComputeLoad();
-                final Map<RegionIdentifier, Map<NodeAttribute<?>, Double>> serviceLoad = sload
+                final Map<NodeIdentifier, Map<NodeAttribute<?>, Double>> serviceLoad = sload
                         .computeIfAbsent(report.getService(), k -> new HashMap<>());
 
-                cload.forEach((srcRegion, values) -> {
-                    final Map<NodeAttribute<?>, Double> sRegionLoad = serviceLoad.computeIfAbsent(srcRegion,
+                cload.forEach((srcNode, values) -> {
+                    final Map<NodeAttribute<?>, Double> sRegionLoad = serviceLoad.computeIfAbsent(srcNode,
                             k -> new HashMap<>());
                     values.forEach((attr, value) -> {
                         sRegionLoad.merge(attr, value, Double::sum);
@@ -330,7 +330,7 @@ public class ResourceReport implements Serializable {
         return computeLoad;
     }
 
-    private transient ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> computeDemand = null;
+    private transient ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> computeDemand = null;
 
     /**
      * Get estimated compute demand for this node. The meanings of the keys and
@@ -340,19 +340,19 @@ public class ResourceReport implements Serializable {
      * @return the demand information. Not null.
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
             getComputeDemand() {
         if (null == computeDemand) {
             // compute it
-            final Map<ServiceIdentifier<?>, Map<RegionIdentifier, Map<NodeAttribute<?>, Double>>> sload = new HashMap<>();
+            final Map<ServiceIdentifier<?>, Map<NodeIdentifier, Map<NodeAttribute<?>, Double>>> sload = new HashMap<>();
             containerReports.forEach((container, report) -> {
-                final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> cload = report
+                final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> cload = report
                         .getComputeDemand();
-                final Map<RegionIdentifier, Map<NodeAttribute<?>, Double>> serviceLoad = sload
+                final Map<NodeIdentifier, Map<NodeAttribute<?>, Double>> serviceLoad = sload
                         .computeIfAbsent(report.getService(), k -> new HashMap<>());
 
-                cload.forEach((srcRegion, values) -> {
-                    final Map<NodeAttribute<?>, Double> sRegionLoad = serviceLoad.computeIfAbsent(srcRegion,
+                cload.forEach((srcNode, values) -> {
+                    final Map<NodeAttribute<?>, Double> sRegionLoad = serviceLoad.computeIfAbsent(srcNode,
                             k -> new HashMap<>());
                     values.forEach((attr, value) -> {
                         sRegionLoad.merge(attr, value, Double::sum);
