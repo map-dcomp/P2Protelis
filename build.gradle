@@ -20,7 +20,7 @@ plugins {
 
 
 group = 'com.bbn'
-version = '0.22.6'
+version = '0.23.0'
 
 description = """Protelis Testbed"""
 

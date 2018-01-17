@@ -345,11 +345,31 @@ public class ResourceSummary implements Serializable {
     @Nonnull
     public static ResourceSummary convertToSummary(@Nonnull final ResourceReport report,
             @Nonnull final Field nodeToRegion) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = report
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> reportServerLoad = report
                 .getComputeLoad();
-        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = report.getNodeComputeCapacity();
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = report
+        final ImmutableMap.Builder<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoadBuilder = ImmutableMap
+                .builder();
+        reportServerLoad.forEach((service, map) -> {
+            final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> regionMap = convertNodeToRegion(
+                    nodeToRegion, map);
+            serverLoadBuilder.put(service, regionMap);
+        });
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = serverLoadBuilder
+                .build();
+
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> reportServerDemand = report
                 .getComputeDemand();
+        final ImmutableMap.Builder<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemandBuilder = ImmutableMap
+                .builder();
+        reportServerDemand.forEach((service, map) -> {
+            final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> regionMap = convertNodeToRegion(
+                    nodeToRegion, map);
+            serverDemandBuilder.put(service, regionMap);
+        });
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = serverDemandBuilder
+                .build();
+
+        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = report.getNodeComputeCapacity();
 
         // sum of single node is the value
         final ImmutableMap<ServiceIdentifier<?>, Double> serverAvgProcTimeSum = report.getAverageProcessingTime();

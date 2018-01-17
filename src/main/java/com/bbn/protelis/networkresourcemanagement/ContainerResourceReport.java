@@ -50,8 +50,8 @@ public class ContainerResourceReport implements Serializable {
             @Nonnull final ServiceIdentifier<?> service,
             @Nonnull final ResourceReport.EstimationWindow demandEstimationWindow,
             @Nonnull final ImmutableMap<NodeAttribute<?>, Double> computeCapacity,
-            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeLoad,
-            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeDemand,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeLoad,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeDemand,
             final double serverAverageProcessingTime,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad,
@@ -120,30 +120,31 @@ public class ContainerResourceReport implements Serializable {
     private final double averageProcessingTime;
 
     /**
-     * If no requests have completed for the service in this container this value will be NaN.
+     * If no requests have completed for the service in this container this
+     * value will be NaN.
      * 
-     * @return The average time it takes to process a request for the service.  
+     * @return The average time it takes to process a request for the service.
      */
     @Nonnull
     public double getAverageProcessingTime() {
         return averageProcessingTime;
     }
 
-    private final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeLoad;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeLoad;
 
     /**
-     * Get compute load for this node. This is a measured value. region load is
+     * Get compute load for this node. This is a measured value. node load is
      * coming from -> {@link NodeAttribute} specifying the thing being measured
      * -> value.
      * 
      * @return the load information. Not null.
      */
     @Nonnull
-    public ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> getComputeLoad() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> getComputeLoad() {
         return computeLoad;
     }
 
-    private final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeDemand;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeDemand;
 
     /**
      * Get estimated compute demand for this node. The meanings of the keys and
@@ -153,7 +154,7 @@ public class ContainerResourceReport implements Serializable {
      * @return the demand information. Not null.
      */
     @Nonnull
-    public ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> getComputeDemand() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> getComputeDemand() {
         return computeDemand;
     }
 

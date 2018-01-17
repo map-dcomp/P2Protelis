@@ -34,10 +34,10 @@ public class ResourceSummaryTest {
                 serverCapacityValue);
         final ServiceIdentifier<?> service = new StringServiceIdentifier("testService");
         final RegionIdentifier region = new StringRegionIdentifier("A");
-        final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> serverLoad = ImmutableMap
-                .of(region, ImmutableMap.of(nodeAttribute, serverLoadValue));
-        final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> serverDemand = ImmutableMap
-                .of(region, ImmutableMap.of(nodeAttribute, serverDemandValue));
+        final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> serverLoad = ImmutableMap
+                .of(nodeName, ImmutableMap.of(nodeAttribute, serverLoadValue));
+        final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> serverDemand = ImmutableMap
+                .of(nodeName, ImmutableMap.of(nodeAttribute, serverDemandValue));
         final double serverAverageProcessingTime = 30000D;
 
         final LinkAttribute<?> linkAttribute = LinkAttributeEnum.DATARATE;
@@ -68,9 +68,14 @@ public class ResourceSummaryTest {
         Assert.assertEquals(timestamp, summary.getMaxTimestamp());
         Assert.assertEquals(estimationWindow, summary.getDemandEstimationWindow());
 
+        final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> expectedServerLoad = ImmutableMap
+                .of(region, ImmutableMap.of(nodeAttribute, serverLoadValue));
+        final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> expectedServerDemand = ImmutableMap
+                .of(region, ImmutableMap.of(nodeAttribute, serverDemandValue));
+
         Assert.assertEquals(serverCapacity, summary.getServerCapacity());
-        Assert.assertEquals(ImmutableMap.of(service, serverLoad), summary.getServerLoad());
-        Assert.assertEquals(ImmutableMap.of(service, serverDemand), summary.getServerDemand());
+        Assert.assertEquals(ImmutableMap.of(service, expectedServerLoad), summary.getServerLoad());
+        Assert.assertEquals(ImmutableMap.of(service, expectedServerDemand), summary.getServerDemand());
         Assert.assertEquals(ImmutableMap.of(service, serverAverageProcessingTime),
                 summary.getServerAverageProcessingTime());
 
