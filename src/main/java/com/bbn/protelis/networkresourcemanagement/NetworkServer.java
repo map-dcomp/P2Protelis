@@ -303,7 +303,7 @@ public class NetworkServer extends AbstractExecutionContext
     protected void postRunCycle() {
     }
 
-    private Exception programLoopException = null;
+    private Throwable programLoopException = null;
 
     /**
      * This is used for test cases. One can check this value to see if the
@@ -311,7 +311,7 @@ public class NetworkServer extends AbstractExecutionContext
      * 
      * @return the exception thrown in the program loop, null otherwise
      */
-    public Exception getExceptionThrownInProgramLoop() {
+    public Throwable getExceptionThrownInProgramLoop() {
         return programLoopException;
     }
 
@@ -354,7 +354,7 @@ public class NetworkServer extends AbstractExecutionContext
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Node " + getName() + " got interrupted, waking up to check if it's time to exit", e);
                 }
-            } catch (final Exception e) {
+            } catch (final Throwable e) {
                 LOGGER.error("Exception thrown: terminating Protelis on node: " + getName(), e);
                 programLoopException = e;
                 break;
