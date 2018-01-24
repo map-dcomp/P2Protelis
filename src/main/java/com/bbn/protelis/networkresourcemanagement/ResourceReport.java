@@ -276,10 +276,12 @@ public class ResourceReport implements Serializable {
             final Map<ServiceIdentifier<?>, Double> rrProcTimeCount = new HashMap<>();
             containerReports.forEach((container, report) -> {
                 final ServiceIdentifier<?> service = report.getService();
-                final double time = report.getAverageProcessingTime();
-                if (!Double.isNaN(time)) {
-                    rrProcTimeSum.merge(service, time, Double::sum);
-                    rrProcTimeCount.merge(service, 1D, Double::sum);
+                if (null != service) {
+                    final double time = report.getAverageProcessingTime();
+                    if (!Double.isNaN(time)) {
+                        rrProcTimeSum.merge(service, time, Double::sum);
+                        rrProcTimeCount.merge(service, 1D, Double::sum);
+                    }
                 }
             });
 
@@ -313,16 +315,19 @@ public class ResourceReport implements Serializable {
             containerReports.forEach((container, report) -> {
                 final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> cload = report
                         .getComputeLoad();
-                final Map<RegionIdentifier, Map<NodeAttribute<?>, Double>> serviceLoad = sload
-                        .computeIfAbsent(report.getService(), k -> new HashMap<>());
+                final ServiceIdentifier<?> service = report.getService();
+                if (null != service) {
+                    final Map<RegionIdentifier, Map<NodeAttribute<?>, Double>> serviceLoad = sload
+                            .computeIfAbsent(service, k -> new HashMap<>());
 
-                cload.forEach((srcRegion, values) -> {
-                    final Map<NodeAttribute<?>, Double> sRegionLoad = serviceLoad.computeIfAbsent(srcRegion,
-                            k -> new HashMap<>());
-                    values.forEach((attr, value) -> {
-                        sRegionLoad.merge(attr, value, Double::sum);
+                    cload.forEach((srcNode, values) -> {
+                        final Map<NodeAttribute<?>, Double> sRegionLoad = serviceLoad.computeIfAbsent(srcNode,
+                                k -> new HashMap<>());
+                        values.forEach((attr, value) -> {
+                            sRegionLoad.merge(attr, value, Double::sum);
+                        });
                     });
-                });
+                }
             });
 
             computeLoad = ImmutableUtils.makeImmutableMap3(sload);
@@ -348,16 +353,19 @@ public class ResourceReport implements Serializable {
             containerReports.forEach((container, report) -> {
                 final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> cload = report
                         .getComputeDemand();
-                final Map<RegionIdentifier, Map<NodeAttribute<?>, Double>> serviceLoad = sload
-                        .computeIfAbsent(report.getService(), k -> new HashMap<>());
+                final ServiceIdentifier<?> service = report.getService();
+                if (null != service) {
+                    final Map<RegionIdentifier, Map<NodeAttribute<?>, Double>> serviceLoad = sload
+                            .computeIfAbsent(service, k -> new HashMap<>());
 
-                cload.forEach((srcRegion, values) -> {
-                    final Map<NodeAttribute<?>, Double> sRegionLoad = serviceLoad.computeIfAbsent(srcRegion,
-                            k -> new HashMap<>());
-                    values.forEach((attr, value) -> {
-                        sRegionLoad.merge(attr, value, Double::sum);
+                    cload.forEach((srcNode, values) -> {
+                        final Map<NodeAttribute<?>, Double> sRegionLoad = serviceLoad.computeIfAbsent(srcNode,
+                                k -> new HashMap<>());
+                        values.forEach((attr, value) -> {
+                            sRegionLoad.merge(attr, value, Double::sum);
+                        });
                     });
-                });
+                }
             });
 
             computeDemand = ImmutableUtils.makeImmutableMap3(sload);
