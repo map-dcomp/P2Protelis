@@ -9,7 +9,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.core.IsNull;
 import org.junit.Assert;
 import org.junit.Test;
 import org.protelis.lang.datatype.DeviceUID;
@@ -84,6 +87,71 @@ public class NS2ParserTest {
             Assert.assertNull("Received exception inside the program loop: " + node.getExceptionThrownInProgramLoop(),
                     node.getExceptionThrownInProgramLoop());
         }
+
+    }
+
+    /**
+     * Test that a basic network with a switch parses correctly.
+     * 
+     * @throws URISyntaxException
+     *             if there is an error finding the test scenario directory
+     * @throws IOException
+     *             if there is an error reading the test files
+     */
+    @Test
+    public void testSwitch() throws URISyntaxException, IOException {
+        // dummy AP program that we aren't going to execute
+        final String program = "true";
+        final boolean anonymous = true;
+        final NodeLookupService lookupService = new LocalNodeLookupService(42000 /* unused */);
+        final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
+        final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, managerFactory, program, anonymous);
+
+        final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/test-switch");
+        final Path baseDirectory = Paths.get(baseu.toURI());
+
+        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parse("test-switch",
+                baseDirectory, factory);
+
+        final String nodeAName = "nodeA";
+        final NodeIdentifier nodeAId = new StringNodeIdentifier(nodeAName);
+        final NetworkServer nodeA = scenario.getServers().get(nodeAId);
+        Assert.assertThat(nodeA, CoreMatchers.is(IsNull.notNullValue()));
+
+        final String nodeBName = "nodeB";
+        final NodeIdentifier nodeBId = new StringNodeIdentifier(nodeBName);
+        final NetworkServer nodeB = scenario.getServers().get(nodeBId);
+        Assert.assertThat(nodeB, CoreMatchers.is(IsNull.notNullValue()));
+
+        final String nodeCName = "nodeC";
+        final NodeIdentifier nodeCId = new StringNodeIdentifier(nodeCName);
+        final NetworkServer nodeC = scenario.getServers().get(nodeCId);
+        Assert.assertThat(nodeC, CoreMatchers.is(IsNull.notNullValue()));
+
+        final String nodeDName = "nodeD";
+        final NodeIdentifier nodeDId = new StringNodeIdentifier(nodeDName);
+        final NetworkServer nodeD = scenario.getServers().get(nodeDId);
+        Assert.assertThat(nodeD, CoreMatchers.is(IsNull.notNullValue()));
+
+        final Set<NodeIdentifier> nodeANeighbors = nodeA.getNeighbors();
+        Assert.assertEquals(1, nodeANeighbors.size());
+        Assert.assertTrue(nodeANeighbors.contains(nodeBId));
+
+        final Set<NodeIdentifier> nodeBNeighbors = nodeB.getNeighbors();
+        Assert.assertEquals(3, nodeBNeighbors.size());
+        Assert.assertTrue(nodeBNeighbors.contains(nodeAId));
+        Assert.assertTrue(nodeBNeighbors.contains(nodeCId));
+        Assert.assertTrue(nodeBNeighbors.contains(nodeDId));
+
+        final Set<NodeIdentifier> nodeCNeighbors = nodeC.getNeighbors();
+        Assert.assertEquals(2, nodeCNeighbors.size());
+        Assert.assertTrue(nodeCNeighbors.contains(nodeBId));
+        Assert.assertTrue(nodeCNeighbors.contains(nodeDId));
+
+        final Set<NodeIdentifier> nodeDNeighbors = nodeD.getNeighbors();
+        Assert.assertEquals(2, nodeDNeighbors.size());
+        Assert.assertTrue(nodeDNeighbors.contains(nodeBId));
+        Assert.assertTrue(nodeDNeighbors.contains(nodeCId));
 
     }
 

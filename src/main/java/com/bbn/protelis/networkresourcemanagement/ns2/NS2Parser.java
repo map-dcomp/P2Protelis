@@ -11,6 +11,8 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -102,7 +104,6 @@ public final class NS2Parser {
                 // final Pattern setRegExp = Pattern.compile("set (\\s+)
                 // \\[([^]]+)\\]");
                 final Pattern setRegExp = Pattern.compile("^set\\s+(\\S+)\\s+\\[([^]]+)\\]$");
-                final Pattern bandwidthExp = Pattern.compile("^(\\d+\\.?\\d*)(\\S+)$");
 
                 String line;
                 while (null != (line = bufReader.readLine())) {
@@ -135,7 +136,7 @@ public final class NS2Parser {
                                 final String self = tokens[0].substring(1);
                                 if (null == simulator) {
                                     throw new NS2FormatException(
-                                            "Cannot constructor nodes and links without a simulator");
+                                            "Cannot construct nodes and links without a simulator");
                                 }
                                 if (!self.equals(simulator)) {
                                     throw new NS2FormatException(
@@ -178,23 +179,7 @@ public final class NS2Parser {
                                     }
 
                                     final String bandwidthStr = tokens[4];
-                                    final Matcher bandwidthMatch = bandwidthExp.matcher(bandwidthStr);
-                                    if (!bandwidthMatch.matches()) {
-                                        throw new NS2FormatException(
-                                                "Bandwidth spec doesn't match expected format: '" + bandwidthStr + "'");
-                                    }
-                                    final double bandwidthValue = Double.parseDouble(bandwidthMatch.group(1));
-                                    final String bandwidthUnits = bandwidthMatch.group(2);
-                                    final double bandwidthMultiplier;
-                                    if ("mb".equalsIgnoreCase(bandwidthUnits)) {
-                                        // megabits per second
-                                        bandwidthMultiplier = 1;
-                                    } else if ("kb".equalsIgnoreCase(bandwidthUnits)) {
-                                        // kilobits per second
-                                        bandwidthMultiplier = MEGABITS_IN_KILOBIT;
-                                    } else {
-                                        throw new NS2FormatException("Unknown bandwidth units: " + bandwidthUnits);
-                                    }
+                                    final double bandwidth = parseBandwidth(bandwidthStr);
 
                                     // final String delayStr = tokens[5];
                                     // final String queueBehavior =
@@ -213,13 +198,50 @@ public final class NS2Parser {
                                         rightNode = clientsByName.get(rightNodeName);
                                     }
 
-                                    final double bandwidth = bandwidthValue * bandwidthMultiplier;
                                     final L link = factory.createLink(name, leftNode, rightNode, bandwidth);
 
                                     leftNode.addNeighbor(rightNode, link.getBandwidth());
                                     rightNode.addNeighbor(leftNode, link.getBandwidth());
 
                                     links.add(link);
+                                } else if ("make-lan".equals(objectType)) {
+                                    final String bandwidthStr = tokens[tokens.length - 2];
+                                    final double bandwidth = parseBandwidth(bandwidthStr);
+
+                                    final List<String> nodes = new LinkedList<>();
+                                    for (int idx = 2; idx < tokens.length - 2; ++idx) {
+                                        final String str = tokens[idx].replace("\"", "").replace("$", "").trim();
+                                        if (str.length() > 0) {
+                                            nodes.add(str);
+                                        }
+                                    }
+
+                                    for (final String leftNodeName : nodes) {
+                                        for (final String rightNodeName : nodes) {
+                                            final NetworkNode leftNode;
+                                            if (serversByName.containsKey(leftNodeName)) {
+                                                leftNode = serversByName.get(leftNodeName);
+                                            } else {
+                                                leftNode = clientsByName.get(leftNodeName);
+                                            }
+
+                                            if (!leftNodeName.equals(rightNodeName)) {
+                                                final NetworkNode rightNode;
+                                                if (serversByName.containsKey(rightNodeName)) {
+                                                    rightNode = serversByName.get(rightNodeName);
+                                                } else {
+                                                    rightNode = clientsByName.get(rightNodeName);
+                                                }
+
+                                                final L link = factory.createLink(name, leftNode, rightNode, bandwidth);
+
+                                                leftNode.addNeighbor(rightNode, link.getBandwidth());
+                                                rightNode.addNeighbor(leftNode, link.getBandwidth());
+
+                                                links.add(link);
+                                            }
+                                        }
+                                    }
                                 } else {
                                     throw new NS2FormatException(
                                             "Unsupported object type: " + objectType + " on line: " + line);
@@ -281,6 +303,29 @@ public final class NS2Parser {
                 .collect(Collectors.toMap(e -> e.getValue().getNodeIdentifier(), Map.Entry::getValue));
         final Scenario<N, L, C> scenario = new Scenario<>(scenarioName, servers, clients, links);
         return scenario;
+    }
+
+    private static double parseBandwidth(final String bandwidthStr) {
+        final Pattern bandwidthExp = Pattern.compile("^(\\d+\\.?\\d*)(\\S+)$");
+        final Matcher bandwidthMatch = bandwidthExp.matcher(bandwidthStr);
+        if (!bandwidthMatch.matches()) {
+            throw new NS2FormatException("Bandwidth spec doesn't match expected format: '" + bandwidthStr + "'");
+        }
+        final double bandwidthValue = Double.parseDouble(bandwidthMatch.group(1));
+        final String bandwidthUnits = bandwidthMatch.group(2);
+        final double bandwidthMultiplier;
+        if ("mb".equalsIgnoreCase(bandwidthUnits)) {
+            // megabits per second
+            bandwidthMultiplier = 1;
+        } else if ("kb".equalsIgnoreCase(bandwidthUnits)) {
+            // kilobits per second
+            bandwidthMultiplier = MEGABITS_IN_KILOBIT;
+        } else {
+            throw new NS2FormatException("Unknown bandwidth units: " + bandwidthUnits);
+        }
+        final double bandwidth = bandwidthValue * bandwidthMultiplier;
+
+        return bandwidth;
     }
 
     private static boolean checkIsClient(@Nonnull final Map<String, Object> extraData) {
