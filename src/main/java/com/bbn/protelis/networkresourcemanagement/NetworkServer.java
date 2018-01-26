@@ -159,19 +159,23 @@ public class NetworkServer extends AbstractExecutionContext
      *            the program to run on the node
      * @param name
      *            the name of the node (must be unique)
-     * @param lookupService
+     * @param nodeLookupService
      *            How to find other nodes
+     * @param regionLookupService
+     *            used by {@link #convertToSummary(ResourceReport)}.
      */
-    public NetworkServer(@Nonnull final NodeLookupService lookupService,
+    public NetworkServer(@Nonnull final NodeLookupService nodeLookupService,
+            @Nonnull final RegionLookupService regionLookupService,
             @Nonnull final ProtelisProgram program,
             @Nonnull final String name) {
-        super(new SimpleExecutionEnvironment(), new NodeNetworkManager(lookupService));
+        super(new SimpleExecutionEnvironment(), new NodeNetworkManager(nodeLookupService));
         this.uid = new StringNodeIdentifier(name);
         this.region = NULL_REGION;
         this.networkState = new NetworkState(this.region);
         this.regionNodeState = new RegionNodeState(this.region);
         this.regionServiceState = new RegionServiceState(this.region);
         this.resourceManager = new NullResourceManager(this.uid);
+        this.regionLookupService = regionLookupService;
 
         // Finish making the new device and add it to our collection
         vm = new ProtelisVM(program, this);
@@ -631,6 +635,21 @@ public class NetworkServer extends AbstractExecutionContext
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("Finished setting region service reports.");
         }
+    }
+
+    private final RegionLookupService regionLookupService;
+
+    /**
+     * Allow protelis to convert reports to summaries using the
+     * {@link RegionLookupService} passed to this node.
+     * 
+     * @param report
+     *            the report to convert
+     * @return the return value from
+     *         {@link ResourceSummary#convertToSummary(ResourceReport, RegionLookupService)}
+     */
+    public ResourceSummary convertToSummary(@Nonnull final ResourceReport report) {
+        return ResourceSummary.convertToSummary(report, regionLookupService);
     }
 
 }

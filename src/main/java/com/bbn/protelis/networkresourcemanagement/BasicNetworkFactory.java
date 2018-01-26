@@ -13,7 +13,8 @@ import org.protelis.vm.ProtelisProgram;
  */
 public class BasicNetworkFactory implements NetworkFactory<NetworkServer, NetworkLink, NetworkClient> {
 
-    private final NodeLookupService lookupService;
+    private final NodeLookupService nodeLookupService;
+    private final RegionLookupService regionLookupService;
     private final String program;
     private final boolean anonymousProgram;
     private final ResourceManagerFactory<NetworkServer> managerFactory;
@@ -30,12 +31,17 @@ public class BasicNetworkFactory implements NetworkFactory<NetworkServer, Networ
      *            reference
      * @param managerFactory
      *            used to create the {@link ResourceManager}s.
+     * @param regionLookupService
+     *            see
+     *            {@link NetworkServer#NetworkServer(NodeLookupService, RegionLookupService, ProtelisProgram, String)}
      */
-    public BasicNetworkFactory(final NodeLookupService lookupService,
+    public BasicNetworkFactory(@Nonnull final NodeLookupService lookupService,
+            @Nonnull final RegionLookupService regionLookupService,
             @Nonnull final ResourceManagerFactory<NetworkServer> managerFactory,
             final String program,
             final boolean anonymous) {
-        this.lookupService = lookupService;
+        this.nodeLookupService = lookupService;
+        this.regionLookupService = regionLookupService;
         this.program = program;
         this.anonymousProgram = anonymous;
         this.managerFactory = managerFactory;
@@ -51,7 +57,7 @@ public class BasicNetworkFactory implements NetworkFactory<NetworkServer, Networ
             instance = ProtelisLoader.parse(program);
         }
 
-        final NetworkServer node = new NetworkServer(lookupService, instance, name);
+        final NetworkServer node = new NetworkServer(nodeLookupService, regionLookupService, instance, name);
         final ResourceManager manager = managerFactory.createResourceManager(node, extraData);
         node.setResourceManager(manager);
 

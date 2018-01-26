@@ -34,6 +34,7 @@ import com.bbn.protelis.networkresourcemanagement.NetworkLink;
 import com.bbn.protelis.networkresourcemanagement.NetworkNode;
 import com.bbn.protelis.networkresourcemanagement.NetworkServer;
 import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
+import com.bbn.protelis.networkresourcemanagement.DelegateRegionLookup;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
@@ -433,13 +434,17 @@ public final class NS2Parser {
             }
 
             final Path baseDirectory = Paths.get(scenarioFile);
-            final NodeLookupService lookupService = new LocalNodeLookupService(5000);
+            final NodeLookupService nodeLookupService = new LocalNodeLookupService(5000);
+
+            final DelegateRegionLookup regionLookupService = new DelegateRegionLookup();
 
             final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
-            final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, managerFactory,
-                    "/protelis/com/bbn/resourcemanagement/resourcetracker.pt", false);
+            final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService,
+                    managerFactory, "/protelis/com/bbn/resourcemanagement/resourcetracker.pt", false);
             final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parse(scenarioFile,
                     baseDirectory, factory);
+
+            regionLookupService.setDelegate(scenario);
 
             scenario.setTerminationCondition(new NeverTerminate<>());
 

@@ -1,5 +1,10 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.protelis.lang.datatype.Field;
@@ -58,10 +63,10 @@ public class ResourceSummaryTest {
         final ResourceReport report = new ResourceReport(nodeName, timestamp, estimationWindow, serverCapacity,
                 networkCapacity, networkLoad, networkDemand, ImmutableMap.of(containerId, containerReport));
 
-        final Field nodeToRegion = new FieldMapImpl(1, 1);
-        nodeToRegion.addSample(nodeName, region);
+        final TestRegionLookup regionLookup = new TestRegionLookup();
+        regionLookup.addMapping(nodeName, region);
 
-        final ResourceSummary summary = ResourceSummary.convertToSummary(report, nodeToRegion);
+        final ResourceSummary summary = ResourceSummary.convertToSummary(report, regionLookup);
 
         Assert.assertEquals(region, summary.getRegion());
         Assert.assertEquals(timestamp, summary.getMinTimestamp());
@@ -234,6 +239,21 @@ public class ResourceSummaryTest {
         Assert.assertEquals(expectedNetworkCapacity, resultSummary.getNetworkCapacity());
         Assert.assertEquals(expectedNetworkLoad, resultSummary.getNetworkLoad());
         Assert.assertEquals(expectedNetworkDemand, resultSummary.getNetworkDemand());
+    }
+
+    private static final class TestRegionLookup implements RegionLookupService {
+
+        private final Map<NodeIdentifier, RegionIdentifier> data = new HashMap<>();
+
+        public void addMapping(@Nonnull final NodeIdentifier node, @Nonnull final RegionIdentifier region) {
+            data.put(node, region);
+        }
+
+        @Override
+        public RegionIdentifier getRegionForNode(final NodeIdentifier nodeId) {
+            return data.get(nodeId);
+        }
+
     }
 
 }
