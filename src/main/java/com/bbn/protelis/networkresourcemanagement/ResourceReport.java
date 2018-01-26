@@ -353,19 +353,9 @@ public class ResourceReport implements Serializable {
             containerReports.forEach((container, report) -> {
                 final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> cload = report
                         .getComputeDemand();
-<<<<<<< HEAD
-                final Map<NodeIdentifier, Map<NodeAttribute<?>, Double>> serviceLoad = sload
-                        .computeIfAbsent(report.getService(), k -> new HashMap<>());
-
-                cload.forEach((srcNode, values) -> {
-                    final Map<NodeAttribute<?>, Double> sRegionLoad = serviceLoad.computeIfAbsent(srcNode,
-                            k -> new HashMap<>());
-                    values.forEach((attr, value) -> {
-                        sRegionLoad.merge(attr, value, Double::sum);
-=======
                 final ServiceIdentifier<?> service = report.getService();
                 if (null != service) {
-                    final Map<RegionIdentifier, Map<NodeAttribute<?>, Double>> serviceLoad = sload
+                    final Map<NodeIdentifier, Map<NodeAttribute<?>, Double>> serviceLoad = sload
                             .computeIfAbsent(service, k -> new HashMap<>());
 
                     cload.forEach((srcNode, values) -> {
@@ -374,7 +364,6 @@ public class ResourceReport implements Serializable {
                         values.forEach((attr, value) -> {
                             sRegionLoad.merge(attr, value, Double::sum);
                         });
->>>>>>> null-service
                     });
                 }
             });
