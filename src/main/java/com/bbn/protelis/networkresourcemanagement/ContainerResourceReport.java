@@ -47,7 +47,7 @@ public class ContainerResourceReport implements Serializable {
      */
     public ContainerResourceReport(@Nonnull final ContainerIdentifier containerName,
             final long timestamp,
-            @Nonnull final ServiceIdentifier<?> service,
+            final ServiceIdentifier<?> service,
             @Nonnull final ResourceReport.EstimationWindow demandEstimationWindow,
             @Nonnull final ImmutableMap<NodeAttribute<?>, Double> computeCapacity,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeLoad,
@@ -73,9 +73,9 @@ public class ContainerResourceReport implements Serializable {
 
     /**
      * 
-     * @return the service running in the container
+     * @return the service running in the container, null if no service is
+     *         currently running
      */
-    @Nonnull
     public ServiceIdentifier<?> getService() {
         return service;
     }
@@ -223,7 +223,7 @@ public class ContainerResourceReport implements Serializable {
             @Nonnull final ResourceReport.EstimationWindow demandWindow) {
 
         return new ContainerResourceReport(containerName, NULL_TIMESTAMP, //
-                new StringServiceIdentifier("NULL"), // service
+                null, // service
                 demandWindow, //
                 ImmutableMap.of(), // serverCapacity
                 ImmutableMap.of(), // serverLoad
