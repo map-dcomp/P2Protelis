@@ -49,21 +49,25 @@ public class NS2ParserTest {
         final int port = random.nextInt(65535 - 1024) + 1024;
         LOGGER.info("Using base port " + port);
 
-        final NodeLookupService lookupService = new LocalNodeLookupService(port);
+        final NodeLookupService nodeLookupService = new LocalNodeLookupService(port);
 
         // final String program = "true";
         // final boolean anonymous = true;
         final String program = "/protelis/com/bbn/resourcemanagement/resourcetracker.pt";
         final boolean anonymous = false;
 
+        final DelegateRegionLookup regionLookupService = new DelegateRegionLookup();
         final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
-        final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, managerFactory, program, anonymous);
+        final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService,
+                managerFactory, program, anonymous);
 
         final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/multinode");
         final Path baseDirectory = Paths.get(baseu.toURI());
         final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parse("multinode", baseDirectory,
                 factory);
         Assert.assertNotNull("Parse didn't create a scenario", scenario);
+
+        regionLookupService.setDelegate(scenario);
 
         final long maxExecutions = 50;// 5;
 

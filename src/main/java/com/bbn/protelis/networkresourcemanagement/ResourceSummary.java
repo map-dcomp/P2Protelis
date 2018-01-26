@@ -6,7 +6,8 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.protelis.lang.datatype.Field;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -18,6 +19,8 @@ import com.google.common.collect.ImmutableMap;
 public class ResourceSummary implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ResourceSummary.class);
 
     /**
      * 
@@ -335,8 +338,7 @@ public class ResourceSummary implements Serializable {
      * @param report
      *            the report to convert
      * @param nodeToRegion
-     *            the mapping of {@link NodeIdentifier} to
-     *            {@link RegionIdentifier}.
+     *            convert node identifiers to region identifiers
      * @return a new {@link ResourceSummary} object
      * @throws ClassCastException
      *             if nodeRegions does not contain {@link RegionIdentifier}
@@ -344,7 +346,9 @@ public class ResourceSummary implements Serializable {
      */
     @Nonnull
     public static ResourceSummary convertToSummary(@Nonnull final ResourceReport report,
-            @Nonnull final Field nodeToRegion) {
+            @Nonnull final RegionLookupService nodeToRegion) {
+        LOGGER.info("Converting report with server load {}", report.getComputeLoad());
+
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> reportServerLoad = report
                 .getComputeLoad();
         final ImmutableMap.Builder<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoadBuilder = ImmutableMap
@@ -352,10 +356,13 @@ public class ResourceSummary implements Serializable {
         reportServerLoad.forEach((service, map) -> {
             final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> regionMap = convertNodeToRegion(
                     nodeToRegion, map);
+            LOGGER.info("Converted {} -> {}", map, regionMap);
             serverLoadBuilder.put(service, regionMap);
         });
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = serverLoadBuilder
                 .build();
+
+        LOGGER.info("new summary server load {}", serverLoad);
 
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> reportServerDemand = report
                 .getComputeDemand();
@@ -389,7 +396,7 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = convertNodeToRegion(
                 nodeToRegion, report.getAllNetworkDemand());
 
-        final RegionIdentifier reportRegion = (RegionIdentifier) nodeToRegion.getSample(report.getNodeName());
+        final RegionIdentifier reportRegion = nodeToRegion.getRegionForNode(report.getNodeName());
 
         final ResourceSummary summary = new ResourceSummary(reportRegion, report.getTimestamp(), report.getTimestamp(),
                 report.getDemandEstimationWindow(), serverCapacity, serverLoad, serverDemand,
@@ -398,14 +405,18 @@ public class ResourceSummary implements Serializable {
     }
 
     private static <T> ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>> convertNodeToRegion(
-            @Nonnull final Field nodeToRegion, final ImmutableMap<NodeIdentifier, ImmutableMap<T, Double>> source) {
+            @Nonnull final RegionLookupService nodeToRegion,
+            final ImmutableMap<NodeIdentifier, ImmutableMap<T, Double>> source) {
 
         final Map<RegionIdentifier, ImmutableMap<T, Double>> dest = new HashMap<>();
         source.forEach((k, v) -> {
-            final RegionIdentifier region = (RegionIdentifier) nodeToRegion.getSample(k);
+            final RegionIdentifier region = nodeToRegion.getRegionForNode(k);
             if (null != region) {
                 dest.merge(region, v, ResourceSummary::mergeDoubleMapViaSum);
+            } else {
+                LOGGER.warn("Unable to find region for node {}", k);
             }
+
         });
 
         return ImmutableMap.copyOf(dest);

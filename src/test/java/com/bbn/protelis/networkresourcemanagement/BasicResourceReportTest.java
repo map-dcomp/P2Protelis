@@ -30,10 +30,12 @@ public class BasicResourceReportTest {
         final String basePath = "ns2/multinode";
         final Map<String, Object> extraData = NS2Parser.getNodeDataFromResource(basePath, nodeName);
 
+        final RegionLookupService regionLookup = new DelegateRegionLookup();
         final String programStr = "true";
         final ProtelisProgram program = ProtelisLoader.parseAnonymousModule(programStr);
         final int dummyBasePort = 5000;
-        final NetworkServer node = new NetworkServer(new LocalNodeLookupService(dummyBasePort), program, nodeName);
+        final NetworkServer node = new NetworkServer(new LocalNodeLookupService(dummyBasePort), regionLookup, program,
+                nodeName);
         final BasicResourceManager manager = new BasicResourceManager(node, extraData);
         final ResourceReport report = manager.getCurrentResourceReport(ResourceReport.EstimationWindow.SHORT);
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
