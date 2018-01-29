@@ -107,9 +107,12 @@ public class NS2ParserTest {
         // dummy AP program that we aren't going to execute
         final String program = "true";
         final boolean anonymous = true;
-        final NodeLookupService lookupService = new LocalNodeLookupService(42000 /* unused */);
+        final NodeLookupService nodeLookupService = new LocalNodeLookupService(42000 /* unused */);
+        final DelegateRegionLookup regionLookupService = new DelegateRegionLookup(); // unused
+
         final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
-        final BasicNetworkFactory factory = new BasicNetworkFactory(lookupService, managerFactory, program, anonymous);
+        final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService, managerFactory,
+                program, anonymous);
 
         final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/test-switch");
         final Path baseDirectory = Paths.get(baseu.toURI());
