@@ -347,7 +347,9 @@ public class ResourceSummary implements Serializable {
     @Nonnull
     public static ResourceSummary convertToSummary(@Nonnull final ResourceReport report,
             @Nonnull final RegionLookupService nodeToRegion) {
-        LOGGER.info("Converting report with server load {}", report.getComputeLoad());
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Converting report with server load {}", report.getComputeLoad());
+        }
 
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> reportServerLoad = report
                 .getComputeLoad();
@@ -356,13 +358,17 @@ public class ResourceSummary implements Serializable {
         reportServerLoad.forEach((service, map) -> {
             final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> regionMap = convertNodeToRegion(
                     nodeToRegion, map);
-            LOGGER.info("Converted {} -> {}", map, regionMap);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Converted {} -> {}", map, regionMap);
+            }
             serverLoadBuilder.put(service, regionMap);
         });
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = serverLoadBuilder
                 .build();
 
-        LOGGER.info("new summary server load {}", serverLoad);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("new summary server load {}", serverLoad);
+        }
 
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> reportServerDemand = report
                 .getComputeDemand();
