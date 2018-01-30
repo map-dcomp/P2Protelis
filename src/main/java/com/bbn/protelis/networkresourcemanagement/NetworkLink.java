@@ -1,5 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.util.Objects;
+
 /**
  * A link between two {@link NetworkNode}s.
  * 
@@ -63,6 +65,39 @@ public class NetworkLink {
         this.left = left;
         this.right = right;
         this.bandwidth = bandwidth;
+        // make sure that edge(one, two) is equal to edge(two, one)
+        // Objects.hash returns different values depending on the order
+        if (left.hashCode() < right.hashCode()) {
+            this.hashCode = Objects.hash(left, right);
+        } else {
+            this.hashCode = Objects.hash(right, left);
+        }
     }
 
+    private final int hashCode;
+
+    @Override
+    public int hashCode() {
+        return hashCode;
+    }
+
+    /**
+     * Equality is defined as connecting the same pair of nodes.
+     */
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        } else if (null == o) {
+            return false;
+        } else if (getClass() == o.getClass()) {
+            // edges are bidirectional, so left and right don't matter for
+            // equality
+            final NetworkLink other = (NetworkLink) o;
+            return (left.equals(other.getLeft()) && right.equals(other.getRight()))
+                    || (left.equals(other.getRight()) && right.equals(other.getLeft()));
+        } else {
+            return false;
+        }
+    }
 }
