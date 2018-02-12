@@ -234,4 +234,10 @@ public class ContainerResourceReport implements Serializable {
                 ImmutableMap.of()); // networkDemand
     }
 
+    @Override
+    public String toString() {
+        return "{" + " computeCapacity: " + getComputeCapacity() + " computeLoad: " + getComputeLoad()
+                + " computeDemand: " + getComputeDemand() + " }";
+    }
+
 }

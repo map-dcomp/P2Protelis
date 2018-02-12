@@ -56,4 +56,8 @@ public class RegionServiceState implements Serializable {
         this.reports = reports;
     }
 
+    @Override
+    public String toString() {
+        return "{" + " region: " + getRegion() + " reports: " + getServiceReports() + "}";
+    }
 }

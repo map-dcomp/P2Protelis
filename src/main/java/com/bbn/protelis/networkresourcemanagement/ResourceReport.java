@@ -544,4 +544,9 @@ public class ResourceReport implements Serializable {
                 ImmutableMap.of()); // container reports
     }
 
+    @Override
+    public String toString() {
+        return "{" + " node: " + getNodeName() + " nodeComputeCapacity: " + getNodeComputeCapacity() + " computeLoad: "
+                + getComputeLoad() + "}";
+    }
 }

@@ -89,4 +89,9 @@ public class ServiceState implements Serializable {
         return Objects.hash(getService(), getStatus());
     }
 
+    @Override
+    public String toString() {
+        return "{ service: " + getService() + " status: " + getStatus() + "}";
+    }
+
 }

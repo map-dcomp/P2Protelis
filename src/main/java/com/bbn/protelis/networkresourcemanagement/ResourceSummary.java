@@ -523,4 +523,8 @@ public class ResourceSummary implements Serializable {
         return newImmutableMap;
     }
 
+    @Override
+    public String toString() {
+        return "{" + " region: " + getRegion() + " serverLoad: " + getServerLoad() + "}";
+    }
 }

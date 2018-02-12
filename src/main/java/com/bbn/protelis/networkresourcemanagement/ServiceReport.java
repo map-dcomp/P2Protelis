@@ -71,4 +71,9 @@ public class ServiceReport implements Serializable {
         return Objects.hash(getNodeName(), getServiceState());
     }
 
+    @Override
+    public String toString() {
+        return "{" + " node: " + getNodeName() + " serviceState: " + getServiceState() + "}";
+    }
+
 }
