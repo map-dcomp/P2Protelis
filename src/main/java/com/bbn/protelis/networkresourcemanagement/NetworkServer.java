@@ -514,6 +514,7 @@ public class NetworkServer extends AbstractExecutionContext
         this.region = region;
         this.networkState = new NetworkState(this.region);
         this.regionNodeState = new RegionNodeState(this.region);
+        this.regionServiceState = new RegionServiceState(this.region);
     }
 
     @Override
