@@ -218,8 +218,8 @@ public class ResourceReport implements Serializable {
         if (null == nodeNetworkDemand) {
             final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> nload = new HashMap<>();
 
-            // start with the node
-            getNodeNetworkDemand().forEach((srcNode, load) -> {
+            // start with all demand
+            getAllNetworkDemand().forEach((srcNode, load) -> {
                 final Map<LinkAttribute<?>, Double> reportLoad = nload.getOrDefault(srcNode, new HashMap<>());
                 load.forEach((attr, value) -> {
                     reportLoad.merge(attr, value, Double::sum);
