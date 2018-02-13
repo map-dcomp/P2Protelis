@@ -546,7 +546,8 @@ public class ResourceReport implements Serializable {
 
     @Override
     public String toString() {
-        return "{" + " node: " + getNodeName() + " nodeComputeCapacity: " + getNodeComputeCapacity() + " computeLoad: "
-                + getComputeLoad() + "}";
+        return "{" + " node: " + getNodeName() + " nodeComputeCapacity: " + getNodeComputeCapacity()
+                + " allocatedComputeCapacity: " + getAllocatedComputeCapacity() + " computeLoad: " + getComputeLoad()
+                + " containerReports: " + getContainerReports() + "}";
     }
 }
