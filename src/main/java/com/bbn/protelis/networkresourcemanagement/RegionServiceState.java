@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -18,11 +19,14 @@ public class RegionServiceState implements Serializable {
      * Create an empty regional service state.
      * 
      * @param region
-     *            the region that this state is for
+     *            see {@link #getRegion()}
+     * @param reports
+     *            See {@link #getServiceReports(){
      */
-    public RegionServiceState(@Nonnull final RegionIdentifier region) {
+    public RegionServiceState(@Nonnull final RegionIdentifier region,
+            @Nonnull final ImmutableSet<ServiceReport> reports) {
         this.region = region;
-        this.reports = ImmutableSet.of();
+        this.reports = reports;
     }
 
     private final RegionIdentifier region;
@@ -46,18 +50,28 @@ public class RegionServiceState implements Serializable {
         return this.reports;
     }
 
-    /**
-     * Modify the set of reports.
-     * 
-     * @param reports
-     *            the new reports
-     */
-    public void setServiceReports(@Nonnull final ImmutableSet<ServiceReport> reports) {
-        this.reports = reports;
-    }
-
     @Override
     public String toString() {
         return "{" + " region: " + getRegion() + " reports: " + getServiceReports() + "}";
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getRegion(), getServiceReports());
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (null == o) {
+            return false;
+        } else if (o == this) {
+            return true;
+        } else if (getClass().equals(o.getClass())) {
+            final RegionServiceState other = (RegionServiceState) o;
+
+            return getRegion().equals(other.getRegion()) && getServiceReports().equals(other.getServiceReports());
+        } else {
+            return false;
+        }
     }
 }

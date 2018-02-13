@@ -173,7 +173,7 @@ public class NetworkServer extends AbstractExecutionContext
         this.region = NULL_REGION;
         this.networkState = new NetworkState(this.region);
         this.regionNodeState = new RegionNodeState(this.region);
-        this.regionServiceState = new RegionServiceState(this.region);
+        this.regionServiceState = new RegionServiceState(this.region, ImmutableSet.of());
         this.resourceManager = new NullResourceManager(this.uid);
         this.regionLookupService = regionLookupService;
 
@@ -514,7 +514,7 @@ public class NetworkServer extends AbstractExecutionContext
         this.region = region;
         this.networkState = new NetworkState(this.region);
         this.regionNodeState = new RegionNodeState(this.region);
-        this.regionServiceState = new RegionServiceState(this.region);
+        this.regionServiceState = new RegionServiceState(this.region, ImmutableSet.of());
     }
 
     @Override
@@ -575,7 +575,15 @@ public class NetworkServer extends AbstractExecutionContext
     @Override
     @Nonnull
     public RegionServiceState getRegionServiceState() {
-        return regionServiceState;
+        synchronized (lock) {
+            return regionServiceState;
+        }
+    }
+
+    private void setRegionServiceState(final RegionServiceState state) {
+        synchronized (lock) {
+            regionServiceState = state;
+        }
     }
     // --- end RegionServiceStateProvider
 
@@ -631,7 +639,7 @@ public class NetworkServer extends AbstractExecutionContext
                 LOGGER.trace("Adding report for " + report.getNodeName());
             }
         }
-        getRegionServiceState().setServiceReports(builder.build());
+        setRegionServiceState(new RegionServiceState(getRegionIdentifier(), builder.build()));
 
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("Finished setting region service reports.");
