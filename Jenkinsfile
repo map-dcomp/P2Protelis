@@ -15,6 +15,13 @@ pipeline {
 			}
 		}
 		
+		stage('Sloccount') {
+		    steps {
+		        sh "cloc --by-file --xml --out=cloc.xml src"
+		        sloccountPublish pattern: 'cloc.xml' 
+		    }
+		}
+		
 		stage('Build and Test') {
 			steps {
                           wrap([$class: 'Xvfb']) {                          
