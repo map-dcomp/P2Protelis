@@ -3,6 +3,8 @@ package com.bbn.protelis.networkresourcemanagement;
 import java.io.Serializable;
 import java.util.Objects;
 
+import javax.annotation.Nonnull;
+
 /**
  * The state of a service in a container.
  * 
@@ -35,7 +37,11 @@ public class ServiceState implements Serializable {
         /**
          * The service is stopped.
          */
-        STOPPED
+        STOPPED,
+        /**
+         * The service status is unknown.
+         */
+        UNKNOWN
     }
 
     /**
@@ -45,7 +51,7 @@ public class ServiceState implements Serializable {
      * @param status
      *            see {@link #getStatus()}
      */
-    public ServiceState(final ServiceIdentifier<?> service, final Status status) {
+    public ServiceState(@Nonnull final ServiceIdentifier<?> service, @Nonnull final Status status) {
         this.service = service;
         this.status = status;
     }
@@ -56,6 +62,7 @@ public class ServiceState implements Serializable {
      * 
      * @return the service that this information is for
      */
+    @Nonnull
     public ServiceIdentifier<?> getService() {
         return service;
     }
@@ -66,6 +73,7 @@ public class ServiceState implements Serializable {
      * 
      * @return the current status of the service
      */
+    @Nonnull
     public Status getStatus() {
         return status;
     }
