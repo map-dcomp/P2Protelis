@@ -126,7 +126,7 @@ public class BasicResourceManager implements ResourceManager {
                     final Map<String, Object> individualDemand = (Map<String, Object>) v;
                     final ImmutableMap<LinkAttribute<?>, Double> serviceDemand = parseLinkAttributeDoubleMap(
                             individualDemand);
-                    builder.put(new StringNodeIdentifier(nodeName), serviceDemand);
+                    builder.put(new DnsNameIdentifier(nodeName), serviceDemand);
                 } else {
                     LOGGER.warn("While parsing resource report for node " + nodeName + " the service " + nodeName
                             + " doesn't have valid client demand data");
@@ -275,7 +275,7 @@ public class BasicResourceManager implements ResourceManager {
     private int containerCounter = 0;
 
     private synchronized ContainerIdentifier getNextContainerName() {
-        final ContainerIdentifier id = new StringNodeIdentifier("Container-" + containerCounter);
+        final ContainerIdentifier id = new DnsNameIdentifier("Container-" + containerCounter);
         ++containerCounter;
         return id;
     }

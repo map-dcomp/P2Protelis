@@ -121,22 +121,22 @@ public class NS2ParserTest {
                 baseDirectory, factory);
 
         final String nodeAName = "nodeA";
-        final NodeIdentifier nodeAId = new StringNodeIdentifier(nodeAName);
+        final NodeIdentifier nodeAId = new DnsNameIdentifier(nodeAName);
         final NetworkServer nodeA = scenario.getServers().get(nodeAId);
         Assert.assertThat(nodeA, CoreMatchers.is(IsNull.notNullValue()));
 
         final String nodeBName = "nodeB";
-        final NodeIdentifier nodeBId = new StringNodeIdentifier(nodeBName);
+        final NodeIdentifier nodeBId = new DnsNameIdentifier(nodeBName);
         final NetworkServer nodeB = scenario.getServers().get(nodeBId);
         Assert.assertThat(nodeB, CoreMatchers.is(IsNull.notNullValue()));
 
         final String nodeCName = "nodeC";
-        final NodeIdentifier nodeCId = new StringNodeIdentifier(nodeCName);
+        final NodeIdentifier nodeCId = new DnsNameIdentifier(nodeCName);
         final NetworkServer nodeC = scenario.getServers().get(nodeCId);
         Assert.assertThat(nodeC, CoreMatchers.is(IsNull.notNullValue()));
 
         final String nodeDName = "nodeD";
-        final NodeIdentifier nodeDId = new StringNodeIdentifier(nodeDName);
+        final NodeIdentifier nodeDId = new DnsNameIdentifier(nodeDName);
         final NetworkServer nodeD = scenario.getServers().get(nodeDId);
         Assert.assertThat(nodeD, CoreMatchers.is(IsNull.notNullValue()));
 

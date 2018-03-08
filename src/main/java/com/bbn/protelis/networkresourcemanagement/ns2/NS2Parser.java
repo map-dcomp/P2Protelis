@@ -36,7 +36,7 @@ import com.bbn.protelis.networkresourcemanagement.NetworkNode;
 import com.bbn.protelis.networkresourcemanagement.NetworkServer;
 import com.bbn.protelis.networkresourcemanagement.NodeIdentifier;
 import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
-import com.bbn.protelis.networkresourcemanagement.StringNodeIdentifier;
+import com.bbn.protelis.networkresourcemanagement.DnsNameIdentifier;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
@@ -153,12 +153,12 @@ public final class NS2Parser {
                                 if ("node".equals(objectType)) {
                                     final boolean isClient = checkIsClient(extraData);
                                     if (isClient) {
-                                        final NodeIdentifier id = new StringNodeIdentifier(name);
+                                        final NodeIdentifier id = new DnsNameIdentifier(name);
                                         final C client = factory.createClient(id, extraData);
                                         clientsByName.put(name, client);
 
                                     } else {
-                                        final NodeIdentifier id = new StringNodeIdentifier(name);
+                                        final NodeIdentifier id = new DnsNameIdentifier(name);
                                         final N node = factory.createServer(id, extraData);
                                         serversByName.put(name, node);
                                     }

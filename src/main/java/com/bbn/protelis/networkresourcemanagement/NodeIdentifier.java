@@ -6,7 +6,8 @@ import org.protelis.lang.datatype.DeviceUID;
 
 /**
  * Opaque identifier for a node. Implementations should be immutable and must be
- * {@link Comparable}.
+ * {@link Comparable}. Node names shall be compared in a case-insensitive
+ * manner.
  */
 public interface NodeIdentifier extends DeviceUID {
 
