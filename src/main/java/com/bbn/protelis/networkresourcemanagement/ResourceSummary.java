@@ -290,10 +290,12 @@ public class ResourceSummary implements Serializable {
     @Nonnull
     public static ResourceSummary merge(@Nonnull final ResourceSummary one, @Nonnull final ResourceSummary two) {
         if (!one.getRegion().equals(two.getRegion())) {
-            throw new IllegalArgumentException("Cannot merge resource summaries from different regions");
+            throw new IllegalArgumentException("Cannot merge resource summaries from different regions: "
+                    + one.getRegion() + " != " + two.getRegion());
         }
         if (!one.getDemandEstimationWindow().equals(two.getDemandEstimationWindow())) {
-            throw new IllegalArgumentException("Cannot merge resource summaries with different estimation windows");
+            throw new IllegalArgumentException("Cannot merge resource summaries with different estimation windows: "
+                    + one.getDemandEstimationWindow() + " != " + two.getDemandEstimationWindow());
         }
 
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = mergeMaps3(
