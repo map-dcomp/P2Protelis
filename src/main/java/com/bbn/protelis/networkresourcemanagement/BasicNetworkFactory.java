@@ -49,7 +49,8 @@ public class BasicNetworkFactory implements NetworkFactory<NetworkServer, Networ
 
     @Override
     @Nonnull
-    public NetworkServer createServer(@Nonnull final String name, @Nonnull final Map<String, Object> extraData) {
+    public NetworkServer createServer(@Nonnull final NodeIdentifier name,
+            @Nonnull final Map<String, Object> extraData) {
         final ProtelisProgram instance;
         if (anonymousProgram) {
             instance = ProtelisLoader.parseAnonymousModule(program);
@@ -77,7 +78,8 @@ public class BasicNetworkFactory implements NetworkFactory<NetworkServer, Networ
 
     @Override
     @Nonnull
-    public NetworkClient createClient(@Nonnull final String name, @Nonnull final Map<String, Object> extraData) {
+    public NetworkClient createClient(@Nonnull final NodeIdentifier name,
+            @Nonnull final Map<String, Object> extraData) {
         final NetworkClient client = new NetworkClient(name);
 
         client.processExtraData(extraData);

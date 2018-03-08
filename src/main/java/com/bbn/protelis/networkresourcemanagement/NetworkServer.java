@@ -167,9 +167,9 @@ public class NetworkServer extends AbstractExecutionContext
     public NetworkServer(@Nonnull final NodeLookupService nodeLookupService,
             @Nonnull final RegionLookupService regionLookupService,
             @Nonnull final ProtelisProgram program,
-            @Nonnull final String name) {
+            @Nonnull final NodeIdentifier name) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(nodeLookupService));
-        this.uid = new StringNodeIdentifier(name);
+        this.uid = name;
         this.region = NULL_REGION;
         this.networkState = new NetworkState(this.region);
         this.regionNodeState = new RegionNodeState(this.region);

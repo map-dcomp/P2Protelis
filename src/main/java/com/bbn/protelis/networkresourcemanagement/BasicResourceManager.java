@@ -252,10 +252,9 @@ public class BasicResourceManager implements ResourceManager {
         // FIXME hacked to have empty list of container resource reports
         // final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>,
         // Double>> linkDemand = computeNeighborLinkDemand();
-        final ResourceReport report = new ResourceReport(new StringNodeIdentifier(node.getName()),
-                System.currentTimeMillis(), demandWindow, this.computeCapacity,
-                node.getNeighborLinkCapacity(LinkAttributeEnum.DATARATE), ImmutableMap.of(), ImmutableMap.of(),
-                ImmutableMap.of());
+        final ResourceReport report = new ResourceReport(node.getNodeIdentifier(), System.currentTimeMillis(),
+                demandWindow, this.computeCapacity, node.getNeighborLinkCapacity(LinkAttributeEnum.DATARATE),
+                ImmutableMap.of(), ImmutableMap.of(), ImmutableMap.of());
         return report;
     }
 

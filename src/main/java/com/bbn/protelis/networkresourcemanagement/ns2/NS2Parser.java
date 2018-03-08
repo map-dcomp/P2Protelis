@@ -28,13 +28,15 @@ import org.slf4j.LoggerFactory;
 import com.bbn.protelis.common.testbed.termination.NeverTerminate;
 import com.bbn.protelis.networkresourcemanagement.BasicNetworkFactory;
 import com.bbn.protelis.networkresourcemanagement.BasicResourceManagerFactory;
+import com.bbn.protelis.networkresourcemanagement.DelegateRegionLookup;
 import com.bbn.protelis.networkresourcemanagement.NetworkClient;
 import com.bbn.protelis.networkresourcemanagement.NetworkFactory;
 import com.bbn.protelis.networkresourcemanagement.NetworkLink;
 import com.bbn.protelis.networkresourcemanagement.NetworkNode;
 import com.bbn.protelis.networkresourcemanagement.NetworkServer;
+import com.bbn.protelis.networkresourcemanagement.NodeIdentifier;
 import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
-import com.bbn.protelis.networkresourcemanagement.DelegateRegionLookup;
+import com.bbn.protelis.networkresourcemanagement.StringNodeIdentifier;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
@@ -151,11 +153,13 @@ public final class NS2Parser {
                                 if ("node".equals(objectType)) {
                                     final boolean isClient = checkIsClient(extraData);
                                     if (isClient) {
-                                        final C client = factory.createClient(name, extraData);
+                                        final NodeIdentifier id = new StringNodeIdentifier(name);
+                                        final C client = factory.createClient(id, extraData);
                                         clientsByName.put(name, client);
 
                                     } else {
-                                        final N node = factory.createServer(name, extraData);
+                                        final NodeIdentifier id = new StringNodeIdentifier(name);
+                                        final N node = factory.createServer(id, extraData);
                                         serversByName.put(name, node);
                                     }
                                 } else if ("duplex-link".equals(objectType)) {

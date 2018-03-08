@@ -35,7 +35,7 @@ public class BasicResourceReportTest {
         final ProtelisProgram program = ProtelisLoader.parseAnonymousModule(programStr);
         final int dummyBasePort = 5000;
         final NetworkServer node = new NetworkServer(new LocalNodeLookupService(dummyBasePort), regionLookup, program,
-                nodeName);
+                new StringNodeIdentifier(nodeName));
         final BasicResourceManager manager = new BasicResourceManager(node, extraData);
         final ResourceReport report = manager.getCurrentResourceReport(ResourceReport.EstimationWindow.SHORT);
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
