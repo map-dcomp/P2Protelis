@@ -32,7 +32,7 @@ public interface NetworkFactory<N extends NetworkServer, L extends NetworkLink, 
      * @see NetworkServer#processExtraData(Map)
      */
     @Nonnull
-    N createServer(@Nonnull String name, @Nonnull Map<String, Object> extraData);
+    N createServer(@Nonnull NodeIdentifier name, @Nonnull Map<String, Object> extraData);
 
     /**
      * Create a link.
@@ -62,5 +62,5 @@ public interface NetworkFactory<N extends NetworkServer, L extends NetworkLink, 
      * @see NetworkClient#processExtraData(Map)
      */
     @Nonnull
-    C createClient(@Nonnull String name, @Nonnull Map<String, Object> extraData);
+    C createClient(@Nonnull NodeIdentifier name, @Nonnull Map<String, Object> extraData);
 }

@@ -27,7 +27,7 @@ public class ResourceSummaryTest {
      */
     @Test
     public void testConvert() {
-        final NodeIdentifier nodeName = new StringNodeIdentifier("testNode");
+        final NodeIdentifier nodeName = new DnsNameIdentifier("testNode");
         final long timestamp = 0;
         final EstimationWindow estimationWindow = EstimationWindow.SHORT;
 
@@ -56,7 +56,7 @@ public class ResourceSummaryTest {
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = ImmutableMap
                 .of(nodeName, ImmutableMap.of(linkAttribute, networkDemandValue));
 
-        final ContainerIdentifier containerId = new StringNodeIdentifier("container0");
+        final ContainerIdentifier containerId = new DnsNameIdentifier("container0");
         final ContainerResourceReport containerReport = new ContainerResourceReport(containerId, timestamp, service,
                 estimationWindow, serverCapacity, serverLoad, serverDemand, serverAverageProcessingTime,
                 networkCapacity, networkLoad, networkDemand);
@@ -167,7 +167,7 @@ public class ResourceSummaryTest {
      */
     @Test
     public void testMergeWithSelf() {
-        final NodeIdentifier nodeName = new StringNodeIdentifier("testNode");
+        final NodeIdentifier nodeName = new DnsNameIdentifier("testNode");
         final long minTimestamp = 0;
         final long maxTimestamp = 10;
         final EstimationWindow estimationWindow = EstimationWindow.SHORT;

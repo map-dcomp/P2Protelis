@@ -28,19 +28,19 @@ public class NetworkClient implements NetworkNode {
     /**
      * Create a client with the specified name.
      * 
-     * @param name
+     * @param id
      *            the name of the client.
      */
-    public NetworkClient(@Nonnull final String name) {
-        this.uid = new StringNodeIdentifier(name);
+    public NetworkClient(@Nonnull final NodeIdentifier id) {
+        this.uid = id;
         this.region = NetworkServer.NULL_REGION;
     }
 
-    private final StringNodeIdentifier uid;
+    private final NodeIdentifier uid;
 
     @Override
     @Nonnull
-    public final StringNodeIdentifier getNodeIdentifier() {
+    public final NodeIdentifier getNodeIdentifier() {
         return uid;
     }
 
