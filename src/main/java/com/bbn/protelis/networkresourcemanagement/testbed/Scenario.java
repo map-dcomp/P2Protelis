@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -12,11 +14,17 @@ import org.protelis.lang.datatype.DeviceUID;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.networkresourcemanagement.NetworkClient;
+import com.bbn.protelis.networkresourcemanagement.NetworkFactory;
 import com.bbn.protelis.networkresourcemanagement.NetworkLink;
+import com.bbn.protelis.networkresourcemanagement.NetworkNode;
 import com.bbn.protelis.networkresourcemanagement.NetworkServer;
 import com.bbn.protelis.networkresourcemanagement.NodeIdentifier;
 import com.bbn.protelis.networkresourcemanagement.RegionIdentifier;
 import com.bbn.protelis.networkresourcemanagement.RegionLookupService;
+import com.bbn.protelis.networkresourcemanagement.ns2.NetworkDevice;
+import com.bbn.protelis.networkresourcemanagement.ns2.Node;
+import com.bbn.protelis.networkresourcemanagement.ns2.Switch;
+import com.bbn.protelis.networkresourcemanagement.ns2.Topology;
 
 /**
  * A test scenario.
@@ -131,25 +139,81 @@ public class Scenario<N extends NetworkServer, L extends NetworkLink, C extends 
     private final Set<L> links = new HashSet<>();
 
     /**
-     * Constructor for creating a scenario with default conditions.
+     * Create a scenario from the toplogy.
      * 
-     * @param name
-     *            the name of the scenario
-     * @param nodes
-     *            the servers in the scenario
-     * @param links
-     *            the links in the scenario
-     * @param clients
-     *            the clients in the scenario
+     * @param topology
+     *            the toplogy to read
+     * @param factory
+     *            used to create the network objects
+     * @param createNodeIdentifier
+     *            function to map string names to NodeIdentifiers
      */
-    public Scenario(final String name,
-            final Map<DeviceUID, N> nodes,
-            final Map<DeviceUID, C> clients,
-            final Set<L> links) {
-        this.name = name;
-        this.servers.putAll(nodes);
-        this.clients.putAll(clients);
-        this.links.addAll(links);
-    }
+    public Scenario(final Topology topology,
+            final NetworkFactory<N, L, C> factory,
+            final Function<String, NodeIdentifier> createNodeIdentifier) {
+        this.name = topology.getName();
 
+        // create all of the nodes
+        final Map<String, NetworkNode> nameToNetworkNode = new HashMap<>();
+        topology.getNodes().forEach((nodeName, node) -> {
+            final NodeIdentifier id = createNodeIdentifier.apply(nodeName);
+
+            final NetworkNode netNode;
+            if (node.isClient()) {
+                final C c = factory.createClient(id, node.getExtraData());
+                this.clients.put(id, c);
+                netNode = c;
+            } else {
+                final N s = factory.createServer(id, node.getExtraData());
+                this.servers.put(id, s);
+                netNode = s;
+            }
+
+            nameToNetworkNode.put(nodeName, netNode);
+        });
+
+        // create all of the links
+        topology.getNodes().forEach((nodeName, node) -> {
+            node.getLinks().forEach(l -> {
+                final NetworkDevice leftDev = l.getLeft();
+                final NetworkDevice rightDev = l.getRight();
+
+                final Set<Node> leftNodes = new HashSet<>();
+                if (leftDev instanceof Switch) {
+                    leftNodes.addAll(((Switch) leftDev).getNodes().stream().filter(n -> !n.equals(rightDev))
+                            .collect(Collectors.toSet()));
+                } else if (leftDev instanceof Node) {
+                    leftNodes.add((Node) leftDev);
+                } else {
+                    throw new RuntimeException("Unexpectd NetworkDevice type: " + leftDev);
+                }
+
+                final Set<Node> rightNodes = new HashSet<>();
+                if (rightDev instanceof Switch) {
+                    rightNodes.addAll(((Switch) rightDev).getNodes().stream().filter(n -> !n.equals(leftDev))
+                            .collect(Collectors.toSet()));
+                } else if (rightDev instanceof Node) {
+                    rightNodes.add((Node) rightDev);
+                } else {
+                    throw new RuntimeException("Unexpectd NetworkDevice type: " + rightDev);
+                }
+
+                leftNodes.forEach(leftNode -> {
+                    final NetworkNode leftNetNode = nameToNetworkNode.get(leftNode.getName());
+
+                    rightNodes.forEach(rightNode -> {
+                        final NetworkNode rightNetNode = nameToNetworkNode.get(rightNode.getName());
+
+                        final L netLink = factory.createLink(l.getName(), leftNetNode, rightNetNode, l.getBandwidth());
+                        this.links.add(netLink);
+
+                        leftNetNode.addNeighbor(rightNetNode, netLink.getBandwidth());
+                        rightNetNode.addNeighbor(leftNetNode, netLink.getBandwidth());
+                    });
+                });
+
+            });
+        });
+
+    }
 }

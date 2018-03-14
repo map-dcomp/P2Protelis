@@ -12,6 +12,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.hamcrest.CoreMatchers;
+import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
 import org.junit.Assert;
 import org.junit.Test;
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.networkresourcemanagement.ns2.NS2Parser;
+import com.bbn.protelis.networkresourcemanagement.ns2.Topology;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
@@ -66,8 +68,9 @@ public class NS2ParserTest {
 
         final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/multinode");
         final Path baseDirectory = Paths.get(baseu.toURI());
-        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parse("multinode", baseDirectory,
-                factory);
+        final Topology topology = NS2Parser.parse("multinode", baseDirectory);
+        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = new Scenario<>(topology, factory,
+                name -> new DnsNameIdentifier(name));
         Assert.assertNotNull("Parse didn't create a scenario", scenario);
 
         regionLookupService.setDelegate(scenario);
@@ -109,16 +112,20 @@ public class NS2ParserTest {
         final boolean anonymous = true;
         final NodeLookupService nodeLookupService = new LocalNodeLookupService(42000 /* unused */);
         final DelegateRegionLookup regionLookupService = new DelegateRegionLookup(); // unused
+        final int numExpectedLinks = 4;
 
         final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
-        final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService, managerFactory,
-                program, anonymous);
+        final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService,
+                managerFactory, program, anonymous);
 
         final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/test-switch");
         final Path baseDirectory = Paths.get(baseu.toURI());
 
-        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parse("test-switch",
-                baseDirectory, factory);
+        final Topology topology = NS2Parser.parse("test-switch", baseDirectory);
+        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = new Scenario<>(topology, factory,
+                name -> new DnsNameIdentifier(name));
+
+        Assert.assertThat(scenario.getLinks().size(), IsEqual.equalTo(numExpectedLinks));
 
         final String nodeAName = "nodeA";
         final NodeIdentifier nodeAId = new DnsNameIdentifier(nodeAName);

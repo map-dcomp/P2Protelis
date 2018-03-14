@@ -11,17 +11,13 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
-import org.protelis.lang.datatype.DeviceUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,14 +25,11 @@ import com.bbn.protelis.common.testbed.termination.NeverTerminate;
 import com.bbn.protelis.networkresourcemanagement.BasicNetworkFactory;
 import com.bbn.protelis.networkresourcemanagement.BasicResourceManagerFactory;
 import com.bbn.protelis.networkresourcemanagement.DelegateRegionLookup;
-import com.bbn.protelis.networkresourcemanagement.NetworkClient;
-import com.bbn.protelis.networkresourcemanagement.NetworkFactory;
-import com.bbn.protelis.networkresourcemanagement.NetworkLink;
-import com.bbn.protelis.networkresourcemanagement.NetworkNode;
-import com.bbn.protelis.networkresourcemanagement.NetworkServer;
-import com.bbn.protelis.networkresourcemanagement.NodeIdentifier;
-import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.DnsNameIdentifier;
+import com.bbn.protelis.networkresourcemanagement.NetworkClient;
+import com.bbn.protelis.networkresourcemanagement.NetworkLink;
+import com.bbn.protelis.networkresourcemanagement.NetworkServer;
+import com.bbn.protelis.networkresourcemanagement.NodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
@@ -46,6 +39,7 @@ import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayNode;
 import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
 import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Read NS2 files in and create a network for protelis.
@@ -55,12 +49,6 @@ public final class NS2Parser {
     private static final Logger LOGGER = LoggerFactory.getLogger(NS2Parser.class);
 
     private static final double MEGABITS_IN_KILOBIT = 1 / 1000D;
-
-    /**
-     * Extra data key to specify if a client should be created or a node. If
-     * specified and set to true, then a client is created.
-     */
-    public static final String EXTRA_DATA_CLIENT = "client";
 
     /**
      * Name of the file that defines the network topology for a configuration.
@@ -78,24 +66,14 @@ public final class NS2Parser {
      *            name of the scenario to create
      * @param baseDirectory
      *            the directory that contains the data.
-     * @param factory
-     *            how to create {@link NetworkServer}s and {@link NetworkLink}s
-     * @param <N>
-     *            the {@link NetworkServer} type created
-     * @param <L>
-     *            the {@link NetworkLink} type created
-     * @param <C>
-     *            the {@link NetworkClient} type created
-     * @return the network scenario
+     * @return the network topology
      * @throws IOException
      *             if there is an error reading from the reader
      */
-    public static <L extends NetworkLink, N extends NetworkServer, C extends NetworkClient> Scenario<N, L, C> parse(
-            final String scenarioName, final Path baseDirectory, final NetworkFactory<N, L, C> factory)
-            throws IOException {
-        final Map<String, N> serversByName = new HashMap<>();
-        final Map<String, C> clientsByName = new HashMap<>();
-        final Set<L> links = new HashSet<>();
+    public static Topology parse(final String scenarioName, final Path baseDirectory) throws IOException {
+        final Set<Link> links = new HashSet<>();
+        final Map<String, Node> nodesByName = new HashMap<>();
+        final Set<Switch> lans = new HashSet<>();
 
         final Path topologyPath = baseDirectory.resolve(TOPOLOGY_FILENAME);
 
@@ -151,17 +129,8 @@ public final class NS2Parser {
                                 final Map<String, Object> extraData = getNodeData(baseDirectory, name);
 
                                 if ("node".equals(objectType)) {
-                                    final boolean isClient = checkIsClient(extraData);
-                                    if (isClient) {
-                                        final NodeIdentifier id = new DnsNameIdentifier(name);
-                                        final C client = factory.createClient(id, extraData);
-                                        clientsByName.put(name, client);
-
-                                    } else {
-                                        final NodeIdentifier id = new DnsNameIdentifier(name);
-                                        final N node = factory.createServer(id, extraData);
-                                        serversByName.put(name, node);
-                                    }
+                                    final Node node = new Node(name, extraData);
+                                    nodesByName.put(name, node);
                                 } else if ("duplex-link".equals(objectType)) {
                                     if (!tokens[2].startsWith("$") || !tokens[3].startsWith("$")) {
                                         throw new NS2FormatException(
@@ -171,14 +140,12 @@ public final class NS2Parser {
                                     final String leftNodeName = tokens[2].substring(1);
                                     final String rightNodeName = tokens[3].substring(1);
 
-                                    if (!serversByName.containsKey(leftNodeName)
-                                            && !clientsByName.containsKey(leftNodeName)) {
+                                    if (!nodesByName.containsKey(leftNodeName)) {
                                         throw new NS2FormatException(
                                                 "Unknown node " + leftNodeName + " on line: " + line);
                                     }
 
-                                    if (!serversByName.containsKey(rightNodeName)
-                                            && !clientsByName.containsKey(rightNodeName)) {
+                                    if (!nodesByName.containsKey(rightNodeName)) {
                                         throw new NS2FormatException(
                                                 "Unknown node " + rightNodeName + " on line: " + line);
                                     }
@@ -190,63 +157,29 @@ public final class NS2Parser {
                                     // final String queueBehavior =
                                     // tokens[6];
 
-                                    final NetworkNode leftNode;
-                                    if (serversByName.containsKey(leftNodeName)) {
-                                        leftNode = serversByName.get(leftNodeName);
-                                    } else {
-                                        leftNode = clientsByName.get(leftNodeName);
-                                    }
-                                    final NetworkNode rightNode;
-                                    if (serversByName.containsKey(rightNodeName)) {
-                                        rightNode = serversByName.get(rightNodeName);
-                                    } else {
-                                        rightNode = clientsByName.get(rightNodeName);
-                                    }
+                                    final Node leftNode = nodesByName.get(leftNodeName);
+                                    final Node rightNode = nodesByName.get(rightNodeName);
 
-                                    final L link = factory.createLink(name, leftNode, rightNode, bandwidth);
-
-                                    leftNode.addNeighbor(rightNode, link.getBandwidth());
-                                    rightNode.addNeighbor(leftNode, link.getBandwidth());
-
+                                    final Link link = new Link(name, leftNode, rightNode, bandwidth);
                                     links.add(link);
                                 } else if ("make-lan".equals(objectType)) {
                                     final String bandwidthStr = tokens[tokens.length - 2];
                                     final double bandwidth = parseBandwidth(bandwidthStr);
 
-                                    final List<String> nodes = new LinkedList<>();
+                                    final Set<Node> nodes = new HashSet<>();
                                     for (int idx = 2; idx < tokens.length - 2; ++idx) {
                                         final String str = tokens[idx].replace("\"", "").replace("$", "").trim();
                                         if (str.length() > 0) {
-                                            nodes.add(str);
+                                            if (!nodesByName.containsKey(str)) {
+                                                throw new NS2FormatException(
+                                                        "Unknown node " + str + " on line: " + line);
+                                            }
+                                            nodes.add(nodesByName.get(str));
                                         }
                                     }
 
-                                    for (final String leftNodeName : nodes) {
-                                        for (final String rightNodeName : nodes) {
-                                            final NetworkNode leftNode;
-                                            if (serversByName.containsKey(leftNodeName)) {
-                                                leftNode = serversByName.get(leftNodeName);
-                                            } else {
-                                                leftNode = clientsByName.get(leftNodeName);
-                                            }
-
-                                            if (!leftNodeName.equals(rightNodeName)) {
-                                                final NetworkNode rightNode;
-                                                if (serversByName.containsKey(rightNodeName)) {
-                                                    rightNode = serversByName.get(rightNodeName);
-                                                } else {
-                                                    rightNode = clientsByName.get(rightNodeName);
-                                                }
-
-                                                final L link = factory.createLink(name, leftNode, rightNode, bandwidth);
-
-                                                leftNode.addNeighbor(rightNode, link.getBandwidth());
-                                                rightNode.addNeighbor(leftNode, link.getBandwidth());
-
-                                                links.add(link);
-                                            }
-                                        }
-                                    }
+                                    final Switch lan = new Switch(name, nodes, bandwidth);
+                                    lans.add(lan);
                                 } else {
                                     throw new NS2FormatException(
                                             "Unsupported object type: " + objectType + " on line: " + line);
@@ -263,13 +196,12 @@ public final class NS2Parser {
                             throw new NS2FormatException("Expecting node name to start with $ on line: " + line);
                         }
                         final String nodeName = tokens[1].substring(1);
-
-                        if (!serversByName.containsKey(nodeName) && !clientsByName.containsKey(nodeName)) {
+                        if (!nodesByName.containsKey(nodeName)) {
                             throw new NS2FormatException("Unknown node " + nodeName + " on line: " + line);
                         }
 
-                        // final Node node = nodes.get(nodeName);
-                        // node.operatingSystem = tokens[2];
+                        final Node node = nodesByName.get(nodeName);
+                        node.setOperatingSystem(tokens[2]);
                     } else if (line.startsWith("tb-set-hardware")) {
                         final String[] tokens = line.split("\\s");
                         if (tokens.length != 3) {
@@ -280,15 +212,11 @@ public final class NS2Parser {
                             throw new NS2FormatException("Expecting node name to start with $ on line: " + line);
                         }
                         final String nodeName = tokens[1].substring(1);
-
-                        final NetworkNode node;
-                        if (serversByName.containsKey(nodeName)) {
-                            node = serversByName.get(nodeName);
-                        } else if (clientsByName.containsKey(nodeName)) {
-                            node = clientsByName.get(nodeName);
-                        } else {
+                        if (!nodesByName.containsKey(nodeName)) {
                             throw new NS2FormatException("Unknown node " + nodeName + " on line: " + line);
                         }
+
+                        final Node node = nodesByName.get(nodeName);
 
                         final String hardware = tokens[2];
                         node.setHardware(hardware);
@@ -302,12 +230,8 @@ public final class NS2Parser {
             } // bufReader
         } // input stream reader
 
-        final Map<DeviceUID, N> servers = serversByName.entrySet().stream()
-                .collect(Collectors.toMap(e -> e.getValue().getNodeIdentifier(), Map.Entry::getValue));
-        final Map<DeviceUID, C> clients = clientsByName.entrySet().stream()
-                .collect(Collectors.toMap(e -> e.getValue().getNodeIdentifier(), Map.Entry::getValue));
-        final Scenario<N, L, C> scenario = new Scenario<>(scenarioName, servers, clients, links);
-        return scenario;
+        final Topology topology = new Topology(scenarioName, ImmutableMap.copyOf(nodesByName));
+        return topology;
     }
 
     private static double parseBandwidth(final String bandwidthStr) {
@@ -331,15 +255,6 @@ public final class NS2Parser {
         final double bandwidth = bandwidthValue * bandwidthMultiplier;
 
         return bandwidth;
-    }
-
-    private static boolean checkIsClient(@Nonnull final Map<String, Object> extraData) {
-        final Object client = extraData.get(EXTRA_DATA_CLIENT);
-        if (null != client) {
-            return Boolean.parseBoolean(client.toString());
-        } else {
-            return false;
-        }
     }
 
     /**
@@ -445,8 +360,10 @@ public final class NS2Parser {
             final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
             final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService,
                     managerFactory, "/protelis/com/bbn/resourcemanagement/resourcetracker.pt", false);
-            final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parse(scenarioFile,
-                    baseDirectory, factory);
+            final Topology topology = NS2Parser.parse(scenarioFile, baseDirectory);
+
+            final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = new Scenario<>(topology, factory,
+                    name -> new DnsNameIdentifier(name));
 
             regionLookupService.setDelegate(scenario);
 
