@@ -312,6 +312,10 @@ public final class NS2Parser {
                         node.setIpAddress(link, ip);
                     } else if (line.startsWith("tb-set-node-failure-action")) {
                         LOGGER.debug("Ignoring tb-set-node-failure-action line: {}", line);
+                    } else if(line.contains("rtproto")) {
+                        LOGGER.debug("Ignoring routing specification line: {}", line);
+                    } else if(line.endsWith("run")) {
+                        LOGGER.debug("Ignoring run line: {}", line);
                     } else {
                         LOGGER.info("Ignoring unknown line '{}'", line);
                     }
