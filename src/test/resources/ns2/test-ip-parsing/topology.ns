@@ -1,0 +1,36 @@
+set ns [new Simulator]
+source tb_compat.tcl
+
+set nodeA [$ns node]
+set nodeB [$ns node]
+
+set nodeC [$ns node]
+set nodeD [$ns node]
+set nodeE [$ns node]
+
+set nodeF [$ns node]
+set nodeG [$ns node]
+set nodeH [$ns node]
+
+set nodeI [$ns node]
+set nodeJ [$ns node]
+
+# test parsing of single link ip setting
+set link0 [$ns duplex-link $nodeA $nodeB 30Mb 50ms DropTail]
+tb-set-ip $nodeA 10.0.0.1
+
+# test parsing of ip link setting
+set link1 [$ns duplex-link $nodeC $nodeD 30Mb 50ms DropTail]
+set link2 [$ns duplex-link $nodeC $nodeE 30Mb 50ms DropTail]
+tb-set-ip-link $nodeC $link1 10.1.0.1
+ 
+# test parsing of ip lan setting
+set lan0 [$ns make-lan "$nodeF $nodeG $nodeH " 100Mb 0ms]
+tb-set-ip-lan $nodeF $lan0 10.2.0.1 
+
+# test parsing of ip interface setting
+set link1 [$ns duplex-link $nodeI $nodeJ 30Mb 50ms DropTail]
+tb-set-ip-interface $nodeI $nodeJ 10.3.0.1
+
+$ns rtproto Static
+$ns run

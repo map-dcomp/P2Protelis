@@ -1,0 +1,18 @@
+# test failure of setting the ip of a node when there are multiple links
+
+set ns [new Simulator]
+source tb_compat.tcl
+
+set nodeA [$ns node]
+set nodeB [$ns node]
+set nodeC [$ns node]
+
+set link0 [$ns duplex-link $nodeA $nodeB 30Mb 50ms DropTail]
+set link1 [$ns duplex-link $nodeA $nodeC 30Mb 50ms DropTail]
+
+# this should fail becuase there are multiple links on nodeA
+tb-set-ip $nodeA 10.0.0.1
+
+
+$ns rtproto Static
+$ns run

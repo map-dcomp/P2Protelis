@@ -71,9 +71,9 @@ public final class NS2Parser {
      *             if there is an error reading from the reader
      */
     public static Topology parse(final String scenarioName, final Path baseDirectory) throws IOException {
-        final Set<Link> links = new HashSet<>();
+        final Map<String, Link> links = new HashMap<>();
         final Map<String, Node> nodesByName = new HashMap<>();
-        final Set<Switch> lans = new HashSet<>();
+        final Map<String, Switch> lans = new HashMap<>();
 
         final Path topologyPath = baseDirectory.resolve(TOPOLOGY_FILENAME);
 
@@ -161,7 +161,7 @@ public final class NS2Parser {
                                     final Node rightNode = nodesByName.get(rightNodeName);
 
                                     final Link link = new Link(name, leftNode, rightNode, bandwidth);
-                                    links.add(link);
+                                    links.put(name, link);
                                 } else if ("make-lan".equals(objectType)) {
                                     final String bandwidthStr = tokens[tokens.length - 2];
                                     final double bandwidth = parseBandwidth(bandwidthStr);
@@ -179,13 +179,16 @@ public final class NS2Parser {
                                     }
 
                                     final Switch lan = new Switch(name, nodes, bandwidth);
-                                    lans.add(lan);
+                                    lans.put(name, lan);
                                 } else {
                                     throw new NS2FormatException(
                                             "Unsupported object type: " + objectType + " on line: " + line);
                                 }
+                            } else {
+                                throw new NS2FormatException(
+                                        "set arguments must reference an object (doesn't start with $): " + line);
                             }
-                        }
+                        } // set that is not the simulator
                     } else if (line.startsWith("tb-set-node-os")) {
                         final String[] tokens = line.split("\\s");
                         if (tokens.length != 3) {
@@ -205,7 +208,7 @@ public final class NS2Parser {
                     } else if (line.startsWith("tb-set-hardware")) {
                         final String[] tokens = line.split("\\s");
                         if (tokens.length != 3) {
-                            throw new NS2FormatException("Expecting tb-set-node-os to have 3 tokens: " + line);
+                            throw new NS2FormatException("Expecting tb-set-hardware to have 3 tokens: " + line);
                         }
 
                         if (!tokens[1].startsWith("$")) {
@@ -220,10 +223,97 @@ public final class NS2Parser {
 
                         final String hardware = tokens[2];
                         node.setHardware(hardware);
-                    } else {
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info("Ignoring unknown line '" + line + "'");
+                    } else if (line.startsWith("tb-set-ip-link") || line.startsWith("tb-set-ip-lan")
+                            || line.startsWith("tb-set-ip-interface")) {
+                        final String[] tokens = line.split("\\s");
+                        if (tokens.length != 4) {
+                            throw new NS2FormatException("Expecting tb-set-ip-* to have 4 tokens: " + line);
                         }
+
+                        if (!tokens[1].startsWith("$")) {
+                            throw new NS2FormatException("Expecting node name to start with $ on line: " + line);
+                        }
+                        final String nodeName = tokens[1].substring(1);
+                        if (!nodesByName.containsKey(nodeName)) {
+                            throw new NS2FormatException("Unknown node " + nodeName + " on line: " + line);
+                        }
+                        final Node node = nodesByName.get(nodeName);
+
+                        if (!tokens[2].startsWith("$")) {
+                            throw new NS2FormatException(
+                                    "Expecting link/node/lan name to start with $ on line: " + line);
+                        }
+                        final String selectorName = tokens[2].substring(1);
+
+                        final Link link;
+                        if ("tb-set-ip-link".equals(tokens[0])) {
+                            if (!links.containsKey(selectorName)) {
+                                throw new NS2FormatException("Unknown link " + selectorName + " on line: " + line);
+                            }
+                            link = links.get(selectorName);
+                        } else {
+                            final NetworkDevice selectorDevice;
+                            if ("tb-set-ip-lan".equals(tokens[0])) {
+                                selectorDevice = lans.get(selectorName);
+                                if (null == selectorDevice) {
+                                    throw new NS2FormatException(
+                                            "Unable to find lan " + selectorName + " referenced on line " + line);
+                                }
+                            } else if ("tb-set-ip-interface".equals(tokens[0])) {
+                                selectorDevice = nodesByName.get(selectorName);
+                                if (null == selectorDevice) {
+                                    throw new NS2FormatException(
+                                            "Unable to find lan " + selectorName + " referenced on line " + line);
+                                }
+                            } else {
+                                throw new RuntimeException("Internal error, unknown action: " + tokens[0]);
+                            }
+
+                            final Set<Link> nodeLinks = node.getLinks();
+                            link = nodeLinks.stream().filter(
+                                    l -> selectorDevice.equals(l.getLeft()) || selectorDevice.equals(l.getRight()))
+                                    .findFirst().orElse(null);
+
+                        }
+
+                        if (null == link) {
+                            throw new NS2FormatException("Unable to find link for " + selectorName + " on " + nodeName
+                                    + " referenced on line " + line);
+                        }
+
+                        final String ip = tokens[3];
+                        node.setIpAddress(link, ip);
+                    } else if (line.startsWith("tb-set-ip")) {
+                        final String[] tokens = line.split("\\s");
+                        if (tokens.length != 3) {
+                            throw new NS2FormatException("Expecting tb-set-ip to have 3 tokens: " + line);
+                        }
+
+                        if (!tokens[1].startsWith("$")) {
+                            throw new NS2FormatException("Expecting node name to start with $ on line: " + line);
+                        }
+                        final String nodeName = tokens[1].substring(1);
+                        if (!nodesByName.containsKey(nodeName)) {
+                            throw new NS2FormatException("Unknown node " + nodeName + " on line: " + line);
+                        }
+                        final Node node = nodesByName.get(nodeName);
+
+                        final Set<Link> nodeLinks = node.getLinks();
+                        if (nodeLinks.isEmpty()) {
+                            throw new NS2FormatException(
+                                    "No link on node " + nodeName + " cannot assign IP referenced on line " + line);
+                        } else if (nodeLinks.size() > 1) {
+                            throw new NS2FormatException("Multiple links on node " + nodeName
+                                    + " cannot assign IP referenced on line " + line);
+                        }
+
+                        final Link link = nodeLinks.iterator().next();
+                        final String ip = tokens[2];
+                        node.setIpAddress(link, ip);
+                    } else if (line.startsWith("tb-set-node-failure-action")) {
+                        LOGGER.debug("Ignoring tb-set-node-failure-action line: {}", line);
+                    } else {
+                        LOGGER.info("Ignoring unknown line '{}'", line);
                     }
                 }
 
