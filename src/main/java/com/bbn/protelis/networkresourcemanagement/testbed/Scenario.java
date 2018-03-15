@@ -166,6 +166,8 @@ public class Scenario<N extends NetworkServer, L extends NetworkLink, C extends 
             } else {
                 final N s = factory.createServer(id, node.getExtraData());
                 this.servers.put(id, s);
+                s.setHardware(node.getHardware());
+                
                 netNode = s;
             }
 
