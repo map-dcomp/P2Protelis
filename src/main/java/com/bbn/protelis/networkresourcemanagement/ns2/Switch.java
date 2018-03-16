@@ -29,6 +29,7 @@ public class Switch extends NetworkDevice {
      */
     public Switch(@Nonnull final String name, @Nonnull final Set<Node> nodes, final double bandwidth) {
         super(name);
+        this.bandwidth = bandwidth;
 
         nodes.forEach(n -> {
             final Link link = new Link(name, this, n, bandwidth);
@@ -54,6 +55,16 @@ public class Switch extends NetworkDevice {
      */
     public Set<Node> getNodes() {
         return Collections.unmodifiableSet(links.keySet());
+    }
+
+    private final double bandwidth;
+
+    /**
+     * 
+     * @return the bandwidth for the switch
+     */
+    public double getBandwidth() {
+        return bandwidth;
     }
 
 }
