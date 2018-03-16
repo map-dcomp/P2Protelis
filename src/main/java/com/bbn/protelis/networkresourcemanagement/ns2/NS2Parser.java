@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,6 +22,7 @@ import javax.annotation.Nonnull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xbill.DNS.Address;
 
 import com.bbn.protelis.common.testbed.termination.NeverTerminate;
 import com.bbn.protelis.networkresourcemanagement.BasicNetworkFactory;
@@ -282,7 +285,12 @@ public final class NS2Parser {
                         }
 
                         final String ip = tokens[3];
-                        node.setIpAddress(link, ip);
+                        try {
+                            final InetAddress addr = Address.getByAddress(ip);
+                            node.setIpAddress(link, addr);
+                        } catch (final UnknownHostException e) {
+                            throw new NS2FormatException("Invalid IP address: " + ip);
+                        }
                     } else if (line.startsWith("tb-set-ip")) {
                         final String[] tokens = line.split("\\s");
                         if (tokens.length != 3) {
@@ -309,12 +317,17 @@ public final class NS2Parser {
 
                         final Link link = nodeLinks.iterator().next();
                         final String ip = tokens[2];
-                        node.setIpAddress(link, ip);
+                        try {
+                            final InetAddress addr = Address.getByAddress(ip);
+                            node.setIpAddress(link, addr);
+                        } catch (final UnknownHostException e) {
+                            throw new NS2FormatException("Invalid IP address: " + ip);
+                        }
                     } else if (line.startsWith("tb-set-node-failure-action")) {
                         LOGGER.debug("Ignoring tb-set-node-failure-action line: {}", line);
-                    } else if(line.contains("rtproto")) {
+                    } else if (line.contains("rtproto")) {
                         LOGGER.debug("Ignoring routing specification line: {}", line);
-                    } else if(line.endsWith("run")) {
+                    } else if (line.endsWith("run")) {
                         LOGGER.debug("Ignoring run line: {}", line);
                     } else {
                         LOGGER.info("Ignoring unknown line '{}'", line);

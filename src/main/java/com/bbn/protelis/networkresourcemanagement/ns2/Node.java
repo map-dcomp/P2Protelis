@@ -1,5 +1,6 @@
 package com.bbn.protelis.networkresourcemanagement.ns2;
 
+import java.net.InetAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class Node extends NetworkDevice {
         return extraData;
     }
 
-    private final Map<Link, String> ipAddresses = new HashMap<>();
+    private final Map<Link, InetAddress> ipAddresses = new HashMap<>();
 
     /**
      * Specify an IP address for a link. This will overwrite any previous
@@ -56,7 +57,7 @@ public class Node extends NetworkDevice {
      * @param ip
      *            the address for the link
      */
-    public void setIpAddress(@Nonnull final Link link, @Nonnull final String ip) {
+    public void setIpAddress(@Nonnull final Link link, @Nonnull final InetAddress ip) {
         ipAddresses.put(link, ip);
     }
 
@@ -66,7 +67,7 @@ public class Node extends NetworkDevice {
      *            the link to get the address for
      * @return the address or null if there is no address specified for the link
      */
-    public String getIpAddress(@Nonnull final Link link) {
+    public InetAddress getIpAddress(@Nonnull final Link link) {
         return ipAddresses.get(link);
     }
 
@@ -74,7 +75,7 @@ public class Node extends NetworkDevice {
      * @return unmodifiable map of link -> address, note that an address may be
      *         null
      */
-    public Map<Link, String> getAllIpAddresses() {
+    public Map<Link, InetAddress> getAllIpAddresses() {
         return Collections.unmodifiableMap(ipAddresses);
     }
 
