@@ -67,9 +67,8 @@ public class NetworkClient implements NetworkNode {
 
     @Override
     public void processExtraData(@Nonnull final Map<String, Object> extraData) {
-        final Object regionValue = extraData.get(NetworkServer.EXTRA_DATA_REGION_KEY);
-        if (null != regionValue) {
-            final String regionName = regionValue.toString();
+        final String regionName = NetworkServerProperties.parseRegionName(extraData);
+        if (null != regionName) {
             final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
             this.setRegion(region);
         }
