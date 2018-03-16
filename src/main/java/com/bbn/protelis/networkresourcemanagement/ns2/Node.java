@@ -71,6 +71,14 @@ public class Node extends NetworkDevice {
     }
 
     /**
+     * @return unmodifiable map of link -> address, note that an address may be
+     *         null
+     */
+    public Map<Link, String> getAllIpAddresses() {
+        return Collections.unmodifiableMap(ipAddresses);
+    }
+
+    /**
      * Add to the list of known links. This initializes the link with an IP
      * address of null.
      * 
