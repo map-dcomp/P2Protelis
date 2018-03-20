@@ -1,12 +1,12 @@
-package com.bbn.protelis.networkresourcemanagement;
+package com.bbn.protelis.networkresourcemanagement.ns2;
 
 import java.util.Objects;
 
 /**
- * A link between two {@link NetworkNode}s.
+ * A link between two {@link NetworkDevice} objects.
  * 
  */
-public class NetworkLink {
+public class Link {
 
     private final String name;
 
@@ -18,23 +18,23 @@ public class NetworkLink {
         return this.name;
     }
 
-    private final NetworkNode left;
+    private final NetworkDevice left;
 
     /**
      * 
      * @return left side of the link
      */
-    public NetworkNode getLeft() {
+    public NetworkDevice getLeft() {
         return this.left;
     }
 
-    private final NetworkNode right;
+    private final NetworkDevice right;
 
     /**
      * 
      * @return right side of the link
      */
-    public NetworkNode getRight() {
+    public NetworkDevice getRight() {
         return this.right;
     }
 
@@ -49,7 +49,7 @@ public class NetworkLink {
     }
 
     /**
-     * Create a link.
+     * Create a link and adds it to the connected nodes.
      * 
      * @param name
      *            see {@link #getName()}
@@ -59,8 +59,9 @@ public class NetworkLink {
      *            see {@link #getRight()}
      * @param bandwidth
      *            see {@link #getBandwidth()}
+     * @see Node#addLink(Link)
      */
-    public NetworkLink(final String name, final NetworkNode left, final NetworkNode right, final double bandwidth) {
+    public Link(final String name, final NetworkDevice left, final NetworkDevice right, final double bandwidth) {
         this.name = name;
         this.left = left;
         this.right = right;
@@ -71,6 +72,13 @@ public class NetworkLink {
             this.hashCode = Objects.hash(left, right);
         } else {
             this.hashCode = Objects.hash(right, left);
+        }
+
+        if (left instanceof Node) {
+            ((Node) left).addLink(this);
+        }
+        if (right instanceof Node) {
+            ((Node) right).addLink(this);
         }
     }
 
@@ -93,17 +101,16 @@ public class NetworkLink {
         } else if (getClass() == o.getClass()) {
             // edges are bidirectional, so left and right don't matter for
             // equality
-            final NetworkLink other = (NetworkLink) o;
+            final Link other = (Link) o;
             return (left.equals(other.getLeft()) && right.equals(other.getRight()))
                     || (left.equals(other.getRight()) && right.equals(other.getLeft()));
         } else {
             return false;
         }
     }
-    
+
     @Override
     public String toString() {
         return getLeft() + " - " + getRight() + " @ " + getBandwidth() + "Mbps";
     }
-
 }

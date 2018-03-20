@@ -12,6 +12,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.hamcrest.CoreMatchers;
+import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,7 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
+import com.bbn.protelis.networkresourcemanagement.ns2.Link;
 import com.bbn.protelis.networkresourcemanagement.ns2.NS2Parser;
+import com.bbn.protelis.networkresourcemanagement.ns2.NS2Parser.NS2FormatException;
+import com.bbn.protelis.networkresourcemanagement.ns2.Node;
+import com.bbn.protelis.networkresourcemanagement.ns2.Topology;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
@@ -66,8 +71,9 @@ public class NS2ParserTest {
 
         final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/multinode");
         final Path baseDirectory = Paths.get(baseu.toURI());
-        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parse("multinode", baseDirectory,
-                factory);
+        final Topology topology = NS2Parser.parse("multinode", baseDirectory);
+        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = new Scenario<>(topology, factory,
+                name -> new DnsNameIdentifier(name));
         Assert.assertNotNull("Parse didn't create a scenario", scenario);
 
         regionLookupService.setDelegate(scenario);
@@ -109,16 +115,20 @@ public class NS2ParserTest {
         final boolean anonymous = true;
         final NodeLookupService nodeLookupService = new LocalNodeLookupService(42000 /* unused */);
         final DelegateRegionLookup regionLookupService = new DelegateRegionLookup(); // unused
+        final int numExpectedLinks = 4;
 
         final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
-        final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService, managerFactory,
-                program, anonymous);
+        final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService,
+                managerFactory, program, anonymous);
 
         final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/test-switch");
         final Path baseDirectory = Paths.get(baseu.toURI());
 
-        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = NS2Parser.parse("test-switch",
-                baseDirectory, factory);
+        final Topology topology = NS2Parser.parse("test-switch", baseDirectory);
+        final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = new Scenario<>(topology, factory,
+                name -> new DnsNameIdentifier(name));
+
+        Assert.assertThat(scenario.getLinks().size(), IsEqual.equalTo(numExpectedLinks));
 
         final String nodeAName = "nodeA";
         final NodeIdentifier nodeAId = new DnsNameIdentifier(nodeAName);
@@ -162,4 +172,104 @@ public class NS2ParserTest {
 
     }
 
+    /**
+     * Test parsing of IP address information.
+     * 
+     * @throws URISyntaxException
+     *             if there is an error finding the test scenario directory
+     * @throws IOException
+     *             if there is an error reading the test files
+     */
+    @Test
+    public void testParseIp() throws URISyntaxException, IOException {
+        final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/test-ip-parsing");
+        final Path baseDirectory = Paths.get(baseu.toURI());
+
+        final Topology topology = NS2Parser.parse("test-ip-parsing", baseDirectory);
+
+        // test parsing of a single link ip setting
+        final String nodeAName = "nodeA";
+        final Node nodeA = getNodeFromTopology(nodeAName, topology);
+        final String expectedNodeAIp = "10.0.0.1";
+        final int expectedNodeALinks = 1;
+
+        final Set<Link> nodeALinks = nodeA.getLinks();
+        Assert.assertThat(nodeALinks.size(), IsEqual.equalTo(expectedNodeALinks));
+        final Link nodeALink = nodeALinks.iterator().next();
+        final String actualNodeAIp = nodeA.getIpAddress(nodeALink);
+        Assert.assertThat(actualNodeAIp, IsEqual.equalTo(expectedNodeAIp));
+
+        // test parsing of setting for a single link
+        final String nodeCName = "nodeC";
+        final Node nodeC = getNodeFromTopology(nodeCName, topology);
+        final String linkCName = "link1";
+        final String expectedNodeCIp = "10.1.0.1";
+        final int expectedNodeCLinks = 2;
+
+        final Set<Link> nodeCLinks = nodeC.getLinks();
+        Assert.assertThat(nodeCLinks.size(), IsEqual.equalTo(expectedNodeCLinks));
+
+        final Link nodeCLink = nodeCLinks.stream().filter(l -> linkCName.equals(l.getName())).findFirst().orElse(null);
+        Assert.assertThat(nodeCLink, CoreMatchers.is(IsNull.notNullValue()));
+
+        final String actualNodeCIp = nodeC.getIpAddress(nodeCLink);
+        Assert.assertThat(actualNodeCIp, IsEqual.equalTo(expectedNodeCIp));
+
+        // test parsing of ip lan setting
+        final String nodeFName = "nodeF";
+        final Node nodeF = getNodeFromTopology(nodeFName, topology);
+        final String expectedNodeFIp = "10.2.0.1";
+        final int expectedNodeFLinks = 1;
+
+        final Set<Link> nodeFLinks = nodeF.getLinks();
+        Assert.assertThat(nodeFLinks.size(), IsEqual.equalTo(expectedNodeFLinks));
+        final Link nodeFLink = nodeFLinks.iterator().next();
+        final String actualNodeFIp = nodeF.getIpAddress(nodeFLink);
+        Assert.assertThat(actualNodeFIp, IsEqual.equalTo(expectedNodeFIp));
+
+        // test parsing of ip interface setting
+        final String nodeIName = "nodeI";
+        final Node nodeI = getNodeFromTopology(nodeIName, topology);
+        final String nodeJName = "nodeJ";
+        final Node nodeJ = getNodeFromTopology(nodeJName, topology);
+        final String expectedNodeIIp = "10.3.0.1";
+        final int expectedNodeILinks = 1;
+
+        final Set<Link> nodeILinks = nodeI.getLinks();
+        Assert.assertThat(nodeILinks.size(), IsEqual.equalTo(expectedNodeILinks));
+
+        final Link nodeILink = nodeILinks.stream().filter(l -> nodeJ.equals(l.getLeft()) || nodeJ.equals(l.getRight()))
+                .findFirst().orElse(null);
+        Assert.assertThat(nodeILink, CoreMatchers.is(IsNull.notNullValue()));
+
+        final String actualNodeIIp = nodeI.getIpAddress(nodeILink);
+        Assert.assertThat(actualNodeIIp, IsEqual.equalTo(expectedNodeIIp));
+
+    }
+
+    /**
+     * Test that trying to set an IP on a node with multiple links without
+     * specifying which link fails.
+     * 
+     * @throws URISyntaxException
+     *             if there is an error finding the test scenario directory
+     * @throws IOException
+     *             if there is an error reading the test files
+     */
+    @Test(expected = NS2FormatException.class)
+    public void testFailSetIp() throws URISyntaxException, IOException {
+        final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/test-set-ip-fail");
+        final Path baseDirectory = Paths.get(baseu.toURI());
+
+        NS2Parser.parse("test-set-ip-fail", baseDirectory);
+    }
+
+    /**
+     * Find a node in the topology and assert that it's not null.
+     */
+    private static Node getNodeFromTopology(final String name, final Topology topology) {
+        final Node node = topology.getNodes().get(name);
+        Assert.assertThat(node, CoreMatchers.is(IsNull.notNullValue()));
+        return node;
+    }
 }

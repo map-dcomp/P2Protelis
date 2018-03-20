@@ -20,7 +20,7 @@ plugins {
 
 
 group = 'com.bbn.protelis'
-version = '0.24.5'
+version = '0.24.6'
 
 description = """Protelis Testbed"""
 
@@ -64,7 +64,9 @@ exclude(module: 'guava')
     compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-guava', version:'2.8.9'
     compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-parameter-names', version:'2.8.9'
     compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version:'2.8.9'
-    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version:'2.8.9'   
+    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version:'2.8.9'
+    
+    compile group: 'dnsjava', name: 'dnsjava', version: '2.1.8'      
     
 }
 

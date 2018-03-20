@@ -45,13 +45,6 @@ public class NetworkServer extends AbstractExecutionContext
     public static final long DEFAULT_SLEEP_TIME_MS = 2 * 1000;
 
     /**
-     * The key into extra data passed to {@link #processExtraData(Map)} that
-     * specifies the region for a node. This will create a
-     * {@link StringRegionIdentifier}.
-     */
-    public static final String EXTRA_DATA_REGION_KEY = "region";
-
-    /**
      * Extra data key to specify if the node is a single server or a pool of
      * servers.
      */
@@ -524,9 +517,8 @@ public class NetworkServer extends AbstractExecutionContext
 
     @Override
     public void processExtraData(@Nonnull final Map<String, Object> extraData) {
-        final Object regionValue = extraData.get(EXTRA_DATA_REGION_KEY);
-        if (null != regionValue) {
-            final String regionName = regionValue.toString();
+        final String regionName = NetworkServerProperties.parseRegionName(extraData);
+        if (null != regionName) {
             final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
             this.setRegion(region);
         }
