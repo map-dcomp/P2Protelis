@@ -3,6 +3,7 @@ package com.bbn.protelis.networkresourcemanagement;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -19,6 +20,7 @@ import org.junit.Test;
 import org.protelis.lang.datatype.DeviceUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xbill.DNS.Address;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.networkresourcemanagement.ns2.Link;
@@ -190,20 +192,20 @@ public class NS2ParserTest {
         // test parsing of a single link ip setting
         final String nodeAName = "nodeA";
         final Node nodeA = getNodeFromTopology(nodeAName, topology);
-        final String expectedNodeAIp = "10.0.0.1";
+        final InetAddress expectedNodeAIp = Address.getByAddress("10.0.0.1");
         final int expectedNodeALinks = 1;
 
         final Set<Link> nodeALinks = nodeA.getLinks();
         Assert.assertThat(nodeALinks.size(), IsEqual.equalTo(expectedNodeALinks));
         final Link nodeALink = nodeALinks.iterator().next();
-        final String actualNodeAIp = nodeA.getIpAddress(nodeALink);
+        final InetAddress actualNodeAIp = nodeA.getIpAddress(nodeALink);
         Assert.assertThat(actualNodeAIp, IsEqual.equalTo(expectedNodeAIp));
 
         // test parsing of setting for a single link
         final String nodeCName = "nodeC";
         final Node nodeC = getNodeFromTopology(nodeCName, topology);
         final String linkCName = "link1";
-        final String expectedNodeCIp = "10.1.0.1";
+        final InetAddress expectedNodeCIp = Address.getByAddress("10.1.0.1");
         final int expectedNodeCLinks = 2;
 
         final Set<Link> nodeCLinks = nodeC.getLinks();
@@ -212,19 +214,19 @@ public class NS2ParserTest {
         final Link nodeCLink = nodeCLinks.stream().filter(l -> linkCName.equals(l.getName())).findFirst().orElse(null);
         Assert.assertThat(nodeCLink, CoreMatchers.is(IsNull.notNullValue()));
 
-        final String actualNodeCIp = nodeC.getIpAddress(nodeCLink);
+        final InetAddress actualNodeCIp = nodeC.getIpAddress(nodeCLink);
         Assert.assertThat(actualNodeCIp, IsEqual.equalTo(expectedNodeCIp));
 
         // test parsing of ip lan setting
         final String nodeFName = "nodeF";
         final Node nodeF = getNodeFromTopology(nodeFName, topology);
-        final String expectedNodeFIp = "10.2.0.1";
+        final InetAddress expectedNodeFIp = Address.getByAddress("10.2.0.1");
         final int expectedNodeFLinks = 1;
 
         final Set<Link> nodeFLinks = nodeF.getLinks();
         Assert.assertThat(nodeFLinks.size(), IsEqual.equalTo(expectedNodeFLinks));
         final Link nodeFLink = nodeFLinks.iterator().next();
-        final String actualNodeFIp = nodeF.getIpAddress(nodeFLink);
+        final InetAddress actualNodeFIp = nodeF.getIpAddress(nodeFLink);
         Assert.assertThat(actualNodeFIp, IsEqual.equalTo(expectedNodeFIp));
 
         // test parsing of ip interface setting
@@ -232,7 +234,7 @@ public class NS2ParserTest {
         final Node nodeI = getNodeFromTopology(nodeIName, topology);
         final String nodeJName = "nodeJ";
         final Node nodeJ = getNodeFromTopology(nodeJName, topology);
-        final String expectedNodeIIp = "10.3.0.1";
+        final InetAddress expectedNodeIIp = Address.getByAddress("10.3.0.1");
         final int expectedNodeILinks = 1;
 
         final Set<Link> nodeILinks = nodeI.getLinks();
@@ -242,7 +244,7 @@ public class NS2ParserTest {
                 .findFirst().orElse(null);
         Assert.assertThat(nodeILink, CoreMatchers.is(IsNull.notNullValue()));
 
-        final String actualNodeIIp = nodeI.getIpAddress(nodeILink);
+        final InetAddress actualNodeIIp = nodeI.getIpAddress(nodeILink);
         Assert.assertThat(actualNodeIIp, IsEqual.equalTo(expectedNodeIIp));
 
     }
