@@ -2,6 +2,8 @@ package com.bbn.protelis.networkresourcemanagement;
 
 import javax.annotation.Nonnull;
 
+import com.bbn.protelis.utils.SimpleClock;
+import com.bbn.protelis.utils.VirtualClock;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -12,6 +14,7 @@ import com.google.common.collect.ImmutableMap;
 public class NullResourceManager implements ResourceManager {
 
     private final NodeIdentifier nodeId;
+    private final VirtualClock clock = new SimpleClock();
 
     /**
      * 
@@ -50,4 +53,9 @@ public class NullResourceManager implements ResourceManager {
         return new ServiceReport(nodeId, ImmutableMap.of());
     }
 
+    @Override
+    @Nonnull
+    public VirtualClock getClock() {
+        return clock;
+    }
 }

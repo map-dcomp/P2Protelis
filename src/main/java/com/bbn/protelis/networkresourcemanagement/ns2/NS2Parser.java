@@ -40,6 +40,8 @@ import com.bbn.protelis.networkresourcemanagement.visualizer.BasicNetworkVisuali
 import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayEdge;
 import com.bbn.protelis.networkresourcemanagement.visualizer.DisplayNode;
 import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
+import com.bbn.protelis.utils.SimpleClock;
+import com.bbn.protelis.utils.VirtualClock;
 import com.cedarsoftware.util.io.JsonObject;
 import com.cedarsoftware.util.io.JsonReader;
 import com.google.common.collect.ImmutableMap;
@@ -464,7 +466,8 @@ public final class NS2Parser {
 
             final DelegateRegionLookup regionLookupService = new DelegateRegionLookup();
 
-            final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
+            final VirtualClock clock = new SimpleClock();
+            final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory(clock);
             final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService,
                     managerFactory, "/protelis/com/bbn/resourcemanagement/resourcetracker.pt", false);
             final Topology topology = NS2Parser.parse(scenarioFile, baseDirectory);
