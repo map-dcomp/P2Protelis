@@ -2,6 +2,7 @@ package com.bbn.protelis.networkresourcemanagement;
 
 import javax.annotation.Nonnull;
 
+import com.bbn.protelis.utils.VirtualClock;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -60,5 +61,12 @@ public interface ResourceManager {
      */
     @Nonnull
     ImmutableMap<NodeAttribute<?>, Double> getComputeCapacity();
+    
+
+    /**
+     * @return the clock used by the resource manager for timing
+     */
+    @Nonnull
+    VirtualClock getClock();
 
 }

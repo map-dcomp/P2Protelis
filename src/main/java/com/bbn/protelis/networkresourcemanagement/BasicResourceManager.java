@@ -8,6 +8,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.bbn.protelis.utils.VirtualClock;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -51,10 +52,13 @@ public class BasicResourceManager implements ResourceManager {
     private final ImmutableMap<NodeAttribute<?>, Double> computeCapacity;
     private final ImmutableMap<ServiceIdentifier<?>, Double> serverAvgProcTime;
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
+    private final VirtualClock clock;
 
     /**
      * Construct a resource manager for the specified node.
      * 
+     * @param clock
+     *            the clock to be used for timing
      * @param node
      *            the node that this resource manager is for
      * @param extraData
@@ -62,7 +66,10 @@ public class BasicResourceManager implements ResourceManager {
      *            return from the methods.
      * @see NetworkServer#processExtraData(Map)
      */
-    public BasicResourceManager(@Nonnull final NetworkServer node, @Nonnull final Map<String, Object> extraData) {
+    public BasicResourceManager(@Nonnull final VirtualClock clock,
+            @Nonnull final NetworkServer node,
+            @Nonnull final Map<String, Object> extraData) {
+        this.clock = clock;
         this.node = node;
         this.extraData = new HashMap<String, Object>(extraData);
 
@@ -331,6 +338,12 @@ public class BasicResourceManager implements ResourceManager {
     public ServiceReport getServiceReport() {
         final ServiceReport report = new ServiceReport(node.getNodeIdentifier(), computeServiceState());
         return report;
+    }
+
+    @Override
+    @Nonnull
+    public VirtualClock getClock() {
+        return clock;
     }
 
 }

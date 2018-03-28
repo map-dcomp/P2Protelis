@@ -11,6 +11,8 @@ import org.protelis.vm.ProtelisProgram;
 
 import com.bbn.protelis.networkresourcemanagement.ns2.NS2Parser;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
+import com.bbn.protelis.utils.SimpleClock;
+import com.bbn.protelis.utils.VirtualClock;
 
 /**
  * Tests for {@link BasicResourceManager}.
@@ -36,7 +38,8 @@ public class BasicResourceReportTest {
         final int dummyBasePort = 5000;
         final NetworkServer node = new NetworkServer(new LocalNodeLookupService(dummyBasePort), regionLookup, program,
                 new DnsNameIdentifier(nodeName));
-        final BasicResourceManager manager = new BasicResourceManager(node, extraData);
+        final VirtualClock clock = new SimpleClock();
+        final BasicResourceManager manager = new BasicResourceManager(clock, node, extraData);
         final ResourceReport report = manager.getCurrentResourceReport(ResourceReport.EstimationWindow.SHORT);
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             try (ObjectOutputStream serializaer = new ObjectOutputStream(output)) {
