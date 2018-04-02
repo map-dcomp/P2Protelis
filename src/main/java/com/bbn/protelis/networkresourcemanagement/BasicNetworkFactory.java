@@ -58,11 +58,8 @@ public class BasicNetworkFactory implements NetworkFactory<NetworkServer, Networ
             instance = ProtelisLoader.parse(program);
         }
 
-        final NetworkServer node = new NetworkServer(nodeLookupService, regionLookupService, instance, name);
-        final ResourceManager manager = managerFactory.createResourceManager(node, extraData);
-        node.setResourceManager(manager);
-
-        node.processExtraData(extraData);
+        final NetworkServer node = new NetworkServer(nodeLookupService, regionLookupService, instance, name,
+                managerFactory, extraData);
 
         return node;
     }
@@ -80,9 +77,7 @@ public class BasicNetworkFactory implements NetworkFactory<NetworkServer, Networ
     @Nonnull
     public NetworkClient createClient(@Nonnull final NodeIdentifier name,
             @Nonnull final Map<String, Object> extraData) {
-        final NetworkClient client = new NetworkClient(name);
-
-        client.processExtraData(extraData);
+        final NetworkClient client = new NetworkClient(name, extraData);
 
         return client;
     }

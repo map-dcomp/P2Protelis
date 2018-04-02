@@ -29,11 +29,32 @@ public class NetworkClient implements NetworkNode {
      * Create a client with the specified name.
      * 
      * @param id
-     *            the name of the client.
+     *            the name of the client
+     * @param extraData
+     *            defines values for extra properties
      */
-    public NetworkClient(@Nonnull final NodeIdentifier id) {
+    public NetworkClient(@Nonnull final NodeIdentifier id, @Nonnull final Map<String, Object> extraData) {
         this.uid = id;
-        this.region = NetworkServer.NULL_REGION;
+
+        final String regionName = NetworkServerProperties.parseRegionName(extraData);
+        if (null != regionName) {
+            final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
+            this.region = region;
+        } else {
+            this.region = NetworkServer.NULL_REGION;
+        }
+
+        final Object numClientsValue = extraData.get(EXTRA_DATA_NUM_CLIENTS_KEY);
+        if (null != numClientsValue) {
+            try {
+                final int numClients = Integer.parseInt(numClientsValue.toString());
+                setNumClients(numClients);
+            } catch (final NumberFormatException e) {
+                LOGGER.warn("Unable to parse {} as an integer: {}, not setting number of clients", numClientsValue,
+                        e.getMessage());
+            }
+        }
+
     }
 
     private final NodeIdentifier uid;
@@ -65,25 +86,6 @@ public class NetworkClient implements NetworkNode {
         addNeighbor(v.getNodeIdentifier(), bandwidth);
     }
 
-    @Override
-    public void processExtraData(@Nonnull final Map<String, Object> extraData) {
-        final String regionName = NetworkServerProperties.parseRegionName(extraData);
-        if (null != regionName) {
-            final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
-            this.setRegion(region);
-        }
-
-        final Object numClientsValue = extraData.get(EXTRA_DATA_NUM_CLIENTS_KEY);
-        if (null != numClientsValue) {
-            try {
-                final int numClients = Integer.parseInt(numClientsValue.toString());
-                setNumClients(numClients);
-            } catch (final NumberFormatException e) {
-                LOGGER.warn("Unable to parse {} as an integer: {}", numClientsValue, e.getMessage());
-            }
-        }
-    }
-
     private int numClients = 1;
 
     /**
@@ -97,11 +99,7 @@ public class NetworkClient implements NetworkNode {
         numClients = v;
     }
 
-    private RegionIdentifier region;
-
-    private void setRegion(final RegionIdentifier region) {
-        this.region = region;
-    }
+    private final RegionIdentifier region;
 
     @Override
     public RegionIdentifier getRegionIdentifier() {

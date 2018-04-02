@@ -36,11 +36,12 @@ public class BasicResourceReportTest {
         final String programStr = "true";
         final ProtelisProgram program = ProtelisLoader.parseAnonymousModule(programStr);
         final int dummyBasePort = 5000;
-        final NetworkServer node = new NetworkServer(new LocalNodeLookupService(dummyBasePort), regionLookup, program,
-                new DnsNameIdentifier(nodeName));
         final VirtualClock clock = new SimpleClock();
-        final BasicResourceManager manager = new BasicResourceManager(clock, node, extraData);
-        final ResourceReport report = manager.getCurrentResourceReport(ResourceReport.EstimationWindow.SHORT);
+        final BasicResourceManagerFactory resMgrFactory = new BasicResourceManagerFactory(clock);
+        final NetworkServer node = new NetworkServer(new LocalNodeLookupService(dummyBasePort), regionLookup, program,
+                new DnsNameIdentifier(nodeName), resMgrFactory, extraData);
+        final ResourceReport report = node.getResourceManager()
+                .getCurrentResourceReport(ResourceReport.EstimationWindow.SHORT);
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             try (ObjectOutputStream serializaer = new ObjectOutputStream(output)) {
                 serializaer.writeObject(report);
