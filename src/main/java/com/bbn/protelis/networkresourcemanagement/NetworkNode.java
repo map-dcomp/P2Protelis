@@ -1,6 +1,5 @@
 package com.bbn.protelis.networkresourcemanagement;
 
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -29,16 +28,6 @@ public interface NetworkNode {
      *         be null
      */
     RegionIdentifier getRegionIdentifier();
-
-    /**
-     * Process the extra data that was found when creating the node.
-     * 
-     * @param extraData
-     *            key/value pairs
-     * @see NetworkFactory#createServer(String, java.util.Map)
-     * @see NetworkFactory#createClient(String, Map)
-     */
-    void processExtraData(@Nonnull Map<String, Object> extraData);
 
     /**
      * Add a neighbor. If the neighbor node already exists, the bandwidth

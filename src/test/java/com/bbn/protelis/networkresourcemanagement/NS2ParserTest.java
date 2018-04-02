@@ -32,6 +32,8 @@ import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService
 import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
 import com.bbn.protelis.networkresourcemanagement.testbed.termination.ExecutionCountTermination;
+import com.bbn.protelis.utils.SimpleClock;
+import com.bbn.protelis.utils.VirtualClock;
 
 /**
  * Tests for {@link NS2Parser}.
@@ -66,8 +68,9 @@ public class NS2ParserTest {
         final String program = "/protelis/com/bbn/resourcemanagement/resourcetracker.pt";
         final boolean anonymous = false;
 
+        final VirtualClock clock = new SimpleClock();
         final DelegateRegionLookup regionLookupService = new DelegateRegionLookup();
-        final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
+        final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory(clock);
         final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService,
                 managerFactory, program, anonymous);
 
@@ -119,7 +122,8 @@ public class NS2ParserTest {
         final DelegateRegionLookup regionLookupService = new DelegateRegionLookup(); // unused
         final int numExpectedLinks = 4;
 
-        final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory();
+        final VirtualClock clock = new SimpleClock();
+        final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory(clock);
         final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService,
                 managerFactory, program, anonymous);
 

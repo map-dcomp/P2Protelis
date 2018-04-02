@@ -155,20 +155,41 @@ public class NetworkServer extends AbstractExecutionContext
      * @param nodeLookupService
      *            How to find other nodes
      * @param regionLookupService
-     *            used by {@link #convertToSummary(ResourceReport)}.
+     *            used by {@link #convertToSummary(ResourceReport)}
+     * @param managerFactory
+     *            used to create the {@link ResourceManager} for the node
+     * @param extraData
+     *            data to help define extra attributes about the node
      */
     public NetworkServer(@Nonnull final NodeLookupService nodeLookupService,
             @Nonnull final RegionLookupService regionLookupService,
             @Nonnull final ProtelisProgram program,
-            @Nonnull final NodeIdentifier name) {
+            @Nonnull final NodeIdentifier name,
+            @Nonnull final ResourceManagerFactory<NetworkServer> managerFactory,
+            @Nonnull final Map<String, Object> extraData) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(nodeLookupService));
         this.uid = name;
-        this.region = NULL_REGION;
+
+        final String regionName = NetworkServerProperties.parseRegionName(extraData);
+        if (null != regionName) {
+            final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
+            this.region = region;
+        } else {
+            this.region = NULL_REGION;
+        }
+
         this.networkState = new NetworkState(this.region);
         this.regionNodeState = new RegionNodeState(this.region);
         this.regionServiceState = new RegionServiceState(this.region, ImmutableSet.of());
-        this.resourceManager = new NullResourceManager(this.uid);
+
+        this.resourceManager = managerFactory.createResourceManager(this, extraData);
+
         this.regionLookupService = regionLookupService;
+
+        final Object pool = extraData.get(EXTRA_DATA_POOL);
+        if (null != pool) {
+            this.setPool(Boolean.parseBoolean(pool.toString()));
+        }
 
         // Finish making the new device and add it to our collection
         vm = new ProtelisVM(program, this);
@@ -449,16 +470,7 @@ public class NetworkServer extends AbstractExecutionContext
         } // isExecuting
     }
 
-    private ResourceManager resourceManager;
-
-    /**
-     * 
-     * @param resourceManager
-     *            the new {@link ResourceManager} for this node
-     */
-    public void setResourceManager(@Nonnull final ResourceManager resourceManager) {
-        this.resourceManager = resourceManager;
-    }
+    private final ResourceManager resourceManager;
 
     /**
      * 
@@ -493,40 +505,11 @@ public class NetworkServer extends AbstractExecutionContext
         return resourceManager.getServiceReport();
     }
 
-    private RegionIdentifier region;
-
-    /**
-     * Changing the region has the side effect of resetting the network state
-     * and the regional node state.
-     * 
-     * @param region
-     *            the new region that this node belongs to
-     * @see #getNetworkState()
-     */
-    public void setRegion(final RegionIdentifier region) {
-        this.region = region;
-        this.networkState = new NetworkState(this.region);
-        this.regionNodeState = new RegionNodeState(this.region);
-        this.regionServiceState = new RegionServiceState(this.region, ImmutableSet.of());
-    }
+    private final RegionIdentifier region;
 
     @Override
     public RegionIdentifier getRegionIdentifier() {
         return this.region;
-    }
-
-    @Override
-    public void processExtraData(@Nonnull final Map<String, Object> extraData) {
-        final String regionName = NetworkServerProperties.parseRegionName(extraData);
-        if (null != regionName) {
-            final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
-            this.setRegion(region);
-        }
-
-        final Object pool = extraData.get(EXTRA_DATA_POOL);
-        if (null != pool) {
-            this.setPool(Boolean.parseBoolean(pool.toString()));
-        }
     }
 
     private String hardware;
