@@ -44,6 +44,12 @@ public class ContainerResourceReport implements Serializable {
      *            see {@link #getNetworkLoad()}
      * @param networkDemand
      *            see {@link #getNetworkDemand()}
+     * @param neighborNetworkCapacity
+     *            see {@link #getNeighborNetworkCapacity()}
+     * @param neighborNetworkLoad
+     *            see {@link #getNeighborNetworkLoad()}
+     * @param neighborNetworkDemand
+     *            see {@link #getNeighborNetworkDemand()}
      */
     public ContainerResourceReport(@Nonnull final ContainerIdentifier containerName,
             final long timestamp,
@@ -53,20 +59,32 @@ public class ContainerResourceReport implements Serializable {
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeLoad,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeDemand,
             final double serverAverageProcessingTime,
+
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
             @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand) {
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand,
+
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkCapacity,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkLoad,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkDemand) {
         this.containerName = containerName;
         this.timestamp = timestamp;
         this.service = service;
         this.demandEstimationWindow = demandEstimationWindow;
+
         this.computeLoad = computeLoad;
         this.computeCapacity = computeCapacity;
         this.computeDemand = computeDemand;
         this.averageProcessingTime = serverAverageProcessingTime;
+
         this.networkCapacity = networkCapacity;
         this.networkLoad = networkLoad;
         this.networkDemand = networkDemand;
+
+        this.neighborNetworkCapacity = neighborNetworkCapacity;
+        this.neighborNetworkLoad = neighborNetworkLoad;
+        this.neighborNetworkDemand = neighborNetworkDemand;
+
     }
 
     private final ServiceIdentifier<?> service;
@@ -173,8 +191,9 @@ public class ContainerResourceReport implements Serializable {
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity;
 
     /**
-     * Link capacity for neighboring nodes. neighbor node -> attribute -> value.
-     * Each key in the list is the identifier of a neighboring node.
+     * Link capacity for network flows. client/other node -> attribute -> value.
+     * Each key in the list is the identifier of a node that is interacting with
+     * this container.
      * 
      * @return Not null.
      */
@@ -186,7 +205,7 @@ public class ContainerResourceReport implements Serializable {
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
 
     /**
-     * Network load to neighboring nodes. See {@link #getNetworkCapacity()} for
+     * Network load with other nodes. See {@link #getNetworkCapacity()} for
      * details on the map definition.
      * 
      * @return Not null.
@@ -199,14 +218,53 @@ public class ContainerResourceReport implements Serializable {
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand;
 
     /**
-     * Network demand to neighboring nodes. See {@link #getNetworkCapacity()}
-     * for details on the map definition.
+     * Network demand with other nodes. See {@link #getNetworkCapacity()} for
+     * details on the map definition.
      * 
      * @return Not null.
      */
     @Nonnull
     public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkDemand() {
         return networkDemand;
+    }
+
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkCapacity;
+
+    /**
+     * Link capacity for neighboring nodes. neighbor node -> attribute -> value.
+     * Each key in the list is the identifier of a neighboring node.
+     * 
+     * @return Not null.
+     */
+    @Nonnull
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNeighborNetworkCapacity() {
+        return neighborNetworkCapacity;
+    }
+
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkLoad;
+
+    /**
+     * Network load to neighboring nodes. See
+     * {@link #getNeighborNetworkCapacity()} for details on the map definition.
+     * 
+     * @return Not null.
+     */
+    @Nonnull
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNeighborNetworkLoad() {
+        return neighborNetworkLoad;
+    }
+
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkDemand;
+
+    /**
+     * Network demand to neighboring nodes. See
+     * {@link #getNeighborNetworkCapacity()} for details on the map definition.
+     * 
+     * @return Not null.
+     */
+    @Nonnull
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNeighborNetworkDemand() {
+        return neighborNetworkDemand;
     }
 
     /**
@@ -231,7 +289,11 @@ public class ContainerResourceReport implements Serializable {
                 0, // serverAverageProcessingTime
                 ImmutableMap.of(), // networkCapacity
                 ImmutableMap.of(), // networkLoad
-                ImmutableMap.of()); // networkDemand
+                ImmutableMap.of(), // networkDemand
+                ImmutableMap.of(), // neighborNetworkCapacity
+                ImmutableMap.of(), // neighborNetworkLoad
+                ImmutableMap.of()); // neighborNetworkDemand
+
     }
 
     @Override

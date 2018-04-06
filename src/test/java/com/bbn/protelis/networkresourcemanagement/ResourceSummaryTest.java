@@ -59,6 +59,8 @@ public class ResourceSummaryTest {
         final ContainerIdentifier containerId = new DnsNameIdentifier("container0");
         final ContainerResourceReport containerReport = new ContainerResourceReport(containerId, timestamp, service,
                 estimationWindow, serverCapacity, serverLoad, serverDemand, serverAverageProcessingTime,
+                networkCapacity, networkLoad, networkDemand,
+                // assume all clients are neighbors
                 networkCapacity, networkLoad, networkDemand);
         final ResourceReport report = new ResourceReport(nodeName, timestamp, estimationWindow, serverCapacity,
                 networkCapacity, networkLoad, networkDemand, ImmutableMap.of(containerId, containerReport));
