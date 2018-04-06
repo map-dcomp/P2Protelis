@@ -158,10 +158,10 @@ public class ResourceReport implements Serializable {
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkCapacity;
 
     /**
-     * Node link capacity for neighboring nodes. neighbor node -> attribute ->
-     * value. Each key in the list is the identifier of a neighboring node. The
-     * available capacity of the node can be computed by subtracting all of the
-     * individual container capacities from this value.
+     * Node link capacity for neighboring nodes. The available capacity of the
+     * node can be computed by subtracting all of the individual container
+     * capacities from this value. See {@link #getAllocatedNetworkCapacity()}
+     * for details on the map definition.
      * 
      * @return Not null.
      */
@@ -175,7 +175,8 @@ public class ResourceReport implements Serializable {
     /**
      * The network load on a node that cannot be attributed to a container on
      * the node. This will include traffic that terminates at the node itself or
-     * is routed through the node.
+     * is routed through the node. See {@link #getAllocatedNetworkCapacity()}
+     * for details on the map definition.
      * 
      * @return the network load passing through this node
      */
@@ -209,6 +210,8 @@ public class ResourceReport implements Serializable {
     private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkDemand = null;
 
     /**
+     * See {@link #getAllocatedNetworkCapacity()} for details on the map
+     * definition.
      * 
      * @return the network demand that isn't attributed to a container
      * @see #getNodeNetworkLoad()
@@ -501,6 +504,8 @@ public class ResourceReport implements Serializable {
     /**
      * All network load on the node. This includes both traffic passing through
      * the node and traffic that terminates at a container running on the node.
+     * See {@link #getAllocatedNetworkCapacity()} for details on the map
+     * definition.
      * 
      * @return the network load
      */
@@ -514,7 +519,8 @@ public class ResourceReport implements Serializable {
     /**
      * All network demand for the node. This includes both traffic passing
      * through the node and traffic that terminates at a container running on
-     * the node.
+     * the node. See {@link #getAllocatedNetworkCapacity()} for details on the
+     * map definition.
      * 
      * @return the network demand
      */
