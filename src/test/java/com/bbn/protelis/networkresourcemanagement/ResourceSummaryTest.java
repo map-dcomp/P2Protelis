@@ -63,6 +63,8 @@ public class ResourceSummaryTest {
                 // assume all clients are neighbors
                 networkCapacity, networkLoad, networkDemand);
         final ResourceReport report = new ResourceReport(nodeName, timestamp, estimationWindow, serverCapacity,
+                networkCapacity, networkLoad, networkDemand,
+                // assume all clients are neighbors
                 networkCapacity, networkLoad, networkDemand, ImmutableMap.of(containerId, containerReport));
 
         final TestRegionLookup regionLookup = new TestRegionLookup();
@@ -88,10 +90,13 @@ public class ResourceSummaryTest {
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> expectedNetworkCapacity = ImmutableMap
                 .of(region, ImmutableMap.of(linkAttribute, networkCapacityValue));
+
+        // times 2 because BasicResourceManager is adding the load to the
+        // container AND the node
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> expectedNetworkLoad = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkLoadValue));
+                .of(region, ImmutableMap.of(linkAttribute, networkLoadValue * 2));
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> expectedNetworkDemand = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkDemandValue));
+                .of(region, ImmutableMap.of(linkAttribute, networkDemandValue * 2));
 
         Assert.assertEquals(expectedNetworkCapacity, summary.getNetworkCapacity());
         Assert.assertEquals(expectedNetworkLoad, summary.getNetworkLoad());

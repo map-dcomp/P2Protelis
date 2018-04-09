@@ -259,9 +259,22 @@ public class BasicResourceManager implements ResourceManager {
         // FIXME hacked to have empty list of container resource reports
         // final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>,
         // Double>> linkDemand = computeNeighborLinkDemand();
+
+        // FIXME assumes that all client demand is only from neighbors, this
+        // isn't correct
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkCapacity = node
+                .getNeighborLinkCapacity(LinkAttributeEnum.DATARATE);
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkLoad = networkLoad;
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkDemand = computeNeighborLinkDemand();
+
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkCapacity = node
+                .getNeighborLinkCapacity(LinkAttributeEnum.DATARATE);
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkLoad = networkLoad;
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkDemand = computeNeighborLinkDemand();
+
         final ResourceReport report = new ResourceReport(node.getNodeIdentifier(), System.currentTimeMillis(),
-                demandWindow, this.computeCapacity, node.getNeighborLinkCapacity(LinkAttributeEnum.DATARATE),
-                ImmutableMap.of(), ImmutableMap.of(), ImmutableMap.of());
+                demandWindow, this.computeCapacity, nodeNetworkCapacity, nodeNetworkLoad, nodeNetworkDemand,
+                nodeNeighborNetworkCapacity, nodeNeighborNetworkLoad, nodeNeighborNetworkDemand, ImmutableMap.of());
         return report;
     }
 
