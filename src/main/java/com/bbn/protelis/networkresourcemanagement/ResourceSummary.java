@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
@@ -18,6 +18,7 @@ import com.google.common.collect.ImmutableMap;
  * {@link ResourceReport} for information about capacity vs. load vs. demand.
  * 
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ResourceSummary implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -159,7 +160,6 @@ public class ResourceSummary implements Serializable {
      * 
      * @return the average processing time for services in this region
      */
-    @JsonIgnore
     @Nonnull
     public ImmutableMap<ServiceIdentifier<?>, Double> getServerAverageProcessingTime() {
         return serverAverageProcessingTime;

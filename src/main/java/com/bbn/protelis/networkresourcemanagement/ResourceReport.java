@@ -7,7 +7,7 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import com.bbn.protelis.utils.ImmutableUtils;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
  * Demand is an estimated value predicting how much a particular resource will
  * be used over the window specified by {@Link #getDemandEstimationWindow()}.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ResourceReport implements Serializable {
 
     /**
@@ -271,7 +272,6 @@ public class ResourceReport implements Serializable {
      * 
      * @return all network load on the node and it's containers
      */
-    @JsonIgnore
     public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getAllNetworkLoad() {
         if (null == allNetworkLoad) {
             final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> nload = new HashMap<>();
@@ -307,7 +307,6 @@ public class ResourceReport implements Serializable {
      * 
      * @return all network load on the node and it's containers
      */
-    @JsonIgnore
     public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getAllNetworkDemand() {
         if (null == allNetworkDemand) {
             final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> nload = new HashMap<>();
@@ -363,7 +362,6 @@ public class ResourceReport implements Serializable {
      * @return The average time it takes to process a request for each service.
      */
     @Nonnull
-    @JsonIgnore
     public ImmutableMap<ServiceIdentifier<?>, Double> getAverageProcessingTime() {
         if (null == serverAverageProcessingTime) {
             final Map<ServiceIdentifier<?>, Double> rrProcTimeSum = new HashMap<>();
@@ -401,7 +399,6 @@ public class ResourceReport implements Serializable {
      * @return the load information. Not null.
      */
     @Nonnull
-    @JsonIgnore
     public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
             getComputeLoad() {
         if (null == computeLoad) {
@@ -440,7 +437,6 @@ public class ResourceReport implements Serializable {
      * @return the demand information. Not null.
      */
     @Nonnull
-    @JsonIgnore
     public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
             getComputeDemand() {
         if (null == computeDemand) {
@@ -479,7 +475,6 @@ public class ResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    @JsonIgnore
     public ImmutableMap<NodeAttribute<?>, Double> getAllocatedComputeCapacity() {
         if (null == allocatedComputeCapacity) {
             final Map<NodeAttribute<?>, Double> rrCapacity = new HashMap<>();
@@ -503,7 +498,6 @@ public class ResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    @JsonIgnore
     public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getContainerNetworkLoad() {
         if (null == containerNetworkLoad) {
             // compute it
@@ -537,7 +531,6 @@ public class ResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    @JsonIgnore
     public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getContainerNetworkDemand() {
         if (null == containerNetworkDemand) {
             // compute it
