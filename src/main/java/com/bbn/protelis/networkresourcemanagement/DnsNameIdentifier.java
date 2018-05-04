@@ -8,7 +8,7 @@ import org.protelis.lang.datatype.DeviceUID;
  * Identifier that represents a DNS name. The name is compared in a
  * case-insensitive manner.
  */
-public class DnsNameIdentifier implements ContainerIdentifier, DeviceUID, Comparable<DnsNameIdentifier> {
+public class DnsNameIdentifier implements ContainerIdentifier, Comparable<DnsNameIdentifier> {
     private static final long serialVersionUID = 1L;
 
     private final String name;
