@@ -25,7 +25,11 @@ import com.google.common.collect.ImmutableMap;
  * Demand is an estimated value predicting how much a particular resource will
  * be used over the window specified by {@Link #getDemandEstimationWindow()}.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
+// this annotation is here to allow computed properties to be serialized, but
+// not deserialized
+@JsonIgnoreProperties(ignoreUnknown = true, value = { "allNetworkDemand", "allNetworkLoad", "allocatedComputeCapacity",
+        "averageProcessingTime", "computeDemand", "computeLoad", "containerNetworkDemand",
+        "containerNetworkLoad" }, allowGetters = true, allowSetters = false)
 public class ResourceReport implements Serializable {
 
     /**
