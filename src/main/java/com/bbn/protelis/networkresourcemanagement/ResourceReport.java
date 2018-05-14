@@ -7,6 +7,8 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import com.bbn.protelis.utils.ImmutableUtils;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -23,6 +25,11 @@ import com.google.common.collect.ImmutableMap;
  * Demand is an estimated value predicting how much a particular resource will
  * be used over the window specified by {@Link #getDemandEstimationWindow()}.
  */
+// this annotation is here to allow computed properties to be serialized, but
+// not deserialized
+@JsonIgnoreProperties(ignoreUnknown = true, value = { "allNetworkDemand", "allNetworkLoad", "allocatedComputeCapacity",
+        "averageProcessingTime", "computeDemand", "computeLoad", "containerNetworkDemand",
+        "containerNetworkLoad" }, allowGetters = true, allowSetters = false)
 public class ResourceReport implements Serializable {
 
     /**
@@ -93,20 +100,20 @@ public class ResourceReport implements Serializable {
      *             if any of the container reports don't have the same demand
      *             estimation window as specified in this constructor
      */
-    public ResourceReport(@Nonnull final NodeIdentifier nodeName,
-            final long timestamp,
-            @Nonnull final EstimationWindow demandEstimationWindow,
-            @Nonnull final ImmutableMap<NodeAttribute<?>, Double> nodeComputeCapacity,
+    public ResourceReport(@JsonProperty("nodeName") @Nonnull final NodeIdentifier nodeName,
+            @JsonProperty("timestamp") final long timestamp,
+            @JsonProperty("demandEstimationWindow") @Nonnull final EstimationWindow demandEstimationWindow,
+            @JsonProperty("nodeComputeCapacity") @Nonnull final ImmutableMap<NodeAttribute<?>, Double> nodeComputeCapacity,
 
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkCapacity,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkLoad,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkDemand,
+            @JsonProperty("nodeNetworkCapacity") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkCapacity,
+            @JsonProperty("nodeNetworkLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkLoad,
+            @JsonProperty("nodeNetworkDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkDemand,
 
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkCapacity,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkLoad,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkDemand,
+            @JsonProperty("nodeNeighborNetworkCapacity") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkCapacity,
+            @JsonProperty("nodeNeighborNetworkLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkLoad,
+            @JsonProperty("nodeNeighborNetworkDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkDemand,
 
-            @Nonnull final ImmutableMap<ContainerIdentifier, ContainerResourceReport> containerReports) {
+            @JsonProperty("containerReports") @Nonnull final ImmutableMap<ContainerIdentifier, ContainerResourceReport> containerReports) {
         this.nodeName = nodeName;
         this.timestamp = timestamp;
         this.demandEstimationWindow = demandEstimationWindow;

@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import javax.annotation.Nonnull;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -51,22 +52,22 @@ public class ContainerResourceReport implements Serializable {
      * @param neighborNetworkDemand
      *            see {@link #getNeighborNetworkDemand()}
      */
-    public ContainerResourceReport(@Nonnull final ContainerIdentifier containerName,
-            final long timestamp,
-            final ServiceIdentifier<?> service,
-            @Nonnull final ResourceReport.EstimationWindow demandEstimationWindow,
-            @Nonnull final ImmutableMap<NodeAttribute<?>, Double> computeCapacity,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeLoad,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeDemand,
-            final double serverAverageProcessingTime,
+    public ContainerResourceReport(@JsonProperty("containerName") @Nonnull final ContainerIdentifier containerName,
+            @JsonProperty("timestamp") final long timestamp,
+            @JsonProperty("service") final ServiceIdentifier<?> service,
+            @JsonProperty("demandEstimationWindow") @Nonnull final ResourceReport.EstimationWindow demandEstimationWindow,
+            @JsonProperty("computeCapacity") @Nonnull final ImmutableMap<NodeAttribute<?>, Double> computeCapacity,
+            @JsonProperty("computeLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeLoad,
+            @JsonProperty("computeDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeDemand,
+            @JsonProperty("averageProcessingTime") final double serverAverageProcessingTime,
 
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand,
+            @JsonProperty("networkCapacity") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
+            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad,
+            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand,
 
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkCapacity,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkLoad,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkDemand) {
+            @JsonProperty("neighborNetworkCapacity") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkCapacity,
+            @JsonProperty("neighborNetworkLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkLoad,
+            @JsonProperty("neighborNetworkDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkDemand) {
         this.containerName = containerName;
         this.timestamp = timestamp;
         this.service = service;

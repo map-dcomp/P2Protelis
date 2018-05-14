@@ -9,6 +9,8 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -16,6 +18,7 @@ import com.google.common.collect.ImmutableMap;
  * {@link ResourceReport} for information about capacity vs. load vs. demand.
  * 
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ResourceSummary implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -50,18 +53,18 @@ public class ResourceSummary implements Serializable {
      *            Used to compute {@link #getServerAverageProcessingTime()}
      * 
      */
-    public ResourceSummary(@Nonnull final RegionIdentifier region,
-            final long minTimestamp,
-            final long maxTimestamp,
-            @Nonnull final ResourceReport.EstimationWindow demandEstimationWindow,
-            @Nonnull final ImmutableMap<NodeAttribute<?>, Double> serverCapacity,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, Integer> serverAverageProcessingTimeCount,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTimeSum,
-            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
-            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad,
-            @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand) {
+    public ResourceSummary(@JsonProperty("region") @Nonnull final RegionIdentifier region,
+            @JsonProperty("minTimestamp") final long minTimestamp,
+            @JsonProperty("maxTimestamp") final long maxTimestamp,
+            @JsonProperty("demandEstimationWindow") @Nonnull final ResourceReport.EstimationWindow demandEstimationWindow,
+            @JsonProperty("serverCapacity") @Nonnull final ImmutableMap<NodeAttribute<?>, Double> serverCapacity,
+            @JsonProperty("serverLoad") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad,
+            @JsonProperty("serverDemand") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand,
+            @JsonProperty("serverAverageProcessingTimeCount") @Nonnull final ImmutableMap<ServiceIdentifier<?>, Integer> serverAverageProcessingTimeCount,
+            @JsonProperty("serverAverageProcessingTimeSum") @Nonnull final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTimeSum,
+            @JsonProperty("networkCapacity") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
+            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad,
+            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand) {
         this.region = region;
         this.minTimestamp = minTimestamp;
         this.maxTimestamp = maxTimestamp;
@@ -132,22 +135,22 @@ public class ResourceSummary implements Serializable {
     private final ImmutableMap<ServiceIdentifier<?>, Integer> serverAverageProcessingTimeCount;
 
     /**
-     * Used to compute {@link #getServerAverageProcessingTime()} when executing
-     * {@link #merge(ResourceSummary, ResourceSummary)}
+     * @return Used to compute {@link #getServerAverageProcessingTime()} when
+     *         executing {@link #merge(ResourceSummary, ResourceSummary)}.
      */
     @Nonnull
-    private ImmutableMap<ServiceIdentifier<?>, Integer> getServerAverageProcessingTimeCount() {
+    public ImmutableMap<ServiceIdentifier<?>, Integer> getServerAverageProcessingTimeCount() {
         return serverAverageProcessingTimeCount;
     }
 
     private final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTimeSum;
 
     /**
-     * Used to compute {@link #getServerAverageProcessingTime()} when executing
-     * {@link #merge(ResourceSummary, ResourceSummary)}
+     * @return Used to compute {@link #getServerAverageProcessingTime()} when
+     *         executing {@link #merge(ResourceSummary, ResourceSummary)}.
      */
     @Nonnull
-    private ImmutableMap<ServiceIdentifier<?>, Double> getServerAverageProcessingTimeSum() {
+    public ImmutableMap<ServiceIdentifier<?>, Double> getServerAverageProcessingTimeSum() {
         return serverAverageProcessingTimeSum;
     }
 
