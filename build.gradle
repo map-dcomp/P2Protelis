@@ -72,7 +72,14 @@ exclude(module: 'guava')
 
 // set gradle version when generating the wrapper
 task wrapper(type: Wrapper) {
-     gradleVersion = '4.0'
+    gradleVersion = '4.0'
+}
+
+eclipse {
+    classpath {
+        downloadSources = true
+        downloadJavadoc = true
+    }
 }
 
 checkstyle {
