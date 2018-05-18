@@ -90,6 +90,7 @@ checkstyle {
 
 test {
     testLogging.showStandardStreams = true
+    ignoreFailures Boolean.getBoolean("test.ignoreFailures")        
 }
 
 findbugs {
