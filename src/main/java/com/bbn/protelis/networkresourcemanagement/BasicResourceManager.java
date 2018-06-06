@@ -16,6 +16,9 @@ import com.google.common.collect.ImmutableMap;
  * extra data that was parsed when the node was created. The demand is static
  * and equal to the load. All load is from inside the same region. One could
  * expand the extra data to include this information as well.
+ * 
+ * Note: This class does is not functional and is only provided as an example
+ * for implementations.
  */
 public class BasicResourceManager implements ResourceManager {
 
@@ -51,7 +54,7 @@ public class BasicResourceManager implements ResourceManager {
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> computeLoad;
     private final ImmutableMap<NodeAttribute<?>, Double> computeCapacity;
     private final ImmutableMap<ServiceIdentifier<?>, Double> serverAvgProcTime;
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad;
     private final VirtualClock clock;
 
     /**
@@ -74,20 +77,23 @@ public class BasicResourceManager implements ResourceManager {
         this.extraData = new HashMap<String, Object>(extraData);
 
         final Object resourceReportValuesRaw = this.extraData.get(EXTRA_DATA_RESOURCE_REPORT_KEY);
-        if (null != resourceReportValuesRaw && resourceReportValuesRaw instanceof Map) {
-            @SuppressWarnings("unchecked")
-            final Map<String, Object> resourceReportValues = (Map<String, Object>) resourceReportValuesRaw;
-
-            this.computeLoad = parseClientDemand(resourceReportValues);
-            this.computeCapacity = parseServerCapacity(resourceReportValues);
-            this.serverAvgProcTime = parseServerAverageProcessingTime(resourceReportValues);
-            this.networkLoad = parseNeighborLinkDemand(resourceReportValues);
-        } else {
-            this.computeLoad = ImmutableMap.of();
-            this.computeCapacity = ImmutableMap.of();
-            this.serverAvgProcTime = ImmutableMap.of();
-            this.networkLoad = ImmutableMap.of();
-        }
+        // if (null != resourceReportValuesRaw && resourceReportValuesRaw
+        // instanceof Map) {
+        // @SuppressWarnings("unchecked")
+        // final Map<String, Object> resourceReportValues = (Map<String,
+        // Object>) resourceReportValuesRaw;
+        //
+        // this.computeLoad = parseClientDemand(resourceReportValues);
+        // this.computeCapacity = parseServerCapacity(resourceReportValues);
+        // this.serverAvgProcTime =
+        // parseServerAverageProcessingTime(resourceReportValues);
+        // this.networkLoad = parseNeighborLinkDemand(resourceReportValues);
+        // } else {
+        this.computeLoad = ImmutableMap.of();
+        this.computeCapacity = ImmutableMap.of();
+        this.serverAvgProcTime = ImmutableMap.of();
+        this.networkLoad = ImmutableMap.of();
+        // }
 
     }
 
@@ -264,23 +270,19 @@ public class BasicResourceManager implements ResourceManager {
         // isn't correct
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkCapacity = node
                 .getNeighborLinkCapacity(LinkAttributeEnum.DATARATE);
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkLoad = networkLoad;
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkDemand = computeNeighborLinkDemand();
-
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkCapacity = node
-                .getNeighborLinkCapacity(LinkAttributeEnum.DATARATE);
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkLoad = networkLoad;
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkDemand = computeNeighborLinkDemand();
+        final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> nodeNetworkLoad = networkLoad;
+        final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> nodeNetworkDemand = computeNeighborLinkDemand();
 
         final ResourceReport report = new ResourceReport(node.getNodeIdentifier(), System.currentTimeMillis(),
                 demandWindow, this.computeCapacity, nodeNetworkCapacity, nodeNetworkLoad, nodeNetworkDemand,
-                nodeNeighborNetworkCapacity, nodeNeighborNetworkLoad, nodeNeighborNetworkDemand, ImmutableMap.of());
+                ImmutableMap.of());
         return report;
     }
 
     @Nonnull
-    private ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> computeNeighborLinkDemand() {
-        final ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> builder = ImmutableMap
+    private ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+            computeNeighborLinkDemand() {
+        final ImmutableMap.Builder<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> builder = ImmutableMap
                 .builder();
         this.node.getNeighbors().forEach(neighborId -> {
             if (this.networkLoad.containsKey(neighborId)) {
