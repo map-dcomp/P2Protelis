@@ -76,7 +76,7 @@ public class BasicResourceManager implements ResourceManager {
         this.node = node;
         this.extraData = new HashMap<String, Object>(extraData);
 
-        final Object resourceReportValuesRaw = this.extraData.get(EXTRA_DATA_RESOURCE_REPORT_KEY);
+        //final Object resourceReportValuesRaw = this.extraData.get(EXTRA_DATA_RESOURCE_REPORT_KEY);
         // if (null != resourceReportValuesRaw && resourceReportValuesRaw
         // instanceof Map) {
         // @SuppressWarnings("unchecked")

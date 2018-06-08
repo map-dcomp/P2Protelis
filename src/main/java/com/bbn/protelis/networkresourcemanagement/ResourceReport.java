@@ -423,7 +423,7 @@ public class ResourceReport implements Serializable {
         return ImmutableUtils.makeImmutableMap4(nload);
     }
 
-    private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> containerNetworkDemand = null;
+    private transient ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> containerNetworkDemand = null;
 
     /**
      * Network demand to neighboring nodes summed across the containers. See
@@ -432,10 +432,11 @@ public class ResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getContainerNetworkDemand() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+            getContainerNetworkDemand() {
         if (null == containerNetworkDemand) {
             // compute it
-            containerNetworkLoad = sumContainerNetworkValue(report -> report.getNetworkDemand());
+            containerNetworkDemand = sumContainerNetworkValue(report -> report.getNetworkDemand());
         }
         return containerNetworkDemand;
     }
