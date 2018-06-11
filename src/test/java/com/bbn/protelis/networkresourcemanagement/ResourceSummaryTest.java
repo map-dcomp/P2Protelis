@@ -1,5 +1,10 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertThat;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -177,6 +182,100 @@ public class ResourceSummaryTest {
         Assert.assertEquals(sourceSummary.getNetworkCapacity(), resultSummary.getNetworkCapacity());
         Assert.assertEquals(sourceSummary.getNetworkLoad(), resultSummary.getNetworkLoad());
         Assert.assertEquals(sourceSummary.getNetworkDemand(), resultSummary.getNetworkDemand());
+    }
+
+    /**
+     * Check that when converting a {@link ResourceReport} to a
+     * {@link ResourceSummary} with network capacity and load to a neighbor
+     * inside the region and outside the region that only the capacity and load
+     * to outside the region is in the summary.
+     * 
+     */
+    @Test
+    public void testIgnoreConvertSameRegionNet() {
+        final double loadToA1 = 10;
+        final double capacityToA1 = 100;
+        final double loadToB0 = 20;
+        final double capacityToB0 = 200;
+
+        final NodeIdentifier a0 = new DnsNameIdentifier("a0");
+        final NodeIdentifier a1 = new DnsNameIdentifier("a1");
+        final NodeIdentifier b0 = new DnsNameIdentifier("b0");
+        final NodeIdentifier source = new DnsNameIdentifier("source");
+        final ServiceIdentifier<?> service = new StringServiceIdentifier("service");
+        final RegionIdentifier regionA = new StringRegionIdentifier("A");
+        final RegionIdentifier regionB = new StringRegionIdentifier("B");
+        final RegionIdentifier regionSource = new StringRegionIdentifier("Z");
+        final double tolerance = 1E-6;
+
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap.of(//
+                a1, ImmutableMap.of(LinkAttributeEnum.DATARATE, capacityToA1), //
+                b0, ImmutableMap.of(LinkAttributeEnum.DATARATE, capacityToB0));
+
+        final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad = //
+                ImmutableMap.of(//
+                        a1, //
+                        ImmutableMap.of(source,
+                                ImmutableMap.of(service, //
+                                        ImmutableMap.of(LinkAttributeEnum.DATARATE, loadToA1))), //
+                        b0, //
+                        ImmutableMap.of(source, //
+                                ImmutableMap.of(service, ImmutableMap.of(LinkAttributeEnum.DATARATE, loadToB0))) //
+                );
+
+        final ResourceReport report = new ResourceReport(a0, 0, EstimationWindow.SHORT, ImmutableMap.of(),
+                networkCapacity, networkLoad, ImmutableMap.of(), ImmutableMap.of());
+
+        final TestRegionLookup nodeToRegion = new TestRegionLookup();
+        nodeToRegion.addMapping(a0, regionA);
+        nodeToRegion.addMapping(a1, regionA);
+        nodeToRegion.addMapping(b0, regionB);
+        nodeToRegion.addMapping(source, regionSource);
+
+        final ResourceSummary summary = ResourceSummary.convertToSummary(report, nodeToRegion);
+
+        // ---- check capacity
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> summaryNetCapacity = summary
+                .getNetworkCapacity();
+        assertThat(summaryNetCapacity, notNullValue());
+
+        // make sure region A isn't in the capacity
+        assertThat(summaryNetCapacity.get(regionA), nullValue());
+
+        // check that region B has capacity and that it matches the expected
+        // value
+        final ImmutableMap<LinkAttribute<?>, Double> summaryNetCapacityB = summaryNetCapacity.get(regionB);
+        assertThat(summaryNetCapacityB, notNullValue());
+
+        final Double summaryNetCapacityBvalue = summaryNetCapacityB.get(LinkAttributeEnum.DATARATE);
+        assertThat(summaryNetCapacityBvalue, notNullValue());
+        assertThat(summaryNetCapacityBvalue, closeTo(capacityToB0, tolerance));
+
+        // ---- check load
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> summaryNetLoad = summary
+                .getNetworkLoad();
+        assertThat(summaryNetLoad, notNullValue());
+
+        // make sure region A isn't in the capacity
+        assertThat(summaryNetLoad.get(regionA), nullValue());
+
+        // check that region B has load and that it matches the expected
+        // value
+        final ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>> summaryNetLoadB = summaryNetLoad
+                .get(regionB);
+        assertThat(summaryNetLoadB, notNullValue());
+
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>> summaryNetSourceLoad = summaryNetLoadB
+                .get(regionSource);
+        assertThat(summaryNetSourceLoad, notNullValue());
+
+        final ImmutableMap<LinkAttribute<?>, Double> summaryNetServiceLoad = summaryNetSourceLoad.get(service);
+        assertThat(summaryNetServiceLoad, notNullValue());
+
+        final Double summaryNetLoadBvalue = summaryNetServiceLoad.get(LinkAttributeEnum.DATARATE);
+        assertThat(summaryNetLoadBvalue, notNullValue());
+        assertThat(summaryNetLoadBvalue, closeTo(loadToB0, tolerance));
+
     }
 
     private static final class TestRegionLookup implements RegionLookupService {
