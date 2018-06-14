@@ -9,6 +9,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.bbn.protelis.utils.ImmutableUtils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
@@ -57,14 +58,17 @@ public class ResourceSummary implements Serializable {
             @JsonProperty("minTimestamp") final long minTimestamp,
             @JsonProperty("maxTimestamp") final long maxTimestamp,
             @JsonProperty("demandEstimationWindow") @Nonnull final ResourceReport.EstimationWindow demandEstimationWindow,
+
             @JsonProperty("serverCapacity") @Nonnull final ImmutableMap<NodeAttribute<?>, Double> serverCapacity,
             @JsonProperty("serverLoad") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad,
             @JsonProperty("serverDemand") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand,
+
             @JsonProperty("serverAverageProcessingTimeCount") @Nonnull final ImmutableMap<ServiceIdentifier<?>, Integer> serverAverageProcessingTimeCount,
             @JsonProperty("serverAverageProcessingTimeSum") @Nonnull final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTimeSum,
+
             @JsonProperty("networkCapacity") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
-            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad,
-            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand) {
+            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad,
+            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand) {
         this.region = region;
         this.minTimestamp = minTimestamp;
         this.maxTimestamp = maxTimestamp;
@@ -222,31 +226,35 @@ public class ResourceSummary implements Serializable {
         return networkCapacity;
     }
 
-    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
+    private final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad;
 
     /**
-     * Network load for neighboring regions. neighboring region -> attribute ->
-     * value. Only direct neighbors are reported.
+     * Network load and where it comes from. neighbor region -> source region ->
+     * service -> attribute -> value.
+     * 
+     * Only direct neighbors are reported.
      * 
      * @return the summary information. Not null.
      * @see ResourceReport#getNetworkLoad()
      */
     @Nonnull
-    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkLoad() {
+    public ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+            getNetworkLoad() {
         return networkLoad;
     }
 
-    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand;
+    private final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand;
 
     /**
-     * Network demand for neighboring regions. neighboring region -> attribute
-     * -> value. Only direct neighbors are reported.
+     * Network demand for neighboring regions. Only direct neighbors are
+     * reported. See {@link #getNetworkLoad()} for a description of the map.
      * 
      * @return the demand information. Not null.
      * @see ResourceReport#getNetworkDemand()
      */
     @Nonnull
-    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkDemand() {
+    public ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+            getNetworkDemand() {
         return networkDemand;
     }
 
@@ -269,7 +277,8 @@ public class ResourceSummary implements Serializable {
         final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = ImmutableMap.of();
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap
                 .of();
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = ImmutableMap.of();
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad = ImmutableMap
+                .of();
 
         return new ResourceSummary(region, ResourceReport.NULL_TIMESTAMP, ResourceReport.NULL_TIMESTAMP,
                 estimationWindow, serverCapacity, serverLoad, serverLoad, ImmutableMap.of(), ImmutableMap.of(),
@@ -323,9 +332,9 @@ public class ResourceSummary implements Serializable {
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = mergeMaps2(
                 one.getNetworkCapacity(), two.getNetworkCapacity());
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = mergeMaps2(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad = mergeMaps4(
                 one.getNetworkLoad(), two.getNetworkLoad());
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = mergeMaps2(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand = mergeMaps4(
                 one.getNetworkDemand(), two.getNetworkDemand());
 
         final long minTimestamp = Math.min(one.getMinTimestamp(), two.getMinTimestamp());
@@ -355,6 +364,8 @@ public class ResourceSummary implements Serializable {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("Converting report with server load {}", report.getComputeLoad());
         }
+
+        final RegionIdentifier reportRegion = nodeToRegion.getRegionForNode(report.getNodeName());
 
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> reportServerLoad = report
                 .getComputeLoad();
@@ -398,16 +409,14 @@ public class ResourceSummary implements Serializable {
 
         // use node network capacity as the summaries don't care about the
         // containers
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = convertNodeToRegion(
-                nodeToRegion, report.getNodeNetworkCapacity());
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = convertNodeToRegionExcludingThis1(
+                nodeToRegion, reportRegion, report.getNetworkCapacity());
 
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = convertNodeToRegion(
-                nodeToRegion, report.getAllNetworkLoad());
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad = convertNodeToRegionExcludingThis3(
+                nodeToRegion, reportRegion, report.getNetworkLoad());
 
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = convertNodeToRegion(
-                nodeToRegion, report.getAllNetworkDemand());
-
-        final RegionIdentifier reportRegion = nodeToRegion.getRegionForNode(report.getNodeName());
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand = convertNodeToRegionExcludingThis3(
+                nodeToRegion, reportRegion, report.getNetworkDemand());
 
         final ResourceSummary summary = new ResourceSummary(reportRegion, report.getTimestamp(), report.getTimestamp(),
                 report.getDemandEstimationWindow(), serverCapacity, serverLoad, serverDemand,
@@ -415,17 +424,93 @@ public class ResourceSummary implements Serializable {
         return summary;
     }
 
+    /**
+     * Convert the map of NodeIdentifiers to RegionIdentifiers. Exclude neighbor
+     * nodes that are in thisRegion.
+     */
+    private static <T>
+            ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<T, Double>>>>
+            convertNodeToRegionExcludingThis3(@Nonnull final RegionLookupService nodeToRegion,
+                    @Nonnull final RegionIdentifier thisRegion,
+                    final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<T, Double>>>> source) {
+        final Map<RegionIdentifier, Map<RegionIdentifier, Map<ServiceIdentifier<?>, Map<T, Double>>>> dest = new HashMap<>();
+
+        source.forEach((neighborNode, neighborData) -> {
+            final RegionIdentifier neighborRegion = nodeToRegion.getRegionForNode(neighborNode);
+            if (null != neighborRegion) {
+                if (!thisRegion.equals(neighborRegion)) {
+
+                    final Map<RegionIdentifier, Map<ServiceIdentifier<?>, Map<T, Double>>> destNeighborData = dest
+                            .computeIfAbsent(neighborRegion, k -> new HashMap<>());
+
+                    neighborData.forEach((sourceNode, sourceData) -> {
+                        final RegionIdentifier sourceRegion = nodeToRegion.getRegionForNode(sourceNode);
+                        if (null != sourceRegion) {
+                            final Map<ServiceIdentifier<?>, Map<T, Double>> destSourceData = destNeighborData
+                                    .computeIfAbsent(sourceRegion, k -> new HashMap<>());
+
+                            sourceData.forEach((service, serviceData) -> {
+                                final Map<T, Double> destServiceData = destSourceData.computeIfAbsent(service,
+                                        k -> new HashMap<>());
+
+                                serviceData.forEach((attr, value) -> {
+                                    destServiceData.merge(attr, value, Double::sum);
+                                }); // foreach attribute
+
+                            }); // foreach service
+                        } else {
+                            LOGGER.warn("Unable to find region for node {}", sourceNode);
+                        }
+                    }); // foreach source
+
+                } // check for other region
+            } else {
+                LOGGER.warn("Unable to find region for node {}", neighborNode);
+            }
+        }); // foreach neighbor
+
+        return ImmutableUtils.makeImmutableMap4(dest);
+    }
+
+    /**
+     * Convert the map of NodeIdentifiers to RegionIdentifiers. Exclude this
+     * region.
+     */
+    private static <T> ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>> convertNodeToRegionExcludingThis1(
+            @Nonnull final RegionLookupService nodeToRegion,
+            @Nonnull final RegionIdentifier thisRegion,
+            final ImmutableMap<NodeIdentifier, ImmutableMap<T, Double>> source) {
+
+        final Map<RegionIdentifier, ImmutableMap<T, Double>> dest = new HashMap<>();
+        source.forEach((node, v) -> {
+            final RegionIdentifier region = nodeToRegion.getRegionForNode(node);
+            if (null != region) {
+                if (!thisRegion.equals(region)) {
+                    dest.merge(region, v, ResourceSummary::mergeDoubleMapViaSum);
+                }
+            } else {
+                LOGGER.warn("Unable to find region for node {}", node);
+            }
+
+        });
+
+        return ImmutableMap.copyOf(dest);
+    }
+
+    /**
+     * Convert the map of NodeIdentifiers to RegionIdentifiers.
+     */
     private static <T> ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>> convertNodeToRegion(
             @Nonnull final RegionLookupService nodeToRegion,
             final ImmutableMap<NodeIdentifier, ImmutableMap<T, Double>> source) {
 
         final Map<RegionIdentifier, ImmutableMap<T, Double>> dest = new HashMap<>();
-        source.forEach((k, v) -> {
-            final RegionIdentifier region = nodeToRegion.getRegionForNode(k);
+        source.forEach((node, v) -> {
+            final RegionIdentifier region = nodeToRegion.getRegionForNode(node);
             if (null != region) {
                 dest.merge(region, v, ResourceSummary::mergeDoubleMapViaSum);
             } else {
-                LOGGER.warn("Unable to find region for node {}", k);
+                LOGGER.warn("Unable to find region for node {}", node);
             }
 
         });
@@ -434,18 +519,22 @@ public class ResourceSummary implements Serializable {
     }
 
     @Nonnull
-    private static <ID, T> ImmutableMap<ID, ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>>> mergeMaps3(
-            @Nonnull final ImmutableMap<ID, ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>>> one,
-            @Nonnull final ImmutableMap<ID, ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>>> two) {
+    private static <K1, K2, K3, K4>
+            ImmutableMap<K1, ImmutableMap<K2, ImmutableMap<K3, ImmutableMap<K4, Double>>>>
+            mergeMaps4(
+                    @Nonnull final ImmutableMap<K1, ImmutableMap<K2, ImmutableMap<K3, ImmutableMap<K4, Double>>>> one,
+                    @Nonnull final ImmutableMap<K1, ImmutableMap<K2, ImmutableMap<K3, ImmutableMap<K4, Double>>>> two) {
 
-        final Map<ID, ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>>> newMap = new HashMap<>();
-        for (final ImmutableMap.Entry<ID, ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>>> oneEntry : one
+        // add all keys that are in one and merge in the keys from two
+        final Map<K1, ImmutableMap<K2, ImmutableMap<K3, ImmutableMap<K4, Double>>>> newMap = new HashMap<>();
+        for (final ImmutableMap.Entry<K1, ImmutableMap<K2, ImmutableMap<K3, ImmutableMap<K4, Double>>>> oneEntry : one
                 .entrySet()) {
-            final ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>> twoValue = two.get(oneEntry.getKey());
+            final ImmutableMap<K2, ImmutableMap<K3, ImmutableMap<K4, Double>>> twoValue = two.get(oneEntry.getKey());
             if (null != twoValue) {
-                final ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>> oneValue = oneEntry.getValue();
+                final ImmutableMap<K2, ImmutableMap<K3, ImmutableMap<K4, Double>>> oneValue = oneEntry.getValue();
 
-                final ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>> newValue = mergeMaps2(oneValue, twoValue);
+                final ImmutableMap<K2, ImmutableMap<K3, ImmutableMap<K4, Double>>> newValue = mergeMaps3(oneValue,
+                        twoValue);
 
                 newMap.put(oneEntry.getKey(), newValue);
             } else {
@@ -453,7 +542,9 @@ public class ResourceSummary implements Serializable {
                 newMap.put(oneEntry.getKey(), oneEntry.getValue());
             }
         }
-        for (final ImmutableMap.Entry<ID, ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>>> twoEntry : two
+
+        // add all keys that are in two that aren't in one
+        for (final ImmutableMap.Entry<K1, ImmutableMap<K2, ImmutableMap<K3, ImmutableMap<K4, Double>>>> twoEntry : two
                 .entrySet()) {
             if (!one.containsKey(twoEntry.getKey())) {
                 newMap.put(twoEntry.getKey(), twoEntry.getValue());
@@ -461,7 +552,37 @@ public class ResourceSummary implements Serializable {
         }
 
         return ImmutableMap.copyOf(newMap);
+    }
 
+    @Nonnull
+    private static <K1, K2, K3> ImmutableMap<K1, ImmutableMap<K2, ImmutableMap<K3, Double>>> mergeMaps3(
+            @Nonnull final ImmutableMap<K1, ImmutableMap<K2, ImmutableMap<K3, Double>>> one,
+            @Nonnull final ImmutableMap<K1, ImmutableMap<K2, ImmutableMap<K3, Double>>> two) {
+
+        // add all keys that are in one and merge in the keys from two
+        final Map<K1, ImmutableMap<K2, ImmutableMap<K3, Double>>> newMap = new HashMap<>();
+        for (final ImmutableMap.Entry<K1, ImmutableMap<K2, ImmutableMap<K3, Double>>> oneEntry : one.entrySet()) {
+            final ImmutableMap<K2, ImmutableMap<K3, Double>> twoValue = two.get(oneEntry.getKey());
+            if (null != twoValue) {
+                final ImmutableMap<K2, ImmutableMap<K3, Double>> oneValue = oneEntry.getValue();
+
+                final ImmutableMap<K2, ImmutableMap<K3, Double>> newValue = mergeMaps2(oneValue, twoValue);
+
+                newMap.put(oneEntry.getKey(), newValue);
+            } else {
+                // no conflict, just add
+                newMap.put(oneEntry.getKey(), oneEntry.getValue());
+            }
+        }
+
+        // add all keys that are in two that aren't in one
+        for (final ImmutableMap.Entry<K1, ImmutableMap<K2, ImmutableMap<K3, Double>>> twoEntry : two.entrySet()) {
+            if (!one.containsKey(twoEntry.getKey())) {
+                newMap.put(twoEntry.getKey(), twoEntry.getValue());
+            }
+        }
+
+        return ImmutableMap.copyOf(newMap);
     }
 
     /**
@@ -473,22 +594,24 @@ public class ResourceSummary implements Serializable {
      * @param two
      *            the second map to combine
      * @return a new map
-     * @param <ID>
+     * @param <K1>
      *            first level lookup
-     * @param <T>
+     * @param <K2>
      *            second level lookup
      */
     @Nonnull
-    public static <ID, T> ImmutableMap<ID, ImmutableMap<T, Double>> mergeMaps2(
-            @Nonnull final ImmutableMap<ID, ImmutableMap<T, Double>> one,
-            @Nonnull final ImmutableMap<ID, ImmutableMap<T, Double>> two) {
-        final Map<ID, ImmutableMap<T, Double>> newMap = new HashMap<>();
-        for (final ImmutableMap.Entry<ID, ImmutableMap<T, Double>> oneEntry : one.entrySet()) {
-            final ImmutableMap<T, Double> twoValue = two.get(oneEntry.getKey());
-            if (null != twoValue) {
-                final ImmutableMap<T, Double> oneValue = oneEntry.getValue();
+    public static <K1, K2> ImmutableMap<K1, ImmutableMap<K2, Double>> mergeMaps2(
+            @Nonnull final ImmutableMap<K1, ImmutableMap<K2, Double>> one,
+            @Nonnull final ImmutableMap<K1, ImmutableMap<K2, Double>> two) {
+        final Map<K1, ImmutableMap<K2, Double>> newMap = new HashMap<>();
 
-                final ImmutableMap<T, Double> newValue = mergeDoubleMapViaSum(oneValue, twoValue);
+        // add all keys that are in one and merge in the keys from two
+        for (final ImmutableMap.Entry<K1, ImmutableMap<K2, Double>> oneEntry : one.entrySet()) {
+            final ImmutableMap<K2, Double> twoValue = two.get(oneEntry.getKey());
+            if (null != twoValue) {
+                final ImmutableMap<K2, Double> oneValue = oneEntry.getValue();
+
+                final ImmutableMap<K2, Double> newValue = mergeDoubleMapViaSum(oneValue, twoValue);
 
                 newMap.put(oneEntry.getKey(), newValue);
             } else {
@@ -496,7 +619,9 @@ public class ResourceSummary implements Serializable {
                 newMap.put(oneEntry.getKey(), oneEntry.getValue());
             }
         }
-        for (final ImmutableMap.Entry<ID, ImmutableMap<T, Double>> twoEntry : two.entrySet()) {
+
+        // add all keys that are in two that aren't in one
+        for (final ImmutableMap.Entry<K1, ImmutableMap<K2, Double>> twoEntry : two.entrySet()) {
             if (!one.containsKey(twoEntry.getKey())) {
                 newMap.put(twoEntry.getKey(), twoEntry.getValue());
             }
