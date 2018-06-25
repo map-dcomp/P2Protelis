@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -34,8 +35,8 @@ public class RegionPlan implements Serializable {
      * @param plan
      *            see {@link #getPlan()}
      */
-    public RegionPlan(@Nonnull final RegionIdentifier region,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan) {
+    public RegionPlan(@JsonProperty("region") @Nonnull final RegionIdentifier region,
+            @JsonProperty("plan") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan) {
         this.region = region;
         this.plan = plan;
     }
