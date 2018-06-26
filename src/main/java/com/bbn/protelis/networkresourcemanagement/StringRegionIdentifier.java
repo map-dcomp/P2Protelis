@@ -10,6 +10,11 @@ public class StringRegionIdentifier implements RegionIdentifier, Comparable<Stri
     private static final long serialVersionUID = 1L;
 
     /**
+     * Used to represent an unknown region.
+     */
+    public static final StringRegionIdentifier UNKNOWN = new StringRegionIdentifier("unknown");
+
+    /**
      * 
      * @param name
      *            the name for the region

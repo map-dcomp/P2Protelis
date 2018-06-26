@@ -45,12 +45,6 @@ public class ContainerResourceReport implements Serializable {
      *            see {@link #getNetworkLoad()}
      * @param networkDemand
      *            see {@link #getNetworkDemand()}
-     * @param neighborNetworkCapacity
-     *            see {@link #getNeighborNetworkCapacity()}
-     * @param neighborNetworkLoad
-     *            see {@link #getNeighborNetworkLoad()}
-     * @param neighborNetworkDemand
-     *            see {@link #getNeighborNetworkDemand()}
      */
     public ContainerResourceReport(@JsonProperty("containerName") @Nonnull final ContainerIdentifier containerName,
             @JsonProperty("timestamp") final long timestamp,
@@ -62,12 +56,8 @@ public class ContainerResourceReport implements Serializable {
             @JsonProperty("averageProcessingTime") final double serverAverageProcessingTime,
 
             @JsonProperty("networkCapacity") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
-            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad,
-            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand,
-
-            @JsonProperty("neighborNetworkCapacity") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkCapacity,
-            @JsonProperty("neighborNetworkLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkLoad,
-            @JsonProperty("neighborNetworkDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkDemand) {
+            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad,
+            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand) {
         this.containerName = containerName;
         this.timestamp = timestamp;
         this.service = service;
@@ -81,11 +71,6 @@ public class ContainerResourceReport implements Serializable {
         this.networkCapacity = networkCapacity;
         this.networkLoad = networkLoad;
         this.networkDemand = networkDemand;
-
-        this.neighborNetworkCapacity = neighborNetworkCapacity;
-        this.neighborNetworkLoad = neighborNetworkLoad;
-        this.neighborNetworkDemand = neighborNetworkDemand;
-
     }
 
     private final ServiceIdentifier<?> service;
@@ -192,9 +177,8 @@ public class ContainerResourceReport implements Serializable {
     private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity;
 
     /**
-     * Link capacity for network flows. client/other node -> attribute -> value.
-     * Each key in the list is the identifier of a node that is interacting with
-     * this container.
+     * Link capacity between a node an it's neighbors. neighbor node ->
+     * attribute -> value.
      * 
      * @return Not null.
      */
@@ -203,69 +187,32 @@ public class ContainerResourceReport implements Serializable {
         return networkCapacity;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad;
 
     /**
-     * Network load with other nodes. See {@link #getNetworkCapacity()} for
-     * details on the map definition.
+     * Network load and where it comes from. neighbor node -> source node ->
+     * service -> attribute -> value
      * 
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkLoad() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+            getNetworkLoad() {
         return networkLoad;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand;
 
     /**
-     * Network demand with other nodes. See {@link #getNetworkCapacity()} for
+     * Network demand with other nodes. See {@link #getNetworkLoad()} for
      * details on the map definition.
      * 
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkDemand() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+            getNetworkDemand() {
         return networkDemand;
-    }
-
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkCapacity;
-
-    /**
-     * Link capacity for neighboring nodes. neighbor node -> attribute -> value.
-     * Each key in the list is the identifier of a neighboring node.
-     * 
-     * @return Not null.
-     */
-    @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNeighborNetworkCapacity() {
-        return neighborNetworkCapacity;
-    }
-
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkLoad;
-
-    /**
-     * Network load to neighboring nodes. See
-     * {@link #getNeighborNetworkCapacity()} for details on the map definition.
-     * 
-     * @return Not null.
-     */
-    @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNeighborNetworkLoad() {
-        return neighborNetworkLoad;
-    }
-
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> neighborNetworkDemand;
-
-    /**
-     * Network demand to neighboring nodes. See
-     * {@link #getNeighborNetworkCapacity()} for details on the map definition.
-     * 
-     * @return Not null.
-     */
-    @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNeighborNetworkDemand() {
-        return neighborNetworkDemand;
     }
 
     /**
@@ -290,10 +237,8 @@ public class ContainerResourceReport implements Serializable {
                 0, // serverAverageProcessingTime
                 ImmutableMap.of(), // networkCapacity
                 ImmutableMap.of(), // networkLoad
-                ImmutableMap.of(), // networkDemand
-                ImmutableMap.of(), // neighborNetworkCapacity
-                ImmutableMap.of(), // neighborNetworkLoad
-                ImmutableMap.of()); // neighborNetworkDemand
+                ImmutableMap.of() // networkDemand
+        );
 
     }
 

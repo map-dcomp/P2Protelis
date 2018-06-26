@@ -3,6 +3,7 @@ package com.bbn.protelis.networkresourcemanagement;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 
@@ -80,18 +81,12 @@ public class ResourceReport implements Serializable {
      *            see {@link #getTimestamp()}
      * @param nodeComputeCapacity
      *            see {@link #getNodeComputeCapacity()}
-     * @param nodeNetworkCapacity
-     *            see {@link #getNodeNetworkCapacity()}
-     * @param nodeNetworkLoad
-     *            see {@link #getNodeNetworkLoad()}
-     * @param nodeNetworkDemand
-     *            see {@link #getNodeNetworkDemand()}
-     * @param nodeNeighborNetworkCapacity
-     *            see {@link #getNodeNeighborNetworkCapacity()}
-     * @param nodeNeighborNetworkLoad
-     *            see {@link #getNodeNeighborNetworkLoad()}
-     * @param nodeNeighborNetworkDemand
-     *            see {@link #getNodeNeighborNetworkDemand()}
+     * @param networkCapacity
+     *            see {@link #getNetworkCapacity()}
+     * @param networkLoad
+     *            see {@link #getNetworkLoad()}
+     * @param networkDemand
+     *            see {@link #getDemand()}
      * @param demandEstimationWindow
      *            see {@link #getDemandEstimationWindow()}
      * @param containerReports
@@ -105,13 +100,9 @@ public class ResourceReport implements Serializable {
             @JsonProperty("demandEstimationWindow") @Nonnull final EstimationWindow demandEstimationWindow,
             @JsonProperty("nodeComputeCapacity") @Nonnull final ImmutableMap<NodeAttribute<?>, Double> nodeComputeCapacity,
 
-            @JsonProperty("nodeNetworkCapacity") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkCapacity,
-            @JsonProperty("nodeNetworkLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkLoad,
-            @JsonProperty("nodeNetworkDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkDemand,
-
-            @JsonProperty("nodeNeighborNetworkCapacity") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkCapacity,
-            @JsonProperty("nodeNeighborNetworkLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkLoad,
-            @JsonProperty("nodeNeighborNetworkDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkDemand,
+            @JsonProperty("networkCapacity") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
+            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad,
+            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand,
 
             @JsonProperty("containerReports") @Nonnull final ImmutableMap<ContainerIdentifier, ContainerResourceReport> containerReports) {
         this.nodeName = nodeName;
@@ -119,13 +110,9 @@ public class ResourceReport implements Serializable {
         this.demandEstimationWindow = demandEstimationWindow;
         this.nodeComputeCapacity = nodeComputeCapacity;
 
-        this.nodeNetworkCapacity = nodeNetworkCapacity;
-        this.nodeNetworkLoad = nodeNetworkLoad;
-        this.nodeNetworkDemand = nodeNetworkDemand;
-
-        this.nodeNeighborNetworkCapacity = nodeNeighborNetworkCapacity;
-        this.nodeNeighborNetworkLoad = nodeNeighborNetworkLoad;
-        this.nodeNeighborNetworkDemand = nodeNeighborNetworkDemand;
+        this.networkCapacity = networkCapacity;
+        this.networkLoad = networkLoad;
+        this.networkDemand = networkDemand;
 
         this.containerReports = containerReports;
 
@@ -180,163 +167,54 @@ public class ResourceReport implements Serializable {
         return nodeComputeCapacity;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkCapacity;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity;
 
     /**
-     * This is the same as the property
-     * {@link ContainerResourceReport#getNetworkCapacity()}, except it's for the
-     * node itself rather than a container on the node.
+     * The capacity of the links connected to the node. See
+     * {@link ContainerResourceReport#getNetworkCapacity()} for a description of
+     * the returned map.
      * 
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNodeNetworkCapacity() {
-        return nodeNetworkCapacity;
+    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkCapacity() {
+        return networkCapacity;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkLoad;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad;
 
     /**
-     * This is the same as the property
-     * {@link ContainerResourceReport#getNetworkLoad()}, except it's for the
-     * node itself rather than a container on the node.
+     * This is the network traffic passing through this node or terminating at
+     * this node.
      * 
-     * @return the network load to this node and not the containers
+     * See {@link ContainerResourceReport#getNetworkLoad()} for a description of
+     * the returned map.
+     * 
+     * @return the network load
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNodeNetworkLoad() {
-        return nodeNetworkLoad;
+    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+            getNetworkLoad() {
+        return networkLoad;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNetworkDemand;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand;
 
     /**
-     * This is the same as the property
-     * {@link ContainerResourceReport#getNetworkDemand()}, except it's for the
-     * node itself rather than a container on the node.
+     * This is the demand based on {@link #getNetworkLoad()}.
+     *
+     * See {@link ContainerResourceReport#getNetworkLoad()} for a description of
+     * the returned map.
      * 
-     * @return the network demand that isn't attributed to a container
-     * @see #getNodeNetworkLoad()
+     * @return the network demand
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNodeNetworkDemand() {
-        return nodeNetworkDemand;
-    }
-
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkCapacity;
-
-    /**
-     * This is the same as the property
-     * {@link ContainerResourceReport#getNeighborNetworkCapacity()}, except it's
-     * for the node itself rather than a container on the node.
-     * 
-     * @return Not null.
-     */
-    @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNodeNeighborNetworkCapacity() {
-        return nodeNeighborNetworkCapacity;
-    }
-
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkLoad;
-
-    /**
-     * This is the same as the property
-     * {@link ContainerResourceReport#getNeighborNetworkLoad()}, except it's for
-     * the node itself rather than a container on the node.
-     * 
-     * @return the network load passing through this node
-     */
-    @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNodeNeighborNetworkLoad() {
-        return nodeNeighborNetworkLoad;
-    }
-
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> nodeNeighborNetworkDemand;
-
-    /**
-     * This is the same as the property
-     * {@link ContainerResourceReport#getNeighborNetworkDemand()}, except it's
-     * for the node itself rather than a container on the node.
-     * 
-     * @return the network demand that isn't attributed to a container
-     * @see #getNodeNetworkLoad()
-     */
-    @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNodeNeighborNetworkDemand() {
-        return nodeNeighborNetworkDemand;
+    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+            getNetworkDemand() {
+        return networkDemand;
     }
 
     private final EstimationWindow demandEstimationWindow;
-
-    private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> allNetworkLoad = null;
-
-    /**
-     * The sum of {@link #getNodeNetworkLoad()} and
-     * {@link ContainerResourceReport#getNetworkLoad()} for all containers.
-     * 
-     * @return all network load on the node and it's containers
-     */
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getAllNetworkLoad() {
-        if (null == allNetworkLoad) {
-            final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> nload = new HashMap<>();
-
-            getNodeNetworkLoad().forEach((srcNode, load) -> {
-                final Map<LinkAttribute<?>, Double> reportLoad = nload.computeIfAbsent(srcNode, k -> new HashMap<>());
-                load.forEach((attr, value) -> {
-                    reportLoad.merge(attr, value, Double::sum);
-                });
-            });
-
-            getContainerReports().forEach((cid, creport) -> {
-                creport.getNetworkLoad().forEach((srcNode, load) -> {
-                    final Map<LinkAttribute<?>, Double> reportLoad = nload.computeIfAbsent(srcNode,
-                            k -> new HashMap<>());
-                    load.forEach((attr, value) -> {
-                        reportLoad.merge(attr, value, Double::sum);
-                    });
-                });
-            });
-
-            allNetworkLoad = ImmutableUtils.makeImmutableMap2(nload);
-        }
-
-        return allNetworkLoad;
-    }
-
-    private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> allNetworkDemand = null;
-
-    /**
-     * The sum of {@link #getNodeNetworkDemand()} and
-     * {@link ContainerResourceReport#getNetworkDemand()} for all containers.
-     * 
-     * @return all network load on the node and it's containers
-     */
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getAllNetworkDemand() {
-        if (null == allNetworkDemand) {
-            final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> nload = new HashMap<>();
-
-            getNodeNetworkDemand().forEach((srcNode, load) -> {
-                final Map<LinkAttribute<?>, Double> reportLoad = nload.computeIfAbsent(srcNode, k -> new HashMap<>());
-                load.forEach((attr, value) -> {
-                    reportLoad.merge(attr, value, Double::sum);
-                });
-            });
-
-            getContainerReports().forEach((cid, creport) -> {
-                creport.getNetworkDemand().forEach((srcNode, load) -> {
-                    final Map<LinkAttribute<?>, Double> reportLoad = nload.computeIfAbsent(srcNode,
-                            k -> new HashMap<>());
-                    load.forEach((attr, value) -> {
-                        reportLoad.merge(attr, value, Double::sum);
-                    });
-                });
-            });
-
-            allNetworkDemand = ImmutableUtils.makeImmutableMap2(nload);
-        }
-
-        return allNetworkDemand;
-    }
 
     /**
      * @return the window over which the demand values are computed
@@ -493,40 +371,59 @@ public class ResourceReport implements Serializable {
         return allocatedComputeCapacity;
     }
 
-    private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> containerNetworkLoad = null;
+    private transient ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> containerNetworkLoad = null;
 
     /**
-     * Network load to neighboring nodes summed across the containers. See
-     * {@link #getAllocatedNetworkCapacity()} for details on the map definition.
+     * Sum of {@link ContainerResourceReport#getNetworkLoad()} across all
+     * containers on the node.
      * 
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getContainerNetworkLoad() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+            getContainerNetworkLoad() {
         if (null == containerNetworkLoad) {
             // compute it
-            final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> nload = new HashMap<>();
-            containerReports.forEach((container, report) -> {
-                final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> cload = report
-                        .getNetworkLoad();
-
-                cload.forEach((neighborNode, values) -> {
-
-                    final Map<LinkAttribute<?>, Double> rrValues = nload.computeIfAbsent(neighborNode,
-                            k -> new HashMap<>());
-
-                    values.forEach((attr, value) -> {
-                        rrValues.merge(attr, value, Double::sum);
-                    });
-                });
-            });
-
-            containerNetworkLoad = ImmutableUtils.makeImmutableMap2(nload);
+            containerNetworkLoad = sumContainerNetworkValue(report -> report.getNetworkLoad());
         }
         return containerNetworkLoad;
     }
 
-    private transient ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> containerNetworkDemand = null;
+    private ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+            sumContainerNetworkValue(
+                    final Function<ContainerResourceReport, ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>> reportFunction) {
+        // compute it
+        final Map<NodeIdentifier, Map<NodeIdentifier, Map<ServiceIdentifier<?>, Map<LinkAttribute<?>, Double>>>> nload = new HashMap<>();
+        containerReports.forEach((container, report) -> {
+            final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> cload = reportFunction
+                    .apply(report);
+
+            cload.forEach((neighborNode, cneighborLoad) -> {
+                final Map<NodeIdentifier, Map<ServiceIdentifier<?>, Map<LinkAttribute<?>, Double>>> neighborLoad = nload
+                        .computeIfAbsent(neighborNode, k -> new HashMap<>());
+
+                cneighborLoad.forEach((sourceNode, csourceLoad) -> {
+                    final Map<ServiceIdentifier<?>, Map<LinkAttribute<?>, Double>> sourceLoad = neighborLoad
+                            .computeIfAbsent(sourceNode, k -> new HashMap<>());
+
+                    csourceLoad.forEach((service, cserviceLoad) -> {
+
+                        final Map<LinkAttribute<?>, Double> serviceLoad = sourceLoad.computeIfAbsent(service,
+                                k -> new HashMap<>());
+
+                        cserviceLoad.forEach((attr, value) -> {
+                            serviceLoad.merge(attr, value, Double::sum);
+                        }); // foreach value
+
+                    }); // foreach service
+                }); // foreach source
+            }); // foreach neighbor
+        }); // foreach container
+
+        return ImmutableUtils.makeImmutableMap4(nload);
+    }
+
+    private transient ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> containerNetworkDemand = null;
 
     /**
      * Network demand to neighboring nodes summed across the containers. See
@@ -535,26 +432,11 @@ public class ResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getContainerNetworkDemand() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+            getContainerNetworkDemand() {
         if (null == containerNetworkDemand) {
             // compute it
-            final Map<NodeIdentifier, Map<LinkAttribute<?>, Double>> nload = new HashMap<>();
-            containerReports.forEach((container, report) -> {
-                final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> cload = report
-                        .getNetworkDemand();
-
-                cload.forEach((neighborNode, values) -> {
-
-                    final Map<LinkAttribute<?>, Double> rrValues = nload.computeIfAbsent(neighborNode,
-                            k -> new HashMap<>());
-
-                    values.forEach((attr, value) -> {
-                        rrValues.merge(attr, value, Double::sum);
-                    });
-                });
-            });
-
-            containerNetworkDemand = ImmutableUtils.makeImmutableMap2(nload);
+            containerNetworkDemand = sumContainerNetworkValue(report -> report.getNetworkDemand());
         }
         return containerNetworkDemand;
     }
@@ -575,13 +457,9 @@ public class ResourceReport implements Serializable {
         return new ResourceReport(nodeName, NULL_TIMESTAMP, demandWindow, //
                 ImmutableMap.of(), // nodeComputeCapacity
 
-                ImmutableMap.of(), // nodeNetworkCapacity
-                ImmutableMap.of(), // nodeNetworkLoad
-                ImmutableMap.of(), // nodeNetworkDemand
-
-                ImmutableMap.of(), // nodeNeighborNetworkCapacity
-                ImmutableMap.of(), // nodeNeighborNetworkLoad
-                ImmutableMap.of(), // nodeNeighborNetworkDemand
+                ImmutableMap.of(), // networkCapacity
+                ImmutableMap.of(), // networkLoad
+                ImmutableMap.of(), // networkDemand
 
                 ImmutableMap.of()); // container reports
     }

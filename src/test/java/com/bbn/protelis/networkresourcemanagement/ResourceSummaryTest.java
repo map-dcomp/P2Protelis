@@ -1,5 +1,10 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertThat;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,8 +12,6 @@ import javax.annotation.Nonnull;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.protelis.lang.datatype.Field;
-import org.protelis.lang.datatype.impl.FieldMapImpl;
 
 import com.bbn.protelis.networkresourcemanagement.ResourceReport.EstimationWindow;
 import com.google.common.collect.ImmutableMap;
@@ -28,6 +31,7 @@ public class ResourceSummaryTest {
     @Test
     public void testConvert() {
         final NodeIdentifier nodeName = new DnsNameIdentifier("testNode");
+        final NodeIdentifier neighborNodeName = new DnsNameIdentifier("testNeighborNode");
         final long timestamp = 0;
         final EstimationWindow estimationWindow = EstimationWindow.SHORT;
 
@@ -39,6 +43,8 @@ public class ResourceSummaryTest {
                 serverCapacityValue);
         final ServiceIdentifier<?> service = new StringServiceIdentifier("testService");
         final RegionIdentifier region = new StringRegionIdentifier("A");
+        final RegionIdentifier neighborRegion = new StringRegionIdentifier("B");
+
         final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> serverLoad = ImmutableMap
                 .of(nodeName, ImmutableMap.of(nodeAttribute, serverLoadValue));
         final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> serverDemand = ImmutableMap
@@ -50,25 +56,29 @@ public class ResourceSummaryTest {
         final double networkLoadValue = 15;
         final double networkDemandValue = 13;
         final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap
-                .of(nodeName, ImmutableMap.of(linkAttribute, networkCapacityValue));
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = ImmutableMap
-                .of(nodeName, ImmutableMap.of(linkAttribute, networkLoadValue));
-        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = ImmutableMap
-                .of(nodeName, ImmutableMap.of(linkAttribute, networkDemandValue));
+                .of(neighborNodeName, ImmutableMap.of(linkAttribute, networkCapacityValue));
 
+        final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad = ImmutableMap
+                .of(neighborNodeName, ImmutableMap.of(neighborNodeName,
+                        ImmutableMap.of(service, ImmutableMap.of(linkAttribute, networkLoadValue))));
+
+        final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand = ImmutableMap
+                .of(neighborNodeName, ImmutableMap.of(neighborNodeName,
+                        ImmutableMap.of(service, ImmutableMap.of(linkAttribute, networkDemandValue))));
+
+        // all traffic is going to the container through the node so both have
+        // the same network load and demand values
         final ContainerIdentifier containerId = new DnsNameIdentifier("container0");
         final ContainerResourceReport containerReport = new ContainerResourceReport(containerId, timestamp, service,
                 estimationWindow, serverCapacity, serverLoad, serverDemand, serverAverageProcessingTime,
-                networkCapacity, networkLoad, networkDemand,
-                // assume all clients are neighbors
                 networkCapacity, networkLoad, networkDemand);
+
         final ResourceReport report = new ResourceReport(nodeName, timestamp, estimationWindow, serverCapacity,
-                networkCapacity, networkLoad, networkDemand,
-                // assume all clients are neighbors
                 networkCapacity, networkLoad, networkDemand, ImmutableMap.of(containerId, containerReport));
 
         final TestRegionLookup regionLookup = new TestRegionLookup();
         regionLookup.addMapping(nodeName, region);
+        regionLookup.addMapping(neighborNodeName, neighborRegion);
 
         final ResourceSummary summary = ResourceSummary.convertToSummary(report, regionLookup);
 
@@ -77,26 +87,27 @@ public class ResourceSummaryTest {
         Assert.assertEquals(timestamp, summary.getMaxTimestamp());
         Assert.assertEquals(estimationWindow, summary.getDemandEstimationWindow());
 
-        final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> expectedServerLoad = ImmutableMap
-                .of(region, ImmutableMap.of(nodeAttribute, serverLoadValue));
-        final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> expectedServerDemand = ImmutableMap
-                .of(region, ImmutableMap.of(nodeAttribute, serverDemandValue));
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> expectedServerLoad = ImmutableMap
+                .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverLoadValue)));
+
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> expectedServerDemand = ImmutableMap
+                .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverDemandValue)));
 
         Assert.assertEquals(serverCapacity, summary.getServerCapacity());
-        Assert.assertEquals(ImmutableMap.of(service, expectedServerLoad), summary.getServerLoad());
-        Assert.assertEquals(ImmutableMap.of(service, expectedServerDemand), summary.getServerDemand());
+        Assert.assertEquals(expectedServerLoad, summary.getServerLoad());
+        Assert.assertEquals(expectedServerDemand, summary.getServerDemand());
         Assert.assertEquals(ImmutableMap.of(service, serverAverageProcessingTime),
                 summary.getServerAverageProcessingTime());
 
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> expectedNetworkCapacity = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkCapacityValue));
+                .of(neighborRegion, ImmutableMap.of(linkAttribute, networkCapacityValue));
 
-        // times 2 because BasicResourceManager is adding the load to the
-        // container AND the node
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> expectedNetworkLoad = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkLoadValue * 2));
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> expectedNetworkDemand = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkDemandValue * 2));
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> expectedNetworkLoad = ImmutableMap
+                .of(neighborRegion, ImmutableMap.of(neighborRegion,
+                        ImmutableMap.of(service, ImmutableMap.of(linkAttribute, networkLoadValue))));
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> expectedNetworkDemand = ImmutableMap
+                .of(neighborRegion, ImmutableMap.of(neighborRegion,
+                        ImmutableMap.of(service, ImmutableMap.of(linkAttribute, networkDemandValue))));
 
         Assert.assertEquals(expectedNetworkCapacity, summary.getNetworkCapacity());
         Assert.assertEquals(expectedNetworkLoad, summary.getNetworkLoad());
@@ -126,8 +137,10 @@ public class ResourceSummaryTest {
                 serverCapacityValue);
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = ImmutableMap
                 .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverLoadValue)));
+
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = ImmutableMap
                 .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverDemandValue)));
+
         final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTimeSum = ImmutableMap.of(service,
                 30000D);
         final ImmutableMap<ServiceIdentifier<?>, Integer> serverAverageProcessingTimeCount = ImmutableMap.of(service,
@@ -139,10 +152,14 @@ public class ResourceSummaryTest {
         final double networkDemandValue = 13;
         final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap
                 .of(region, ImmutableMap.of(linkAttribute, networkCapacityValue));
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkLoadValue));
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkDemandValue));
+
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad = ImmutableMap
+                .of(region, ImmutableMap.of(region,
+                        ImmutableMap.of(service, ImmutableMap.of(linkAttribute, networkLoadValue))));
+
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand = ImmutableMap
+                .of(region, ImmutableMap.of(region,
+                        ImmutableMap.of(service, ImmutableMap.of(linkAttribute, networkDemandValue))));
 
         final ResourceSummary sourceSummary = new ResourceSummary(region, minTimestamp, maxTimestamp, estimationWindow,
                 serverCapacity, serverLoad, serverDemand, serverAverageProcessingTimeCount,
@@ -168,84 +185,97 @@ public class ResourceSummaryTest {
     }
 
     /**
-     * Test that merging a {@link ResourceSummary} with itself produces twice
-     * the values.
+     * Check that when converting a {@link ResourceReport} to a
+     * {@link ResourceSummary} with network capacity and load to a neighbor
+     * inside the region and outside the region that only the capacity and load
+     * to outside the region is in the summary.
      * 
      */
     @Test
-    public void testMergeWithSelf() {
-        final NodeIdentifier nodeName = new DnsNameIdentifier("testNode");
-        final long minTimestamp = 0;
-        final long maxTimestamp = 10;
-        final EstimationWindow estimationWindow = EstimationWindow.SHORT;
+    public void testIgnoreConvertSameRegionNet() {
+        final double loadToA1 = 10;
+        final double capacityToA1 = 100;
+        final double loadToB0 = 20;
+        final double capacityToB0 = 200;
 
-        final NodeAttribute<?> nodeAttribute = NodeAttributeEnum.TASK_CONTAINERS;
-        final double serverCapacityValue = 10;
-        final double serverLoadValue = 5;
-        final double serverDemandValue = 3;
-        final ServiceIdentifier<?> service = new StringServiceIdentifier("testService");
-        final RegionIdentifier region = new StringRegionIdentifier("A");
+        final NodeIdentifier a0 = new DnsNameIdentifier("a0");
+        final NodeIdentifier a1 = new DnsNameIdentifier("a1");
+        final NodeIdentifier b0 = new DnsNameIdentifier("b0");
+        final NodeIdentifier source = new DnsNameIdentifier("source");
+        final ServiceIdentifier<?> service = new StringServiceIdentifier("service");
+        final RegionIdentifier regionA = new StringRegionIdentifier("A");
+        final RegionIdentifier regionB = new StringRegionIdentifier("B");
+        final RegionIdentifier regionSource = new StringRegionIdentifier("Z");
+        final double tolerance = 1E-6;
 
-        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = ImmutableMap.of(nodeAttribute,
-                serverCapacityValue);
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = ImmutableMap
-                .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverLoadValue)));
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = ImmutableMap
-                .of(service, ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverDemandValue)));
-        final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTimeSum = ImmutableMap.of(service,
-                30000D);
-        final ImmutableMap<ServiceIdentifier<?>, Integer> serverAverageProcessingTimeCount = ImmutableMap.of(service,
-                1);
+        final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap.of(//
+                a1, ImmutableMap.of(LinkAttributeEnum.DATARATE, capacityToA1), //
+                b0, ImmutableMap.of(LinkAttributeEnum.DATARATE, capacityToB0));
 
-        final LinkAttribute<?> linkAttribute = LinkAttributeEnum.DATARATE;
-        final double networkCapacityValue = 20;
-        final double networkLoadValue = 15;
-        final double networkDemandValue = 13;
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkCapacityValue));
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkLoad = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkLoadValue));
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkDemand = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkDemandValue));
+        final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad = //
+                ImmutableMap.of(//
+                        a1, //
+                        ImmutableMap.of(source,
+                                ImmutableMap.of(service, //
+                                        ImmutableMap.of(LinkAttributeEnum.DATARATE, loadToA1))), //
+                        b0, //
+                        ImmutableMap.of(source, //
+                                ImmutableMap.of(service, ImmutableMap.of(LinkAttributeEnum.DATARATE, loadToB0))) //
+                );
 
-        final ResourceSummary sourceSummary = new ResourceSummary(region, minTimestamp, maxTimestamp, estimationWindow,
-                serverCapacity, serverLoad, serverDemand, serverAverageProcessingTimeCount,
-                serverAverageProcessingTimeSum, networkCapacity, networkLoad, networkDemand);
+        final ResourceReport report = new ResourceReport(a0, 0, EstimationWindow.SHORT, ImmutableMap.of(),
+                networkCapacity, networkLoad, ImmutableMap.of(), ImmutableMap.of());
 
-        final Field nodeToRegion = new FieldMapImpl(1, 1);
-        nodeToRegion.addSample(nodeName, region);
+        final TestRegionLookup nodeToRegion = new TestRegionLookup();
+        nodeToRegion.addMapping(a0, regionA);
+        nodeToRegion.addMapping(a1, regionA);
+        nodeToRegion.addMapping(b0, regionB);
+        nodeToRegion.addMapping(source, regionSource);
 
-        final ResourceSummary resultSummary = ResourceSummary.merge(sourceSummary, sourceSummary);
+        final ResourceSummary summary = ResourceSummary.convertToSummary(report, nodeToRegion);
 
-        Assert.assertEquals(region, resultSummary.getRegion());
-        Assert.assertEquals(minTimestamp, resultSummary.getMinTimestamp());
-        Assert.assertEquals(maxTimestamp, resultSummary.getMaxTimestamp());
-        Assert.assertEquals(estimationWindow, resultSummary.getDemandEstimationWindow());
+        // ---- check capacity
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> summaryNetCapacity = summary
+                .getNetworkCapacity();
+        assertThat(summaryNetCapacity, notNullValue());
 
-        final ImmutableMap<NodeAttribute<?>, Double> expectedServerCapacity = ImmutableMap.of(nodeAttribute,
-                serverCapacityValue + serverCapacityValue);
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> expectedServerLoad = ImmutableMap
-                .of(service,
-                        ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverLoadValue + serverLoadValue)));
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> expectedServerDemand = ImmutableMap
-                .of(service,
-                        ImmutableMap.of(region, ImmutableMap.of(nodeAttribute, serverDemandValue + serverDemandValue)));
+        // make sure region A isn't in the capacity
+        assertThat(summaryNetCapacity.get(regionA), nullValue());
 
-        Assert.assertEquals(expectedServerCapacity, resultSummary.getServerCapacity());
-        Assert.assertEquals(expectedServerLoad, resultSummary.getServerLoad());
-        Assert.assertEquals(expectedServerDemand, resultSummary.getServerDemand());
-        Assert.assertEquals(serverAverageProcessingTimeSum, resultSummary.getServerAverageProcessingTime());
+        // check that region B has capacity and that it matches the expected
+        // value
+        final ImmutableMap<LinkAttribute<?>, Double> summaryNetCapacityB = summaryNetCapacity.get(regionB);
+        assertThat(summaryNetCapacityB, notNullValue());
 
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> expectedNetworkCapacity = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkCapacityValue + networkCapacityValue));
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> expectedNetworkLoad = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkLoadValue + networkLoadValue));
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> expectedNetworkDemand = ImmutableMap
-                .of(region, ImmutableMap.of(linkAttribute, networkDemandValue + networkDemandValue));
+        final Double summaryNetCapacityBvalue = summaryNetCapacityB.get(LinkAttributeEnum.DATARATE);
+        assertThat(summaryNetCapacityBvalue, notNullValue());
+        assertThat(summaryNetCapacityBvalue, closeTo(capacityToB0, tolerance));
 
-        Assert.assertEquals(expectedNetworkCapacity, resultSummary.getNetworkCapacity());
-        Assert.assertEquals(expectedNetworkLoad, resultSummary.getNetworkLoad());
-        Assert.assertEquals(expectedNetworkDemand, resultSummary.getNetworkDemand());
+        // ---- check load
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> summaryNetLoad = summary
+                .getNetworkLoad();
+        assertThat(summaryNetLoad, notNullValue());
+
+        // make sure region A isn't in the capacity
+        assertThat(summaryNetLoad.get(regionA), nullValue());
+
+        // check that region B has load and that it matches the expected
+        // value
+        final ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>> summaryNetLoadB = summaryNetLoad
+                .get(regionB);
+        assertThat(summaryNetLoadB, notNullValue());
+
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>> summaryNetSourceLoad = summaryNetLoadB
+                .get(regionSource);
+        assertThat(summaryNetSourceLoad, notNullValue());
+
+        final ImmutableMap<LinkAttribute<?>, Double> summaryNetServiceLoad = summaryNetSourceLoad.get(service);
+        assertThat(summaryNetServiceLoad, notNullValue());
+
+        final Double summaryNetLoadBvalue = summaryNetServiceLoad.get(LinkAttributeEnum.DATARATE);
+        assertThat(summaryNetLoadBvalue, notNullValue());
+        assertThat(summaryNetLoadBvalue, closeTo(loadToB0, tolerance));
+
     }
 
     private static final class TestRegionLookup implements RegionLookupService {
