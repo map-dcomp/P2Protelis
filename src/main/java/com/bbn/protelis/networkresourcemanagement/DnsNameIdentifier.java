@@ -2,8 +2,6 @@ package com.bbn.protelis.networkresourcemanagement;
 
 import javax.annotation.Nonnull;
 
-import org.protelis.lang.datatype.DeviceUID;
-
 /**
  * Identifier that represents a DNS name. The name is compared in a
  * case-insensitive manner.

@@ -13,10 +13,6 @@ def once(v) {
     rep(x <- v) { x };
 }
 
-def hopDistanceTo(leader) {
-    rep(d <- Infinity) { mux(leader) { 0 } else { 1 + minHood(nbr(d)) } }
-}
-
 public def countDevices(potential) {
     C(potential, sum, 1, 0)
 }

@@ -13,13 +13,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.math3.random.BitsStreamGenerator;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.protelis.lang.datatype.DeviceUID;
+import org.protelis.lang.datatype.impl.LongUID;
 import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
 import org.protelis.vm.impl.AbstractExecutionContext;
 import org.protelis.vm.impl.SimpleExecutionEnvironment;
 import org.slf4j.Logger;
-
-import com.bbn.protelis.utils.LongUID;
 
 //TODO: This file needs checkstyle cleanup
 //CHECKSTYLE:OFF

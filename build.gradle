@@ -46,7 +46,7 @@ repositories {
 dependencies {
     compile group: 'com.cedarsoftware', name: 'json-io', version:'4.9.12'
     compile group: 'com.google.guava', name: 'guava', version:'22.0'
-    compile(group: 'org.protelis', name: 'protelis', version:'10.5.0') {
+    compile(group: 'org.protelis', name: 'protelis', version:'10.5.2') {
 exclude(module: 'guava')
     }
     compile group: 'commons-cli', name: 'commons-cli', version:'1.4'
