@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -45,11 +46,11 @@ public class LoadBalancerPlan implements Serializable {
      * @param stopContainers
      *            see {@link #getStopContainers()}
      */
-    public LoadBalancerPlan(@Nonnull final RegionIdentifier region,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, Integer>> servicePlan,
-            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopTrafficTo,
-            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopContainers) {
+    public LoadBalancerPlan(@JsonProperty("region") @Nonnull final RegionIdentifier region,
+            @JsonProperty("servicePlan") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, Integer>> servicePlan,
+            @JsonProperty("overflowPlan") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan,
+            @JsonProperty("stopTrafficTo") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopTrafficTo,
+            @JsonProperty("stopContainers") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopContainers) {
         this.regionName = region;
         this.servicePlan = servicePlan;
         this.overflowPlan = overflowPlan;
