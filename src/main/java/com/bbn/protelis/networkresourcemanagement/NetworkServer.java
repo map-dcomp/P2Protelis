@@ -26,11 +26,6 @@ import com.google.common.collect.ImmutableSet;
 public class NetworkServer extends AbstractExecutionContext
         implements NetworkStateProvider, RegionNodeStateProvider, RegionServiceStateProvider, NetworkNode {
 
-    /**
-     * Used when there is no region name.
-     */
-    public static final StringRegionIdentifier NULL_REGION = new StringRegionIdentifier("__null-region__");
-
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkServer.class);
 
     /** Device numerical identifier */
@@ -175,7 +170,7 @@ public class NetworkServer extends AbstractExecutionContext
             final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
             this.region = region;
         } else {
-            this.region = NULL_REGION;
+            this.region = StringRegionIdentifier.UNKNOWN;
         }
 
         this.networkState = new NetworkState(this.region);

@@ -41,7 +41,7 @@ public class NetworkClient implements NetworkNode {
             final StringRegionIdentifier region = new StringRegionIdentifier(regionName);
             this.region = region;
         } else {
-            this.region = NetworkServer.NULL_REGION;
+            this.region = StringRegionIdentifier.UNKNOWN;
         }
 
         final Object numClientsValue = extraData.get(EXTRA_DATA_NUM_CLIENTS_KEY);
