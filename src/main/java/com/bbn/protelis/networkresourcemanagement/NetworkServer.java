@@ -160,7 +160,7 @@ public class NetworkServer extends AbstractExecutionContext
             @Nonnull final RegionLookupService regionLookupService,
             @Nonnull final ProtelisProgram program,
             @Nonnull final NodeIdentifier name,
-            @Nonnull final ResourceManagerFactory<NetworkServer> managerFactory,
+            @Nonnull final ResourceManagerFactory<? extends NetworkServer> managerFactory,
             @Nonnull final Map<String, Object> extraData) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(nodeLookupService));
         this.uid = name;
