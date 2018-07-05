@@ -20,11 +20,11 @@ import com.google.common.collect.ImmutableMap;
  * Note: This class does is not functional and is only provided as an example
  * for implementations.
  */
-public class BasicResourceManager implements ResourceManager {
+public class BasicResourceManager implements ResourceManager<NetworkServer> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicResourceManager.class);
 
-    private final Map<String, Object> extraData;
+    private Map<String, Object> extraData;
 
     /**
      * Used to find resource report information in extraData.
@@ -62,21 +62,12 @@ public class BasicResourceManager implements ResourceManager {
      * 
      * @param clock
      *            the clock to be used for timing
-     * @param node
-     *            the node that this resource manager is for
-     * @param extraData
-     *            the extra data for the node. This contains the information to
-     *            return from the methods.
-     * @see NetworkServer#processExtraData(Map)
      */
-    public BasicResourceManager(@Nonnull final VirtualClock clock,
-            @Nonnull final NetworkServer node,
-            @Nonnull final Map<String, Object> extraData) {
+    public BasicResourceManager(@Nonnull final VirtualClock clock) {
         this.clock = clock;
-        this.node = node;
-        this.extraData = new HashMap<String, Object>(extraData);
 
-        //final Object resourceReportValuesRaw = this.extraData.get(EXTRA_DATA_RESOURCE_REPORT_KEY);
+        // final Object resourceReportValuesRaw =
+        // this.extraData.get(EXTRA_DATA_RESOURCE_REPORT_KEY);
         // if (null != resourceReportValuesRaw && resourceReportValuesRaw
         // instanceof Map) {
         // @SuppressWarnings("unchecked")
@@ -97,7 +88,16 @@ public class BasicResourceManager implements ResourceManager {
 
     }
 
-    private final NetworkServer node;
+    private NetworkServer node;
+
+    /**
+     * @see NetworkServer#processExtraData(Map)
+     */
+    @Override
+    public void init(@Nonnull final NetworkServer node, @Nonnull final Map<String, Object> extraData) {
+        this.node = node;
+        this.extraData = new HashMap<>(extraData);
+    }
 
     @Nonnull
     private ImmutableMap<NodeAttribute<?>, Double>

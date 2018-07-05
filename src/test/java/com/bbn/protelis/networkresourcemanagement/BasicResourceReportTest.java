@@ -3,6 +3,7 @@ package com.bbn.protelis.networkresourcemanagement;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.Collections;
 import java.util.Map;
 
 import org.junit.Test;
@@ -38,8 +39,10 @@ public class BasicResourceReportTest {
         final int dummyBasePort = 5000;
         final VirtualClock clock = new SimpleClock();
         final BasicResourceManagerFactory resMgrFactory = new BasicResourceManagerFactory(clock);
+        final ResourceManager<NetworkServer> resMgr = resMgrFactory.createResourceManager();
         final NetworkServer node = new NetworkServer(new LocalNodeLookupService(dummyBasePort), regionLookup, program,
-                new DnsNameIdentifier(nodeName), resMgrFactory, extraData);
+                new DnsNameIdentifier(nodeName), resMgr, extraData);
+        resMgr.init(node, Collections.emptyMap());
         final ResourceReport report = node.getResourceManager()
                 .getCurrentResourceReport(ResourceReport.EstimationWindow.SHORT);
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
