@@ -13,15 +13,12 @@ import javax.annotation.Nonnull;
 public interface ResourceManagerFactory<T extends NetworkServer> {
 
     /**
-     * Create a resource manager.
+     * Create a resource manager. The node will be assigned by
+     * {@link ResourceManager#init(NetworkServer, Map)}
      * 
-     * @param node
-     *            the node that the manager is for
-     * @param extraData
-     *            extra data read in when creating the node, used for testing
-     * @return the resource manager to use
+     * @return the resource manager
      */
     @Nonnull
-    ResourceManager createResourceManager(@Nonnull T node, @Nonnull Map<String, Object> extraData);
+    ResourceManager<T> createResourceManager();
 
 }

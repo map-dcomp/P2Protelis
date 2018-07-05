@@ -141,7 +141,7 @@ public class NetworkServer extends AbstractExecutionContext
     }
 
     /**
-     * Creates a {@link NetworkServer} with a {@link NullResourceManager}.
+     * Creates a {@link NetworkServer}.
      * 
      * @param program
      *            the program to run on the node
@@ -151,8 +151,8 @@ public class NetworkServer extends AbstractExecutionContext
      *            How to find other nodes
      * @param regionLookupService
      *            used by {@link #convertToSummary(ResourceReport)}
-     * @param managerFactory
-     *            used to create the {@link ResourceManager} for the node
+     * @param manager
+     *            see {@link #getResourceManager()}
      * @param extraData
      *            data to help define extra attributes about the node
      */
@@ -160,7 +160,7 @@ public class NetworkServer extends AbstractExecutionContext
             @Nonnull final RegionLookupService regionLookupService,
             @Nonnull final ProtelisProgram program,
             @Nonnull final NodeIdentifier name,
-            @Nonnull final ResourceManagerFactory<? extends NetworkServer> managerFactory,
+            @Nonnull final ResourceManager<? extends NetworkServer> manager,
             @Nonnull final Map<String, Object> extraData) {
         super(new SimpleExecutionEnvironment(), new NodeNetworkManager(nodeLookupService));
         this.uid = name;
@@ -177,7 +177,7 @@ public class NetworkServer extends AbstractExecutionContext
         this.regionNodeState = new RegionNodeState(this.region);
         this.regionServiceState = new RegionServiceState(this.region, ImmutableSet.of());
 
-        this.resourceManager = managerFactory.createResourceManager(this, extraData);
+        this.resourceManager = manager;
 
         this.regionLookupService = regionLookupService;
 
@@ -465,14 +465,13 @@ public class NetworkServer extends AbstractExecutionContext
         } // isExecuting
     }
 
-    private final ResourceManager resourceManager;
+    private final ResourceManager<?> resourceManager;
 
     /**
-     * 
      * @return the resource manager for this node
      */
     @Nonnull
-    public ResourceManager getResourceManager() {
+    public ResourceManager<?> getResourceManager() {
         return resourceManager;
     }
 

@@ -25,9 +25,8 @@ public class BasicResourceManagerFactory implements ResourceManagerFactory<Netwo
 
     @Override
     @Nonnull
-    public ResourceManager createResourceManager(@Nonnull final NetworkServer node,
-            @Nonnull final Map<String, Object> extraData) {
-        return new BasicResourceManager(clock, node, extraData);
+    public ResourceManager<NetworkServer> createResourceManager() {
+        return new BasicResourceManager(clock);
     }
 
 }

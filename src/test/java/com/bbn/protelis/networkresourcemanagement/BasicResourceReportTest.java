@@ -38,8 +38,9 @@ public class BasicResourceReportTest {
         final int dummyBasePort = 5000;
         final VirtualClock clock = new SimpleClock();
         final BasicResourceManagerFactory resMgrFactory = new BasicResourceManagerFactory(clock);
+        final ResourceManager<NetworkServer> resMgr = resMgrFactory.createResourceManager();
         final NetworkServer node = new NetworkServer(new LocalNodeLookupService(dummyBasePort), regionLookup, program,
-                new DnsNameIdentifier(nodeName), resMgrFactory, extraData);
+                new DnsNameIdentifier(nodeName), resMgr, extraData);
         final ResourceReport report = node.getResourceManager()
                 .getCurrentResourceReport(ResourceReport.EstimationWindow.SHORT);
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {

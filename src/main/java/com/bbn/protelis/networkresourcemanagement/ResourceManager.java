@@ -1,5 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.util.Map;
+
 import javax.annotation.Nonnull;
 
 import com.bbn.protelis.utils.VirtualClock;
@@ -11,8 +13,22 @@ import com.google.common.collect.ImmutableMap;
  * and to make changes to the {@link NetworkServer}.
  * 
  * This interface assumes that each containern runs only a single service.
+ * 
+ * @param <T>
+ *            the type of {@link NetworkServer} that is being managed.
  */
-public interface ResourceManager {
+public interface ResourceManager<T extends NetworkServer> {
+
+    /**
+     * Initialize the object with the node that it will manage.
+     * 
+     * @param node
+     *            the node to be managed
+     * @param extraData
+     *            extra information about the node, usually used to set some
+     *            extra properties
+     */
+    void init(@Nonnull T node, @Nonnull Map<String, Object> extraData);
 
     /**
      * @return The current state of the device being managed. Not null.
@@ -61,7 +77,6 @@ public interface ResourceManager {
      */
     @Nonnull
     ImmutableMap<NodeAttribute<?>, Double> getComputeCapacity();
-    
 
     /**
      * @return the clock used by the resource manager for timing

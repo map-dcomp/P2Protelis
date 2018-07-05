@@ -1,5 +1,7 @@
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.util.Map;
+
 import javax.annotation.Nonnull;
 
 import com.bbn.protelis.utils.SimpleClock;
@@ -11,7 +13,7 @@ import com.google.common.collect.ImmutableMap;
  * anything.
  * 
  */
-public class NullResourceManager implements ResourceManager {
+public class NullResourceManager implements ResourceManager<NetworkServer> {
 
     private final NodeIdentifier nodeId;
     private final VirtualClock clock = new SimpleClock();
@@ -57,5 +59,10 @@ public class NullResourceManager implements ResourceManager {
     @Nonnull
     public VirtualClock getClock() {
         return clock;
+    }
+
+    @Override
+    public void init(@Nonnull final NetworkServer node, @Nonnull final Map<String, Object> extraData) {
+        // nothing to do
     }
 }
