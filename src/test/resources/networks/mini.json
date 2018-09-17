@@ -1,19 +1,60 @@
 [
-{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
- "uid":1, "alias":"Legacy UNIX",
- "environment":[["foo","baboon"],["bar",2],["baz",3.0],["qux","elephant"]],
- "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.DummyMonitorable",
- 	"port":5001,
- 	"dependencyList":[]
- 	}
- },
-
-{"@type":"com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
- "uid":2, "alias":"Outlook",
- "environment":[["foo","foob"],["bar",1],["baz",7.0],["qux","quux"]],
- "client":{"@type":"com.bbn.protelis.processmanagement.testbed.client.DummyMonitorable",
- 	"port":5002,
- 	"dependencyList":[5001]
- 	}
- }
+  {
+    "@type": "com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+    "uid": 1,
+    "alias": "Legacy UNIX",
+    "environment": [
+      [
+        "foo",
+        "baboon"
+      ],
+      [
+        "bar",
+        2
+      ],
+      [
+        "baz",
+        3.0
+      ],
+      [
+        "qux",
+        "elephant"
+      ]
+    ],
+    "client": {
+      "@type": "com.bbn.protelis.processmanagement.testbed.client.DummyMonitorable",
+      "port": 5001,
+      "dependencyList": []
+    }
+  },
+  {
+    "@type": "com.bbn.protelis.processmanagement.testbed.daemon.LocalDaemon",
+    "uid": 2,
+    "alias": "Outlook",
+    "environment": [
+      [
+        "foo",
+        "foob"
+      ],
+      [
+        "bar",
+        1
+      ],
+      [
+        "baz",
+        7.0
+      ],
+      [
+        "qux",
+        "quux"
+      ]
+    ],
+    "client": {
+      "@type": "com.bbn.protelis.processmanagement.testbed.client.DummyMonitorable",
+      "port": 5002,
+      "dependencyList": [
+        5001
+      ]
+    }
+  }
 ]

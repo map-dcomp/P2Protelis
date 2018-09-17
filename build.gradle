@@ -1,0 +1,121 @@
+import org.gradle.internal.os.OperatingSystem
+
+buildscript {
+  repositories {
+      mavenCentral()
+      jcenter()
+  }
+}
+
+// Plugins
+plugins {
+    id 'java'
+    id 'maven'
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'checkstyle'
+    id 'findbugs'
+}
+
+
+group = 'com.bbn.protelis'
+version = '2.0.0'
+
+description = """Protelis Testbed"""
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+
+
+
+repositories {
+
+ mavenLocal()
+ mavenCentral()
+ jcenter()
+ maven {
+   url 'https://repository.apache.org/content/repositories/snapshots'
+ }
+}
+
+dependencies {
+    compile group: 'com.cedarsoftware', name: 'json-io', version:'4.9.12'
+    compile group: 'com.google.guava', name: 'guava', version:'22.0'
+    compile(group: 'org.protelis', name: 'protelis', version:'10.5.2') {
+exclude(module: 'guava')
+    }
+    compile group: 'commons-cli', name: 'commons-cli', version:'1.4'
+    compile group: 'net.sf.jung', name: 'jung-graph-impl', version:'2.0.1'
+    compile group: 'net.sf.jung', name: 'jung-algorithms', version:'2.0.1'
+    compile group: 'net.sf.jung', name: 'jung-visualization', version:'2.0.1'
+    compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.25'
+    compile group: 'org.kie', name: 'kie-api', version:'7.0.0.Final'
+    runtime group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version:'2.8.2'
+    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version:'2.8.2'
+    testCompile group: 'junit', name: 'junit', version:'4.12'
+    testCompile group: 'org.hamcrest', name: 'hamcrest-library', version:'1.3'
+    
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.8.9'
+    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-guava', version:'2.8.9'
+    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-parameter-names', version:'2.8.9'
+    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version:'2.8.9'
+    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version:'2.8.9'
+    
+    compile group: 'dnsjava', name: 'dnsjava', version: '2.1.8'      
+    
+}
+
+// set gradle version when generating the wrapper
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.0'
+}
+
+eclipse {
+    classpath {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
+
+checkstyle {
+    config = resources.text.fromFile('style.xml', 'UTF-8')
+    showViolations = true
+    ignoreFailures = false
+}
+
+test {
+    testLogging.showStandardStreams = true
+    ignoreFailures Boolean.getBoolean("test.ignoreFailures")        
+}
+
+findbugs {
+    ignoreFailures = true
+}
+
+// need to delete the bin directory created by IDEs
+clean {
+  delete 'bin'
+}
+
+task sourceJar(type: Jar) {
+  classifier "sources"
+  from sourceSets.main.allJava
+}
+
+publishing {
+    repositories {
+        mavenLocal()
+    }
+    
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact tasks.sourceJar
+        }
+    }
+}

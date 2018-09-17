@@ -1,0 +1,24 @@
+{
+  "region": "B",
+  "pool": true,
+  "resource-report": {
+    "serverLoad": {
+      
+    },
+    "serverAverageProcessingTime": {
+      "service1": 30000,
+      "service2": 45000
+    },
+    "serverCapacity": {
+      "CPU": 1,
+      "MEMORY": 1000000000000,
+      "DISK": 1000000
+    },
+    "networkLoad": {
+      "*": {
+        "DATARATE": 1
+      }
+    }
+  }
+}
+

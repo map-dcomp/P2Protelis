@@ -1,5 +1,0 @@
-module test:reference2
-
-public def testFun2() {
-	5;
-}
