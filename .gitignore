@@ -5,3 +5,4 @@ build/
 bin/
 .classpath
 build_log.txt
+/.apt_generated/

@@ -18,20 +18,22 @@ pipeline {
 		stage('Sloccount') {
 		    steps {
 		        sh "cloc --by-file --xml --out=cloc.xml src"
-		        sloccountPublish pattern: 'cloc.xml' 
+			sloccountPublish pattern: 'cloc.xml' 
 		    }
 		}
-		
+
 		stage('Build and Test') {
 			steps {
                           wrap([$class: 'Xvfb']) {                          
 				timestamps {
-                                    sh "./continuous_integration/standard_build"
+                                    timeout(time: 1, unit: 'HOURS') {
+                                      sh "./gradlew --continue --no-daemon --gradle-user-home " + gradleRepo() + " -Dmaven.repo.local=" + mavenRepo() + " clean build check"
+                                    }
 				}
-                          }
+			    }
 			}
 		}
-                
+
 	} // stages
 		
 	post {
@@ -48,7 +50,7 @@ pipeline {
                     junit "**/build/test-results/**/*.xml"
                     
 			emailext recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'CulpritsRecipientProvider']], 
-					to: 'map-bbn-commits@rlist.app.ray.com',
+					to: 'FILL-IN-EMAIL-ADDRESS',
 					subject: '$DEFAULT_SUBJECT', 
 					body: '''${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}
 
@@ -69,3 +71,11 @@ ${BUILD_LOG, maxLines=50}
 	} // post
 
 } // pipeline
+
+def gradleRepo() {
+ "${WORKSPACE}/gradle-repo"
+}
+
+def mavenRepo() {
+ "${WORKSPACE}/maven-repo"
+}

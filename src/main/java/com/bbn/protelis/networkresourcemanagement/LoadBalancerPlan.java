@@ -1,3 +1,34 @@
+/*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
+Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+the exception of the dcop implementation identified below (see notes).
+
+Dispersed Computing (DCOMP)
+Mission-oriented Adaptive Placement of Task and Data (MAP) 
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.io.Serializable;
@@ -6,8 +37,8 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Plan for balancing services in a region. The load balancer should look at the
@@ -28,9 +59,7 @@ public class LoadBalancerPlan implements Serializable {
     @Nonnull
     public static LoadBalancerPlan getNullLoadBalancerPlan(@Nonnull final RegionIdentifier region) {
         return new LoadBalancerPlan(region, ImmutableMap.of(), // servicePlan
-                ImmutableMap.of(), // overflowPlan
-                ImmutableMap.of(), // stopTrafficTo
-                ImmutableMap.of()); // stopContainers
+                ImmutableMap.of()); // overflowPlan
     }
 
     /**
@@ -41,21 +70,13 @@ public class LoadBalancerPlan implements Serializable {
      *            see {@link #getServicePlan()}
      * @param overflowPlan
      *            see {@link #getOverflowPlan()}
-     * @param stopTrafficTo
-     *            see {@link #getStopTrafficTo()}
-     * @param stopContainers
-     *            see {@link #getStopContainers()}
      */
     public LoadBalancerPlan(@JsonProperty("region") @Nonnull final RegionIdentifier region,
-            @JsonProperty("servicePlan") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, Integer>> servicePlan,
-            @JsonProperty("overflowPlan") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan,
-            @JsonProperty("stopTrafficTo") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopTrafficTo,
-            @JsonProperty("stopContainers") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopContainers) {
+            @JsonProperty("servicePlan") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableCollection<ContainerInfo>> servicePlan,
+            @JsonProperty("overflowPlan") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan) {
         this.regionName = region;
         this.servicePlan = servicePlan;
         this.overflowPlan = overflowPlan;
-        this.stopTrafficTo = stopTrafficTo;
-        this.stopContainers = stopContainers;
     }
 
     private final RegionIdentifier regionName;
@@ -68,16 +89,16 @@ public class LoadBalancerPlan implements Serializable {
         return this.regionName;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, Integer>> servicePlan;
+    private final ImmutableMap<NodeIdentifier, ImmutableCollection<ContainerInfo>> servicePlan;
 
     /**
-     * Plan for which services should run on which nodes.
+     * Plan for which services should run on which nodes. See
+     * {@link ContainerInfo} for details on what the properties mean.
      * 
-     * @return the plan. service -> mapping of node and how many instances of
-     *         the service
+     * @return the plan
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, Integer>> getServicePlan() {
+    public ImmutableMap<NodeIdentifier, ImmutableCollection<ContainerInfo>> getServicePlan() {
         return servicePlan;
     }
 
@@ -101,35 +122,6 @@ public class LoadBalancerPlan implements Serializable {
         return overflowPlan;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopTrafficTo;
-
-    /**
-     * Specify which containers to stop sending traffic to. The services running
-     * in these containers will continue to run, but there will be no new
-     * connections to these containers. This can be used to allow a container to
-     * catch up processing or to prepare it for shutdown.
-     * 
-     * @return node -> containers on node
-     */
-    @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> getStopTrafficTo() {
-        return stopTrafficTo;
-    }
-
-    private final ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> stopContainers;
-
-    /**
-     * The containers to stop on each node. These containers implicitly have
-     * traffic to them stopped. It is ok to list the containers in both this
-     * property and in {@Link #getStopTrafficTo()}.
-     * 
-     * @return node -> containers on node
-     */
-    @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableSet<ContainerIdentifier>> getStopContainers() {
-        return stopContainers;
-    }
-
     @Override
     public int hashCode() {
         return Objects.hash(regionName, servicePlan, overflowPlan);
@@ -143,9 +135,7 @@ public class LoadBalancerPlan implements Serializable {
             final LoadBalancerPlan other = (LoadBalancerPlan) o;
             return Objects.equals(getRegion(), other.getRegion())
                     && Objects.equals(getServicePlan(), other.getServicePlan())
-                    && Objects.equals(getOverflowPlan(), other.getOverflowPlan())
-                    && Objects.equals(getStopTrafficTo(), other.getStopTrafficTo())
-                    && Objects.equals(getStopContainers(), other.getStopContainers());
+                    && Objects.equals(getOverflowPlan(), other.getOverflowPlan());
         } else {
             return false;
         }
@@ -156,8 +146,111 @@ public class LoadBalancerPlan implements Serializable {
         return this.getClass().getSimpleName() + " [" + " region: " + regionName //
                 + " servicePlan: " + servicePlan //
                 + " overflowPlan: " + overflowPlan //
-                + " stopTrafficTo: " + stopTrafficTo //
-                + " stopContainers: " + stopContainers //
                 + " ]";
+    }
+
+    /**
+     * Information about a container in the plan.
+     */
+    public static final class ContainerInfo implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * 
+         * @param id
+         *            see {@link #getId()}
+         * @param service
+         *            see {@link #getService()}
+         * @param weight
+         *            see {@link #getWeight()}, must be a value greater than 0
+         * @param stopTrafficTo
+         *            see {@link #isStopTrafficTo()}
+         * @param stop
+         *            see {@link #isStop()}
+         * @throws IllegalArgumentException
+         *             if the weight is not greater than 0 and stopTrafficTo and
+         *             stop are false
+         */
+        public ContainerInfo(@JsonProperty("id") final NodeIdentifier id,
+                @JsonProperty("service") @Nonnull final ServiceIdentifier<?> service,
+                @JsonProperty("weight") final double weight,
+                @JsonProperty("stopTrafficTo") final boolean stopTrafficTo,
+                @JsonProperty("stop") final boolean stop) {
+            if (weight <= 0 && !stop && !stopTrafficTo) {
+                throw new IllegalArgumentException(
+                        "Container weight must be greater than 0 if the container is to receive any traffic");
+            }
+
+            this.id = id;
+            this.service = service;
+            this.weight = weight;
+            this.stopTrafficTo = stopTrafficTo;
+            this.stop = stop;
+        }
+
+        private final NodeIdentifier id;
+
+        /**
+         * @return The ID of the container or null. If null, this is a new
+         *         container to be started.
+         */
+        public NodeIdentifier getId() {
+            return id;
+        }
+
+        private final ServiceIdentifier<?> service;
+
+        /**
+         * 
+         * @return the service to run on the container
+         */
+        @Nonnull
+        public ServiceIdentifier<?> getService() {
+            return service;
+        }
+
+        private final double weight;
+
+        /**
+         * 
+         * @return the weight of this container, used to determine how much this
+         *         container should be used relative to other containers running
+         *         the same service in the region
+         */
+        public double getWeight() {
+            return weight;
+        }
+
+        private final boolean stopTrafficTo;
+
+        /**
+         * 
+         * @return if true, then don't send any traffic to this container
+         */
+        public boolean isStopTrafficTo() {
+            return stopTrafficTo;
+        }
+
+        private final boolean stop;
+
+        /**
+         * 
+         * @return if true stop this container
+         */
+        public boolean isStop() {
+            return stop;
+        }
+
+        @Override
+        public String toString() {
+            return this.getClass().getSimpleName() + " [" //
+                    + " container: " + id //
+                    + " service: " + service //
+                    + " weight: " + weight //
+                    + " stopTrafficTo: " + stopTrafficTo //
+                    + " stop: " + stop //
+                    + " ]";
+        }
+
     }
 }
