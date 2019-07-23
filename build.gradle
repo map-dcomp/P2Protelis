@@ -16,6 +16,7 @@ plugins {
     id 'maven-publish'
     id 'checkstyle'
     id 'findbugs'
+    id("org.protelis.protelisdoc") version "0.1.3"
 }
 
 
@@ -63,13 +64,14 @@ exclude(module: 'guava')
     compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version:'2.8.9'
     
     compile group: 'dnsjava', name: 'dnsjava', version: '2.1.8'      
-    
+
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: '+'
 }
 
 // set gradle version when generating the wrapper
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.0'
-}
+//task wrapper(type: Wrapper) {
+//    gradleVersion = '5.0'
+//}
 
 eclipse {
     classpath {
@@ -88,6 +90,16 @@ checkstyle {
 test {
     testLogging.showStandardStreams = true
     ignoreFailures Boolean.getBoolean("test.ignoreFailures")        
+}
+
+Protelis2KotlinDoc {
+    baseDir.set("src/main/resources/protelis") // base dir from which recursively looking for .pt files
+    // destDir.set("${project.buildDir.path}/protelis-docs/") // output dir for docs
+    // kotlinVersion.set("+")
+    // protelisVersion.set("+")
+    outputFormat.set("javadoc") // Dokka's output format (alternative: 'html')
+    //automaticDependencies.set(false) // Automatic resolution of deps (e.g., protelis-interpreter)
+    debug.set(true) // Debug prints are disabled by default
 }
 
 findbugs {
