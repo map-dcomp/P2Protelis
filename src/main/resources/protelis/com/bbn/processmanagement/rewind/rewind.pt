@@ -53,9 +53,9 @@ def purelyIncoming(msg,contaminated) {
         }
 }
 
-def envOrDefault(var,default) {
-        if(self.hasEnvironmentVariable(var)) {
-                self.getEnvironmentVariable(var);
+def envOrDefault(_var,default) {
+        if(self.hasEnvironmentVariable(_var)) {
+                self.getEnvironmentVariable(_var);
         } else {
                 default;
         }
