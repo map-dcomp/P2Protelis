@@ -1,4 +1,4 @@
-module com:bbn:resourcemanagement:resourcetracker
+module com:bbn:resourcemanagement:resourcecounter
 
 import protelis:coord:accumulation
 import protelis:coord:spreading
