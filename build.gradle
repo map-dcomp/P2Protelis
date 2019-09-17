@@ -17,6 +17,7 @@ plugins {
     id 'checkstyle'
     id 'findbugs'
     id("org.protelis.protelisdoc") version "0.2.0"
+
 }
 
 
@@ -94,7 +95,7 @@ test {
 }
 
 Protelis2KotlinDoc {
-    baseDir.set("src/main/resources/protelis") // base dir from which recursively looking for .pt files
+    baseDir.set("${project.projectDir}/src/main/resources/protelis") // base dir from which recursively looking for .pt files
     // destDir.set("${project.buildDir.path}/protelis-docs/") // output dir for docs
     // kotlinVersion.set("+")
     // protelisVersion.set("+")
