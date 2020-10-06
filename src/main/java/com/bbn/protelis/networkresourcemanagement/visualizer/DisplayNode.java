@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -118,9 +118,9 @@ public class DisplayNode {
         if (node instanceof NetworkServer) {
             final NetworkServer server = (NetworkServer) node;
 
-            final float r = objectToColorComponent(server.getExecutionEnvironment().get("red"));
-            final float g = objectToColorComponent(server.getExecutionEnvironment().get("green"));
-            final float b = objectToColorComponent(server.getExecutionEnvironment().get("blue"));
+            final float r = objectToColorComponent(server.getEnvironment().get("red"));
+            final float g = objectToColorComponent(server.getEnvironment().get("green"));
+            final float b = objectToColorComponent(server.getEnvironment().get("blue"));
             if (r == 0 && g == 0 && b == 0) {
                 return null;
             }

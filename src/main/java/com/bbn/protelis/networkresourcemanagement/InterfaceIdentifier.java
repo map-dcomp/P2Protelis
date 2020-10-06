@@ -35,54 +35,83 @@ import java.io.Serializable;
 
 import javax.annotation.Nonnull;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
- * Parameters to start a container. See
- * {@link ResourceManager#startService(ServiceIdentifier, ContainerParameters)}
- * for usage.
+ * Representation of a network interface.
  * 
  * @author jschewe
  *
  */
-public final class ContainerParameters implements Serializable {
+public class InterfaceIdentifier implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /**
      * 
-     * @param computeCapacity
-     *            see {@link #getComputeCapacity()}
-     * @param networkCapacity
-     *            see {@link #getNetworkCapacity()}
+     * @param name
+     *            see {@link #getName()}
+     * @param neighbors
+     *            see {@link #getNeighbors()}
      */
-    public ContainerParameters(@JsonProperty("computeCapacity") final @Nonnull ImmutableMap<NodeAttribute, Double> computeCapacity,
-            @JsonProperty("networkCapacity") final @Nonnull ImmutableMap<LinkAttribute, Double> networkCapacity) {
-        this.computeCapacity = computeCapacity;
-        this.networkCapacity = networkCapacity;
+    public InterfaceIdentifier(@Nonnull final String name, @Nonnull final ImmutableSet<NodeIdentifier> neighbors) {
+        this.name = Objects.requireNonNull(name);
+        this.neighbors = Objects.requireNonNull(neighbors);
     }
 
-    private final ImmutableMap<NodeAttribute, Double> computeCapacity;
+    private final ImmutableSet<NodeIdentifier> neighbors;
 
     /**
      * 
-     * @return the compute capacity for the container
+     * @return the neighbors connected to this interface
      */
-    @Nonnull
-    public ImmutableMap<NodeAttribute, Double> getComputeCapacity() {
-        return computeCapacity;
+    public ImmutableSet<NodeIdentifier> getNeighbors() {
+        return neighbors;
     }
 
-    private final ImmutableMap<LinkAttribute, Double> networkCapacity;
+    private final String name;
 
     /**
      * 
-     * @return the network capacity for the container. The values are applied to
-     *         all directly connected nodes.
+     * @return name of the interface
      */
-    @Nonnull
-    public ImmutableMap<LinkAttribute, Double> getNetworkCapacity() {
-        return networkCapacity;
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    /**
+     * Equal if the {@link #getName()}'s match.
+     */
+    @Override
+    public boolean equals(final Object o) {
+        if (null == o) {
+            return false;
+        } else if (this == o) {
+            return true;
+        } else if (this.getClass().equals(o.getClass())) {
+            final InterfaceIdentifier other = (InterfaceIdentifier) o;
+            return getName().equals(other.getName());
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getSimpleName());
+        sb.append(" ");
+        sb.append(getName());
+        sb.append(" -> ");
+        sb.append(getNeighbors().stream().map(NodeIdentifier::getName).collect(Collectors.joining(",")));
+        return sb.toString();
     }
 }

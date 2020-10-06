@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -95,6 +95,15 @@ public final class NS2Parser {
     private NS2Parser() {
     }
 
+    private static final int SET_MIN_ARGUMENTS = 2;
+    private static final int SET_TYPE_ARGUMENT_INDEX = 1;
+    private static final int LINK_MIN_ARGUMENTS = 7;
+    private static final int LINK_NODE1_ARGUMENT_INDEX = 2;
+    private static final int LINK_NODE2_ARGUMENT_INDEX = 3;
+    private static final int LINK_BANDWIDTH_ARGUMENT_INDEX = 4;
+    private static final int LINK_DELAY_ARGUMENT_INDEX = 5;
+    // private static final int LINK_QTYPE_ARGUMENT_INDEX = 6;
+
     /**
      * Parse an NS2 file into a scenario.
      * 
@@ -118,8 +127,6 @@ public final class NS2Parser {
         try (Reader reader = Files.newBufferedReader(topologyPath, StandardCharsets.UTF_8)) {
             try (BufferedReader bufReader = new BufferedReader(reader)) {
 
-                // final Pattern setRegExp = Pattern.compile("set (\\s+)
-                // \\[([^]]+)\\]");
                 final Pattern setRegExp = Pattern.compile("^set\\s+(\\S+)\\s+\\[([^]]+)\\]$");
 
                 String line;
@@ -160,7 +167,11 @@ public final class NS2Parser {
                                             "Only creating simulated objects is supported line: " + line);
                                 }
 
-                                final String objectType = tokens[1];
+                                if (tokens.length < SET_MIN_ARGUMENTS) {
+                                    throw new NS2FormatException("Expecting at least 2 arguments line: " + line);
+                                }
+
+                                final String objectType = tokens[SET_TYPE_ARGUMENT_INDEX];
 
                                 final Map<String, Object> extraData = getNodeData(baseDirectory, name);
 
@@ -168,13 +179,19 @@ public final class NS2Parser {
                                     final Node node = new Node(name, extraData);
                                     nodesByName.put(name, node);
                                 } else if ("duplex-link".equals(objectType)) {
-                                    if (!tokens[2].startsWith("$") || !tokens[3].startsWith("$")) {
+                                    if (tokens.length < LINK_MIN_ARGUMENTS) {
+                                        throw new NS2FormatException(
+                                                "Expecting at least 7 arguments for duplex-link on line: " + line);
+                                    }
+
+                                    if (!tokens[LINK_NODE1_ARGUMENT_INDEX].startsWith("$")
+                                            || !tokens[LINK_NODE2_ARGUMENT_INDEX].startsWith("$")) {
                                         throw new NS2FormatException(
                                                 "Expecting nodes for link to start with $ on line: " + line);
                                     }
 
-                                    final String leftNodeName = tokens[2].substring(1);
-                                    final String rightNodeName = tokens[3].substring(1);
+                                    final String leftNodeName = tokens[LINK_NODE1_ARGUMENT_INDEX].substring(1);
+                                    final String rightNodeName = tokens[LINK_NODE2_ARGUMENT_INDEX].substring(1);
 
                                     if (!nodesByName.containsKey(leftNodeName)) {
                                         throw new NS2FormatException(
@@ -186,21 +203,26 @@ public final class NS2Parser {
                                                 "Unknown node " + rightNodeName + " on line: " + line);
                                     }
 
-                                    final String bandwidthStr = tokens[4];
+                                    final String bandwidthStr = tokens[LINK_BANDWIDTH_ARGUMENT_INDEX];
                                     final double bandwidth = parseBandwidth(bandwidthStr);
 
-                                    // final String delayStr = tokens[5];
+                                    final String delayStr = tokens[LINK_DELAY_ARGUMENT_INDEX];
+                                    final double delayMs = parseDelay(delayStr);
+
                                     // final String queueBehavior =
-                                    // tokens[6];
+                                    // tokens[LINK_QTYPE_ARGUMENT_INDEX];
 
                                     final Node leftNode = nodesByName.get(leftNodeName);
                                     final Node rightNode = nodesByName.get(rightNodeName);
 
-                                    final Link link = new Link(name, leftNode, rightNode, bandwidth);
+                                    final Link link = new Link(name, leftNode, rightNode, bandwidth, delayMs);
                                     links.put(name, link);
                                 } else if ("make-lan".equals(objectType)) {
                                     final String bandwidthStr = tokens[tokens.length - 2];
                                     final double bandwidth = parseBandwidth(bandwidthStr);
+
+                                    final String delayStr = tokens[tokens.length - 1];
+                                    final double delayMs = parseDelay(delayStr);
 
                                     final Set<Node> nodes = new HashSet<>();
                                     for (int idx = 2; idx < tokens.length - 2; ++idx) {
@@ -214,7 +236,7 @@ public final class NS2Parser {
                                         }
                                     }
 
-                                    final Switch lan = new Switch(name, nodes, bandwidth);
+                                    final Switch lan = new Switch(name, nodes, bandwidth, delayMs);
                                     lans.put(name, lan);
                                 } else {
                                     throw new NS2FormatException(
@@ -374,6 +396,30 @@ public final class NS2Parser {
         return topology;
     }
 
+    /**
+     * Parse the string as a delay.
+     * 
+     * @param delayStr
+     *            the string to parse
+     * @return delay in milliseconds
+     */
+    private static double parseDelay(final String delayStr) {
+        final Pattern delayRegExp = Pattern.compile("^([0-9]*\\.?[0-9]+)(ms)$");
+
+        final Matcher delayMatch = delayRegExp.matcher(delayStr);
+        if (!delayMatch.matches()) {
+            throw new NS2FormatException("String doesn't match expected format for delay: '" + delayStr + "'");
+        }
+        // if there are other delay units, then this needs to handle the
+        // conversion
+        try {
+            final double delayMs = Double.parseDouble(delayMatch.group(1));
+            return delayMs;
+        } catch (final NumberFormatException e) {
+            throw new NS2FormatException("Delay value is not parseable as a floating point number: '" + delayStr + "'");
+        }
+    }
+
     private static double parseBandwidth(final String bandwidthStr) {
         final Pattern bandwidthExp = Pattern.compile("^(\\d+\\.?\\d*)(\\S+)$");
         final Matcher bandwidthMatch = bandwidthExp.matcher(bandwidthStr);
@@ -500,11 +546,11 @@ public final class NS2Parser {
             final VirtualClock clock = new SimpleClock();
             final BasicResourceManagerFactory managerFactory = new BasicResourceManagerFactory(clock);
             final BasicNetworkFactory factory = new BasicNetworkFactory(nodeLookupService, regionLookupService,
-                    managerFactory, "/protelis/com/bbn/resourcemanagement/resourcetracker.pt", false);
+                    managerFactory, "/protelis/com/bbn/resourcemanagement/example_resourcetracker.pt", false);
             final Topology topology = NS2Parser.parse(scenarioFile, baseDirectory);
 
             final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = new Scenario<>(topology, factory,
-                    name -> new DnsNameIdentifier(name));
+                    DnsNameIdentifier::new);
 
             regionLookupService.setDelegate(scenario);
 

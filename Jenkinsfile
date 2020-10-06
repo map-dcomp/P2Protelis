@@ -27,10 +27,26 @@ pipeline {
                           wrap([$class: 'Xvfb']) {                          
 				timestamps {
                                     timeout(time: 1, unit: 'HOURS') {
-                                      sh "./gradlew --continue --no-daemon --gradle-user-home " + gradleRepo() + " -Dmaven.repo.local=" + mavenRepo() + " clean build check"
+                                      sh "./gradlew -Dtest.ignoreFailures=true --continue --no-daemon --gradle-user-home " + gradleRepo() + " -Dmaven.repo.local=" + mavenRepo() + " clean build check"
                                     }
 				}
 			    }
+			}
+		}
+
+		stage('Gather tool results') {
+		        // any post build steps that can fail need to be here to ensure that the email is sent out in the end
+			steps {
+                          recordIssues \
+                              qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]], \
+                              tools: [spotBugs(pattern: '**/build/reports/spotbugs/*.xml'), \
+			              checkStyle(pattern: '**/build/reports/checkstyle/*.xml')]
+                    
+			  junit testResults: "**/build/test-results/**/*.xml", keepLongStdio: true
+			  
+                          recordIssues tool: taskScanner(excludePattern: 'gradle-repo/**,maven-repo/**', includePattern: '**/*.java,**/*.sh,**/*.py', highTags: 'FIXME,HACK', normalTags: 'TODO')
+  		 
+                          recordIssues tool: java()
 			}
 		}
 
@@ -38,17 +54,6 @@ pipeline {
 		
 	post {
 		always {
-                  //archiveArtifacts artifacts: ''
-												
-                    openTasks defaultEncoding: '', excludePattern: '', healthy: '', high: 'FIXME,HACK', low: '', normal: 'TODO', pattern: '**/*.java,**/*.sh,**/*.py', unHealthy: ''
-			warnings categoriesPattern: '', consoleParsers: [[parserName: 'Java Compiler (javac)']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
-
-                    findbugs pattern: '**/build/reports/findbugs/*.xml', unstableTotalAll: '0'
-
-                    checkstyle pattern: '**/build/reports/checkstyle/*.xml', unstableTotalAll: '0'
-                    
-                    junit "**/build/test-results/**/*.xml"
-                    
 			emailext recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'CulpritsRecipientProvider']], 
 					to: 'FILL-IN-EMAIL-ADDRESS',
 					subject: '$DEFAULT_SUBJECT', 

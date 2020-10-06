@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -31,21 +31,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
+import javax.annotation.Nonnull;
+
 /**
- * Used to specify the type of information being reported for capacity or usage
- * for a {@link NetworkLink}.
- * 
+ * A flow between two regions. See {@link AbstractFlow} for more details.
  */
-public enum LinkAttributeEnum implements LinkAttribute<LinkAttributeEnum> {
+public class RegionNetworkFlow extends AbstractFlow<RegionIdentifier> {
+
+    private static final long serialVersionUID = 1L;
 
     /**
-     * Capacity or usage in mega bits per second.
+     * Create a network flow.
+     * 
+     * @param regionSource
+     *            see {@link #getRegionOne()}
+     * @param regionDestination
+     *            see {@link #getRegionTwo()}
+     * @param serverRegion
+     *            see {@link #getServerRegion()}
      */
-    DATARATE;
-
-    @Override
-    public LinkAttributeEnum getAttribute() {
-        return this;
+    public RegionNetworkFlow(@Nonnull final RegionIdentifier regionSource,
+            @Nonnull final RegionIdentifier regionDestination,
+            @Nonnull final RegionIdentifier serverRegion) {
+        super(regionSource, regionDestination, serverRegion);
     }
 
 }

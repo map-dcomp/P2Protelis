@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -107,12 +107,33 @@ public interface ResourceManager<T extends NetworkServer> {
      * @return attribute -> value
      */
     @Nonnull
-    ImmutableMap<NodeAttribute<?>, Double> getComputeCapacity();
+    ImmutableMap<NodeAttribute, Double> getComputeCapacity();
 
     /**
      * @return the clock used by the resource manager for timing
      */
     @Nonnull
     VirtualClock getClock();
+
+    /**
+     * Fetch the image for the specified service. If the image is already local
+     * this is does nothing. This method is asynchronous, it will request the
+     * image and return.
+     * 
+     * @param service
+     *            the service to find the image for
+     */
+    void fetchImage(@Nonnull ServiceIdentifier<?> service);
+
+    /**
+     * Wait for the image for the specified service to arrive on the current
+     * node. If the service doesn't specify an image, this method will return
+     * immediately.
+     * 
+     * @param service
+     *            the service specifying the image
+     * @return if the image is local when the method returns
+     */
+    boolean waitForImage(@Nonnull ServiceIdentifier<?> service);
 
 }

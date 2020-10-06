@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -31,15 +31,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
-import java.io.Serializable;
-
 import javax.annotation.Nonnull;
+
+import org.protelis.lang.datatype.DeviceUID;
 
 /**
  * Identifier for a region. Implementations should be immutable and must be
  * {@link Comparable}.
  */
-public interface RegionIdentifier extends Serializable {
+public interface RegionIdentifier extends DeviceUID {
+
+    /**
+     * Used to represent an unknown region.
+     */
+    RegionIdentifier UNKNOWN = new StringRegionIdentifier("unknown");
+
 
     /**
      * @return the name of the region

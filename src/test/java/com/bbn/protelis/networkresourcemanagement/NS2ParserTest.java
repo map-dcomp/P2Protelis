@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -47,7 +47,9 @@ import org.hamcrest.CoreMatchers;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
 import org.protelis.lang.datatype.DeviceUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +68,8 @@ import com.bbn.protelis.networkresourcemanagement.testbed.termination.ExecutionC
 import com.bbn.protelis.utils.SimpleClock;
 import com.bbn.protelis.utils.VirtualClock;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Tests for {@link NS2Parser}.
  *
@@ -73,6 +77,13 @@ import com.bbn.protelis.utils.VirtualClock;
 public class NS2ParserTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NS2ParserTest.class);
+
+    /**
+     * Rules for running tests.
+     */
+    @SuppressFBWarnings(value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD", justification = "Used by the JUnit framework")
+    @Rule
+    public RuleChain chain = NetworkResourceTestUtils.getStandardRuleChain();
 
     /**
      * Test that ns2/multinode.ns parses and check that the nodes die when they
@@ -96,7 +107,7 @@ public class NS2ParserTest {
 
         // final String program = "true";
         // final boolean anonymous = true;
-        final String program = "/protelis/com/bbn/resourcemanagement/resourcetracker.pt";
+        final String program = "/protelis/com/bbn/resourcemanagement/example_resourcetracker.pt";
         final boolean anonymous = false;
 
         final VirtualClock clock = new SimpleClock();
@@ -109,7 +120,7 @@ public class NS2ParserTest {
         final Path baseDirectory = Paths.get(baseu.toURI());
         final Topology topology = NS2Parser.parse("multinode", baseDirectory);
         final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = new Scenario<>(topology, factory,
-                name -> new DnsNameIdentifier(name));
+                DnsNameIdentifier::new);
         Assert.assertNotNull("Parse didn't create a scenario", scenario);
 
         regionLookupService.setDelegate(scenario);
@@ -149,7 +160,8 @@ public class NS2ParserTest {
         // dummy AP program that we aren't going to execute
         final String program = "true";
         final boolean anonymous = true;
-        final NodeLookupService nodeLookupService = new LocalNodeLookupService(42000 /* unused */);
+        final NodeLookupService nodeLookupService = new LocalNodeLookupService(
+                42000 /* unused */);
         final DelegateRegionLookup regionLookupService = new DelegateRegionLookup(); // unused
         final int numExpectedLinks = 4;
 
@@ -163,7 +175,7 @@ public class NS2ParserTest {
 
         final Topology topology = NS2Parser.parse("test-switch", baseDirectory);
         final Scenario<NetworkServer, NetworkLink, NetworkClient> scenario = new Scenario<>(topology, factory,
-                name -> new DnsNameIdentifier(name));
+                DnsNameIdentifier::new);
 
         Assert.assertThat(scenario.getLinks().size(), IsEqual.equalTo(numExpectedLinks));
 

@@ -1,16 +1,18 @@
 module com:bbn:resourcemanagement:resourcecounter
 
+import java.lang.Double.POSITIVE_INFINITY
+
 import protelis:coord:accumulation
 import protelis:coord:spreading
 import protelis:lang:utils
 import protelis:coord:nonselfstabilizing:accumulation
 
 def once(v) {
-    rep(x <- v) { x };
+    rep(x <- v) { x }
 }
 
 def hopDistanceTo(leader) {
-    rep(d <- Infinity) { mux(leader) { 0 } else { 1 + minHood(nbr(d)) } }
+    rep(d <- POSITIVE_INFINITY) { mux(leader) { 0 } else { 1 + minHood(nbr(d)) } }
 }
 
 public def countDevices(potential) {
@@ -40,8 +42,8 @@ def countNodes() {
     let leader = nonce == gossip(nonce, min);
     //self.putEnvironmentVariable("blue",leader);
     let d = hopDistanceTo(leader);
-    [leader, countDevices(d)];
+    [leader, countDevices(d)]
 
 }
 
-countNodes();
+countNodes()

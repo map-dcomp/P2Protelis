@@ -34,16 +34,25 @@ package com.bbn.protelis.networkresourcemanagement;
 import javax.annotation.Nonnull;
 
 /**
- * Provide information about the nodes in a region.
- * 
+ * A flow between two nodes. See {@link AbstractFlow} for more details.
  */
-public interface RegionNodeStateProvider {
+public class NodeNetworkFlow extends AbstractFlow<NodeIdentifier> {
 
     /**
      * 
-     * @return the detailed state of the nodes in a region
+     * @param source
+     *            passed to parent class
+     * @param destination
+     *            passed to parent class
+     * @param server
+     *            passed to parent class
      */
-    @Nonnull
-    RegionNodeState getRegionNodeState();
+    public NodeNetworkFlow(@Nonnull final NodeIdentifier source,
+            @Nonnull final NodeIdentifier destination,
+            @Nonnull final NodeIdentifier server) {
+        super(source, destination, server);
+    }
+
+    private static final long serialVersionUID = 1L;
 
 }

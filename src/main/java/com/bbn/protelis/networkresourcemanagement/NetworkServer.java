@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -31,40 +31,58 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nonnull;
 
-import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.lang.datatype.Tuple;
+import org.protelis.vm.CodePathFactory;
+import org.protelis.vm.ExecutionEnvironment;
 import org.protelis.vm.ProtelisProgram;
 import org.protelis.vm.ProtelisVM;
 import org.protelis.vm.impl.AbstractExecutionContext;
+import org.protelis.vm.impl.HashingCodePathFactory;
 import org.protelis.vm.impl.SimpleExecutionEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
 
 /**
  * A server in the network.
+ * 
+ * This class is thread-safe with the exception of access to Protelis data in
+ * {@link AbstractExecutionContext}
  */
-public class NetworkServer extends AbstractExecutionContext
+public class NetworkServer
         implements NetworkStateProvider, RegionNodeStateProvider, RegionServiceStateProvider, NetworkNode {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkServer.class);
+    private final Object lock = new Object();
+
+    private final Logger logger;
 
     /** Device numerical identifier */
     private final NodeIdentifier uid;
 
     /** The Protelis VM to be executed by the device */
     private final ProtelisVM vm;
+
+    private final ExecutionEnvironment environment;
+
+    /**
+     * 
+     * @return the environment used by the VM
+     */
+    public ExecutionEnvironment getEnvironment() {
+        return environment;
+    }
 
     /**
      * Default time to sleep between executions. Specified in milliseconds.
@@ -86,7 +104,9 @@ public class NetworkServer extends AbstractExecutionContext
     private boolean pool = false;
 
     private void setPool(final boolean v) {
-        pool = v;
+        synchronized (lock) {
+            pool = v;
+        }
     }
 
     /**
@@ -95,7 +115,9 @@ public class NetworkServer extends AbstractExecutionContext
      * @see #EXTRA_DATA_POOL
      */
     public boolean isPool() {
-        return pool;
+        synchronized (lock) {
+            return pool;
+        }
     }
 
     /**
@@ -115,7 +137,9 @@ public class NetworkServer extends AbstractExecutionContext
      *         Defaults to {@link #DEFAULT_SLEEP_TIME_MS}.
      */
     public final long getSleepTime() {
-        return sleepTime;
+        synchronized (lock) {
+            return sleepTime;
+        }
     }
 
     /**
@@ -124,7 +148,9 @@ public class NetworkServer extends AbstractExecutionContext
      * @see #getSleepTime()
      */
     public final void setSleepTime(final long v) {
-        sleepTime = v;
+        synchronized (lock) {
+            sleepTime = v;
+        }
     }
 
     /**
@@ -135,7 +161,9 @@ public class NetworkServer extends AbstractExecutionContext
      * @see #addNeighbor(NodeIdentifier, double)
      */
     public Map<NodeIdentifier, Double> getNeighborsWithBandwidth() {
-        return Collections.unmodifiableMap(neighbors);
+        synchronized (lock) {
+            return new HashMap<>(neighbors);
+        }
     }
 
     private final Map<NodeIdentifier, Double> neighbors = new HashMap<>();
@@ -144,7 +172,9 @@ public class NetworkServer extends AbstractExecutionContext
     @Override
     @Nonnull
     public final Set<NodeIdentifier> getNeighbors() {
-        return Collections.unmodifiableSet(neighbors.keySet());
+        synchronized (lock) {
+            return new HashSet<>(neighbors.keySet());
+        }
     }
 
     /**
@@ -152,15 +182,27 @@ public class NetworkServer extends AbstractExecutionContext
      * @return all neighbors that participate in AP sharing
      */
     public Set<NodeIdentifier> getApNeighbors() {
-        return Collections.unmodifiableSet(apNeighbors);
+        synchronized (lock) {
+            return new HashSet<>(apNeighbors);
+        }
     }
 
     /**
      * @return if this node has connected to all of it's neighbors for AP
      *         sharing
+     * @see NodeNetworkManager#isConnectedToAllNeighbors()
      */
     public boolean isApConnectedToAllNeighbors() {
         return accessNetworkManager().isConnectedToAllNeighbors();
+    }
+
+    /**
+     * 
+     * @return the set of neighbors that are currently connected to AP
+     * @see NodeNetworkManager#getConnectedNeighbors()
+     */
+    public Set<NodeIdentifier> getConnectedNeighbors() {
+        return accessNetworkManager().getConnectedNeighbors();
     }
 
     /**
@@ -175,20 +217,26 @@ public class NetworkServer extends AbstractExecutionContext
      *            the bandwidth to the neighbor
      */
     public final void addApNeighbor(@Nonnull final NodeIdentifier v, final double bandwidth) {
-        apNeighbors.add(v);
-        neighbors.put(v, bandwidth);
-
+        synchronized (lock) {
+            apNeighbors.add(v);
+            neighbors.put(v, bandwidth);
+        }
     }
 
     @Override
     public final void addNeighbor(@Nonnull final NetworkNode v, final double bandwidth) {
-        if (v instanceof AbstractExecutionContext) {
-            apNeighbors.add(v.getNodeIdentifier());
+        synchronized (lock) {
+            // all NetworkServer instances are involved in AP
+            if (v instanceof NetworkServer) {
+                apNeighbors.add(v.getNodeIdentifier());
+            }
+            neighbors.put(v.getNodeIdentifier(), bandwidth);
         }
-        neighbors.put(v.getNodeIdentifier(), bandwidth);
     }
 
     /**
+     * Public visibility for testing only.
+     * 
      * @param bandwidthLinkAttribute
      *            the {@link LinkAttribute} to associate with each bandwidth
      *            value
@@ -197,10 +245,16 @@ public class NetworkServer extends AbstractExecutionContext
      * @see ResourceReport#getNetworkCapacity()
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>>
-            getNeighborLinkCapacity(final LinkAttribute<?> bandwidthLinkAttribute) {
-        ImmutableMap.Builder<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> builder = ImmutableMap.builder();
-        neighbors.forEach((k, v) -> builder.put(k, ImmutableMap.of(bandwidthLinkAttribute, v)));
+    public ImmutableMap<InterfaceIdentifier, ImmutableMap<LinkAttribute, Double>>
+            getNeighborLinkCapacity(final LinkAttribute bandwidthLinkAttribute) {
+        final ImmutableMap.Builder<InterfaceIdentifier, ImmutableMap<LinkAttribute, Double>> builder = ImmutableMap
+                .builder();
+        synchronized (lock) {
+            neighbors.forEach((k, v) -> {
+                builder.put(BasicResourceManager.createInterfaceIdentifierForNeighbor(k),
+                        ImmutableMap.of(bandwidthLinkAttribute, v));
+            });
+        }
         return builder.build();
     }
 
@@ -226,8 +280,8 @@ public class NetworkServer extends AbstractExecutionContext
             @Nonnull final NodeIdentifier name,
             @Nonnull final ResourceManager<? extends NetworkServer> manager,
             @Nonnull final Map<String, Object> extraData) {
-        super(new SimpleExecutionEnvironment(), new NodeNetworkManager(nodeLookupService));
         this.uid = name;
+        logger = LoggerFactory.getLogger(NetworkServer.class.getName() + "." + name);
 
         final String regionName = NetworkServerProperties.parseRegionName(extraData);
         if (null != regionName) {
@@ -251,7 +305,12 @@ public class NetworkServer extends AbstractExecutionContext
         }
 
         // Finish making the new device and add it to our collection
-        vm = new ProtelisVM(program, this);
+        networkManager = new NodeNetworkManager(nodeLookupService);
+        environment = new SimpleExecutionEnvironment();
+        // final CodePathFactory codePathFactory = (stack, sizes) -> new
+        // DefaultTimeEfficientCodePath(stack);
+        final CodePathFactory codePathFactory = new HashingCodePathFactory(Hashing.murmur3_128());
+        vm = new ProtelisVM(program, new ExecutionContext(this, environment, networkManager, codePathFactory));
     }
 
     /**
@@ -262,6 +321,8 @@ public class NetworkServer extends AbstractExecutionContext
         return vm;
     }
 
+    private final NodeNetworkManager networkManager;
+
     /**
      * Expose the network manager. This is to allow external simulation of
      * network For real devices, the NetworkManager usually runs autonomously in
@@ -270,7 +331,7 @@ public class NetworkServer extends AbstractExecutionContext
      * @return the node specific version of the network manager
      */
     public final NodeNetworkManager accessNetworkManager() {
-        return (NodeNetworkManager) super.getNetworkManager();
+        return networkManager;
     }
 
     /**
@@ -284,88 +345,6 @@ public class NetworkServer extends AbstractExecutionContext
     @Override
     public final NodeIdentifier getNodeIdentifier() {
         return uid;
-    }
-
-    @Override
-    public final DeviceUID getDeviceUID() {
-        return uid;
-    }
-
-    @Override
-    public final Number getCurrentTime() {
-        return System.currentTimeMillis();
-    }
-
-    /**
-     * Child context used for {@link NetworkServer#instance()}.
-     */
-    public class ChildContext extends AbstractExecutionContext {
-        private NetworkServer parent;
-
-        /**
-         * Create a child context.
-         * 
-         * @param parent
-         *            the parent environment to get information from.
-         */
-        public ChildContext(final NetworkServer parent) {
-            super(parent.getExecutionEnvironment(), parent.getNetworkManager());
-            this.parent = parent;
-        }
-
-        @Override
-        public Number getCurrentTime() {
-            return parent.getCurrentTime();
-        }
-
-        @Override
-        public NodeIdentifier getDeviceUID() {
-            return parent.getNodeIdentifier();
-        }
-
-        @Override
-        public double nextRandomDouble() {
-            return parent.nextRandomDouble();
-        }
-
-        @Override
-        protected AbstractExecutionContext instance() {
-            return new ChildContext(parent);
-        }
-
-        // TODO: need to better fix the whole ChildContext architecture
-        /**
-         * @return the region of the parent
-         */
-        public RegionIdentifier getRegion() {
-            return parent.getRegionIdentifier();
-        }
-
-        /**
-         * 
-         * @return parent network state
-         */
-        public NetworkState getNetworkState() {
-            return parent.getNetworkState();
-        }
-
-        /**
-         * 
-         * @return parent region node state
-         */
-        public RegionNodeState getRegionNodeState() {
-            return parent.getRegionNodeState();
-        }
-    }
-
-    @Override
-    protected AbstractExecutionContext instance() {
-        return new ChildContext(this);
-    }
-
-    @Override
-    public final double nextRandomDouble() {
-        return Math.random();
     }
 
     /**
@@ -398,53 +377,41 @@ public class NetworkServer extends AbstractExecutionContext
      * Execute the protolis program.
      */
     private void run() {
-        while (running) {
+        while (running.get()) {
             try {
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace("{}: Executing preRunCycle", getNodeIdentifier());
-                }
+                logger.debug("Executing preRunCycle");
                 preRunCycle();
-                if (!running) {
+                if (!running.get()) {
                     break;
                 }
 
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace("{}: runCycle", getNodeIdentifier());
-                }
+                logger.debug("runCycle");
                 getVM().runCycle(); // execute the Protelis program
                 incrementExecutionCount();
-                if (!running) {
+                if (!running.get()) {
                     break;
                 }
 
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace("{}: Executing postRunCycle", getNodeIdentifier());
-                }
+                logger.debug("Executing postRunCycle");
                 postRunCycle();
-                if (!running) {
+                if (!running.get()) {
                     break;
                 }
 
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace("{}: sleep", getNodeIdentifier());
-                }
+                logger.debug("sleep");
                 Thread.sleep(sleepTime);
             } catch (final InterruptedException e) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Node " + getName() + " got interrupted, waking up to check if it's time to exit", e);
-                }
+                logger.debug("Node " + getName() + " got interrupted, waking up to check if it's time to exit", e);
             } catch (final Throwable e) {
-                LOGGER.error("Exception thrown: terminating Protelis on node: " + getName(), e);
+                logger.error("Exception thrown: terminating Protelis on node: " + getName(), e);
                 programLoopException = e;
                 break;
             }
         }
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Exiting Protelis loop on node: " + getName());
-        }
+        logger.info("Exiting Protelis loop on node: {}", getName());
     }
 
-    private final Object lock = new Object();
+    private final Object executeThreadLock = new Object();
 
     private Thread executeThread = null;
 
@@ -453,23 +420,23 @@ public class NetworkServer extends AbstractExecutionContext
      * @return is the node currently executing?
      */
     public final boolean isExecuting() {
-        synchronized (lock) {
-            return running && null != executeThread && executeThread.isAlive();
+        synchronized (executeThreadLock) {
+            return running.get() && null != executeThread && executeThread.isAlive();
         }
     }
 
-    private boolean running = false;
+    private AtomicBoolean running = new AtomicBoolean(false);
 
     /**
      * Start the node executing.
      */
     public final void startExecuting() {
-        synchronized (lock) {
-            if (running) {
+        synchronized (executeThreadLock) {
+            if (running.get()) {
                 throw new IllegalStateException("Already executing, cannot start again!");
             }
 
-            running = true;
+            running.set(true);
 
             accessNetworkManager().start(this);
 
@@ -490,44 +457,47 @@ public class NetworkServer extends AbstractExecutionContext
      */
     public final void stopExecuting() {
         if (isExecuting()) {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Before lock in stopExecuting on node: {}", getNodeIdentifier());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Before lock in stopExecuting on node: {}", getNodeIdentifier());
             }
 
-            synchronized (lock) {
-                running = false;
-            }
+            running.set(false);
 
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Executing preStopExecuting on node: {}", getNodeIdentifier());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Executing preStopExecuting on node: {}", getNodeIdentifier());
             }
             preStopExecuting();
 
             // stop all network communication
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Stopping network manager on node: {}", getNodeIdentifier());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Stopping network manager on node: {}", getNodeIdentifier());
             }
             accessNetworkManager().stop();
 
-            synchronized (lock) {
-                if (null != executeThread) {
-                    if (LOGGER.isTraceEnabled()) {
-                        LOGGER.trace("Interrupting and then joining node: {}", getNodeIdentifier());
-                    }
-                    executeThread.interrupt();
-
-                    try {
-                        executeThread.join(); // may want to have a timeout here
-
-                        if (LOGGER.isTraceEnabled()) {
-                            LOGGER.trace("Node finished: {}", getNodeIdentifier());
-                        }
-                    } catch (final InterruptedException e) {
-                        LOGGER.debug("Got interrupted waiting for join, probably just time to shutdown", e);
-                    }
-                    executeThread = null;
-                } // non-null executeThread
+            // store the reference so that we don't hold the lock longer
+            // than needed
+            Thread executeThreadTemp;
+            synchronized (executeThreadLock) {
+                executeThreadTemp = executeThread;
+                executeThread = null;
             } // lock
+
+            if (null != executeThreadTemp) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Interrupting and then joining node: {}", getNodeIdentifier());
+                }
+                executeThreadTemp.interrupt();
+
+                try {
+                    executeThreadTemp.join(); // may want to have a timeout here
+
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Node finished: {}", getNodeIdentifier());
+                    }
+                } catch (final InterruptedException e) {
+                    logger.debug("Got interrupted waiting for join, probably just time to shutdown", e);
+                }
+            } // non-null executeThread
         } // isExecuting
     }
 
@@ -576,16 +546,20 @@ public class NetworkServer extends AbstractExecutionContext
 
     @Override
     public String getHardware() {
-        return hardware;
+        synchronized (lock) {
+            return hardware;
+        }
     }
 
     @Override
     public void setHardware(final String hardware) {
-        this.hardware = hardware;
+        synchronized (lock) {
+            this.hardware = hardware;
+        }
     }
 
     // ---- NetworkStateProvider
-    private NetworkState networkState;
+    private final NetworkState networkState;
 
     @Override
     @Nonnull
@@ -595,7 +569,7 @@ public class NetworkServer extends AbstractExecutionContext
     // ---- end NetworkStateProvider
 
     // ---- RegionNodeStateProvider
-    private RegionNodeState regionNodeState;
+    private final RegionNodeState regionNodeState;
 
     @Override
     @Nonnull
@@ -605,18 +579,20 @@ public class NetworkServer extends AbstractExecutionContext
     // ---- end RegionNodeStateProvider
 
     // --- RegionServiceStateProvider
+    // separate from the main lock so that we don't hang up stopping
+    private final Object regionServiceStateLock = new Object();
     private RegionServiceState regionServiceState;
 
     @Override
     @Nonnull
     public RegionServiceState getRegionServiceState() {
-        synchronized (lock) {
+        synchronized (regionServiceStateLock) {
             return regionServiceState;
         }
     }
 
     private void setRegionServiceState(final RegionServiceState state) {
-        synchronized (lock) {
+        synchronized (regionServiceStateLock) {
             regionServiceState = state;
         }
     }
@@ -635,22 +611,30 @@ public class NetworkServer extends AbstractExecutionContext
      *            the list of reports as a tuple
      */
     public void setRegionResourceReports(final Tuple tuple) {
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Setting region resource reports. Region: " + getRegionIdentifier());
+        final long time = getResourceManager().getClock().getCurrentTime();
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("Setting region resource reports. Region: " + getRegionIdentifier());
         }
 
         final ImmutableSet.Builder<ResourceReport> builder = ImmutableSet.builder();
         for (final Object entry : tuple) {
             final ResourceReport report = (ResourceReport) entry;
+            final long propagationDelay = time - report.getTimestamp();
+
+            logger.debug(
+                    "Received ResourceReport with timestamp {} from {} at time {} after a propagation delay of {} ms.",
+                    report.getTimestamp(), report.getNodeName(), time, propagationDelay);
+
             builder.add(report);
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Adding report for " + report.getNodeName());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Adding report for " + report.getNodeName());
             }
         }
         getRegionNodeState().setResourceReports(builder.build());
 
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Finished setting region resource reports.");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Finished setting region resource reports.");
         }
     }
 
@@ -662,22 +646,30 @@ public class NetworkServer extends AbstractExecutionContext
      *            the list of reports as a tuple
      */
     public void setRegionServiceReports(final Tuple tuple) {
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Setting region service reports. Region: " + getRegionIdentifier());
+        final long time = getResourceManager().getClock().getCurrentTime();
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("Setting region service reports. Region: " + getRegionIdentifier());
         }
 
         final ImmutableSet.Builder<ServiceReport> builder = ImmutableSet.builder();
         for (final Object entry : tuple) {
             final ServiceReport report = (ServiceReport) entry;
+            final long propagationDelay = time - report.getTimestamp();
+
+            logger.debug(
+                    "Received ServiceReport with timestamp {} from {} at time {} after a propagation delay of {} ms.",
+                    report.getTimestamp(), report.getNodeName(), time, propagationDelay);
+
             builder.add(report);
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Adding report for " + report.getNodeName());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Adding report for " + report.getNodeName());
             }
         }
         setRegionServiceState(new RegionServiceState(getRegionIdentifier(), builder.build()));
 
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Finished setting region service reports.");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Finished setting region service reports.");
         }
     }
 

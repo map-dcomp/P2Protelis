@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -37,7 +37,9 @@ import java.io.ObjectOutputStream;
 import java.util.Collections;
 import java.util.Map;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
 import org.protelis.lang.ProtelisLoader;
 import org.protelis.vm.ProtelisProgram;
 
@@ -46,10 +48,19 @@ import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService
 import com.bbn.protelis.utils.SimpleClock;
 import com.bbn.protelis.utils.VirtualClock;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Tests for {@link BasicResourceManager}.
  */
 public class BasicResourceReportTest {
+
+    /**
+     * Rules for running tests.
+     */
+    @SuppressFBWarnings(value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD", justification = "Used by the JUnit framework")
+    @Rule
+    public RuleChain chain = NetworkResourceTestUtils.getStandardRuleChain();
 
     /**
      * Test that a {@link ResourceReport} created by this manager can be

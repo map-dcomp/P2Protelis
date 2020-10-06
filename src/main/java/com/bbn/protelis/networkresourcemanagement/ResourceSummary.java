@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -34,6 +34,8 @@ package com.bbn.protelis.networkresourcemanagement;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -83,6 +85,11 @@ public class ResourceSummary implements Serializable {
      *            Used to compute {@link #getServerAverageProcessingTime()}
      * @param serverAverageProcessingTimeSum
      *            Used to compute {@link #getServerAverageProcessingTime()}
+     * @param maximumServiceContainers
+     *            see {@link #getMaximumServiceContainers()}
+     * @param allocatedServiceContainers
+     *            see {@link #getAllocatedServiceContainers()}
+     * 
      * 
      */
     public ResourceSummary(@JsonProperty("region") @Nonnull final RegionIdentifier region,
@@ -90,16 +97,18 @@ public class ResourceSummary implements Serializable {
             @JsonProperty("maxTimestamp") final long maxTimestamp,
             @JsonProperty("demandEstimationWindow") @Nonnull final ResourceReport.EstimationWindow demandEstimationWindow,
 
-            @JsonProperty("serverCapacity") @Nonnull final ImmutableMap<NodeAttribute<?>, Double> serverCapacity,
-            @JsonProperty("serverLoad") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad,
-            @JsonProperty("serverDemand") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand,
+            @JsonProperty("serverCapacity") @Nonnull final ImmutableMap<NodeAttribute, Double> serverCapacity,
+            @JsonProperty("serverLoad") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad,
+            @JsonProperty("serverDemand") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand,
 
             @JsonProperty("serverAverageProcessingTimeCount") @Nonnull final ImmutableMap<ServiceIdentifier<?>, Integer> serverAverageProcessingTimeCount,
             @JsonProperty("serverAverageProcessingTimeSum") @Nonnull final ImmutableMap<ServiceIdentifier<?>, Double> serverAverageProcessingTimeSum,
 
-            @JsonProperty("networkCapacity") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
-            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad,
-            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand) {
+            @JsonProperty("networkCapacity") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
+            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad,
+            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand,
+            @JsonProperty("maximumServiceContainers") final int maximumServiceContainers,
+            @JsonProperty("allocatedServiceContainers") final int allocatedServiceContainers) {
         this.region = region;
         this.minTimestamp = minTimestamp;
         this.maxTimestamp = maxTimestamp;
@@ -121,6 +130,9 @@ public class ResourceSummary implements Serializable {
         this.networkCapacity = networkCapacity;
         this.networkLoad = networkLoad;
         this.networkDemand = networkDemand;
+
+        this.maximumServiceContainers = maximumServiceContainers;
+        this.allocatedServiceContainers = allocatedServiceContainers;
     }
 
     private final RegionIdentifier region;
@@ -200,7 +212,7 @@ public class ResourceSummary implements Serializable {
         return serverAverageProcessingTime;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad;
 
     /**
      * Get server load for this region. This is a measured value. service ->
@@ -210,12 +222,12 @@ public class ResourceSummary implements Serializable {
      * @see ResourceReport#getComputeLoad()
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>>
             getServerLoad() {
         return serverLoad;
     }
 
-    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand;
+    private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand;
 
     /**
      * Get server estimated demand for this region. service -> source region for
@@ -225,12 +237,12 @@ public class ResourceSummary implements Serializable {
      * @see ResourceReport#getComputeDemand()
      */
     @Nonnull
-    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>>
+    public ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>>
             getServerDemand() {
         return serverDemand;
     }
 
-    private final ImmutableMap<NodeAttribute<?>, Double> serverCapacity;
+    private final ImmutableMap<NodeAttribute, Double> serverCapacity;
 
     /**
      * Server capacity for this region.
@@ -239,11 +251,11 @@ public class ResourceSummary implements Serializable {
      * @see ResourceReport#getNodeComputeCapacity()
      */
     @Nonnull
-    public ImmutableMap<NodeAttribute<?>, Double> getServerCapacity() {
+    public ImmutableMap<NodeAttribute, Double> getServerCapacity() {
         return serverCapacity;
     }
 
-    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity;
+    private final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity;
 
     /**
      * Network capacity for neighboring regions. neighbor region -> attribute ->
@@ -253,11 +265,11 @@ public class ResourceSummary implements Serializable {
      * @see ResourceReport#getNetworkCapacity()
      */
     @Nonnull
-    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkCapacity() {
+    public ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkCapacity() {
         return networkCapacity;
     }
 
-    private final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad;
+    private final ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad;
 
     /**
      * Network load and where it comes from. neighbor region -> source region ->
@@ -269,12 +281,12 @@ public class ResourceSummary implements Serializable {
      * @see ResourceReport#getNetworkLoad()
      */
     @Nonnull
-    public ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+    public ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
             getNetworkLoad() {
         return networkLoad;
     }
 
-    private final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand;
+    private final ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand;
 
     /**
      * Network demand for neighboring regions. Only direct neighbors are
@@ -284,9 +296,38 @@ public class ResourceSummary implements Serializable {
      * @see ResourceReport#getNetworkDemand()
      */
     @Nonnull
-    public ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+    public ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
             getNetworkDemand() {
         return networkDemand;
+    }
+
+    private final int maximumServiceContainers;
+
+    /**
+     * 
+     * @return the maximum number of service containers that can run on this
+     *         node.
+     */
+    public int getMaximumServiceContainers() {
+        return maximumServiceContainers;
+    }
+
+    private final int allocatedServiceContainers;
+
+    /**
+     * 
+     * @return the number of service containers that are currently allocated
+     */
+    public int getAllocatedServiceContainers() {
+        return allocatedServiceContainers;
+    }
+
+    /**
+     * 
+     * @return the number of service containers that can be added to this node
+     */
+    public int getAvailableServiceContainers() {
+        return maximumServiceContainers - allocatedServiceContainers;
     }
 
     /**
@@ -303,17 +344,26 @@ public class ResourceSummary implements Serializable {
      */
     public static ResourceSummary getNullSummary(@Nonnull final RegionIdentifier region,
             @Nonnull final ResourceReport.EstimationWindow estimationWindow) {
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = ImmutableMap
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad = ImmutableMap
                 .of();
-        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = ImmutableMap.of();
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = ImmutableMap
-                .of();
-        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad = ImmutableMap
+        final ImmutableMap<NodeAttribute, Double> serverCapacity = ImmutableMap.of();
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = ImmutableMap.of();
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad = ImmutableMap
                 .of();
 
         return new ResourceSummary(region, ResourceReport.NULL_TIMESTAMP, ResourceReport.NULL_TIMESTAMP,
                 estimationWindow, serverCapacity, serverLoad, serverLoad, ImmutableMap.of(), ImmutableMap.of(),
-                networkCapacity, networkLoad, networkLoad);
+                networkCapacity, networkLoad, networkLoad, 0, 0);
+    }
+
+    /**
+     * Check if this summary is the null summary. This is done by checking if
+     * both the min and max timestamp are {@link ResourceReport#NULL_TIMESTAMP}.
+     * 
+     * @return if this is the null summary
+     */
+    public boolean isNullSummary() {
+        return ResourceReport.NULL_TIMESTAMP == getMinTimestamp() && ResourceReport.NULL_TIMESTAMP == getMaxTimestamp();
     }
 
     /**
@@ -341,12 +391,12 @@ public class ResourceSummary implements Serializable {
                     + one.getDemandEstimationWindow() + " != " + two.getDemandEstimationWindow());
         }
 
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = mergeMaps3(
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad = mergeMaps3(
                 one.getServerLoad(), two.getServerLoad());
-        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = mergeDoubleMapViaSum(one.getServerCapacity(),
+        final ImmutableMap<NodeAttribute, Double> serverCapacity = mergeDoubleMapViaSum(one.getServerCapacity(),
                 two.getServerCapacity());
 
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = mergeMaps3(
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand = mergeMaps3(
                 one.getServerDemand(), two.getServerDemand());
 
         final Map<ServiceIdentifier<?>, Double> serverAvgProcTimeSum = new HashMap<>(
@@ -361,18 +411,31 @@ public class ResourceSummary implements Serializable {
             serverAvgProcTimeCount.merge(service, count, Integer::sum);
         });
 
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = mergeMaps2(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = mergeMaps2(
                 one.getNetworkCapacity(), two.getNetworkCapacity());
-        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad = mergeMaps4(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad = mergeMaps4(
                 one.getNetworkLoad(), two.getNetworkLoad());
-        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand = mergeMaps4(
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand = mergeMaps4(
                 one.getNetworkDemand(), two.getNetworkDemand());
 
-        final long minTimestamp = Math.min(one.getMinTimestamp(), two.getMinTimestamp());
-        final long maxTimestamp = Math.max(one.getMaxTimestamp(), two.getMaxTimestamp());
+        final long minTimestamp;
+        final long maxTimestamp;
+        if (one.isNullSummary()) {
+            minTimestamp = two.getMinTimestamp();
+            maxTimestamp = two.getMaxTimestamp();
+        } else if (two.isNullSummary()) {
+            minTimestamp = one.getMinTimestamp();
+            maxTimestamp = one.getMaxTimestamp();
+        } else {
+            minTimestamp = Math.min(one.getMinTimestamp(), two.getMinTimestamp());
+            maxTimestamp = Math.max(one.getMaxTimestamp(), two.getMaxTimestamp());
+        }
+
         return new ResourceSummary(one.getRegion(), minTimestamp, maxTimestamp, one.getDemandEstimationWindow(),
                 serverCapacity, serverLoad, serverDemand, ImmutableMap.copyOf(serverAvgProcTimeCount),
-                ImmutableMap.copyOf(serverAvgProcTimeSum), networkCapacity, networkLoad, networkDemand);
+                ImmutableMap.copyOf(serverAvgProcTimeSum), networkCapacity, networkLoad, networkDemand,
+                one.getMaximumServiceContainers() + two.getMaximumServiceContainers(),
+                one.getAllocatedServiceContainers() + two.getAllocatedServiceContainers());
     }
 
     /**
@@ -398,38 +461,38 @@ public class ResourceSummary implements Serializable {
 
         final RegionIdentifier reportRegion = nodeToRegion.getRegionForNode(report.getNodeName());
 
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> reportServerLoad = report
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute, Double>>> reportServerLoad = report
                 .getComputeLoad();
-        final ImmutableMap.Builder<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoadBuilder = ImmutableMap
+        final ImmutableMap.Builder<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoadBuilder = ImmutableMap
                 .builder();
         reportServerLoad.forEach((service, map) -> {
-            final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> regionMap = convertNodeToRegion(
+            final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>> regionMap = convertNodeToRegion(
                     nodeToRegion, map);
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("Converted {} -> {}", map, regionMap);
             }
             serverLoadBuilder.put(service, regionMap);
         });
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverLoad = serverLoadBuilder
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverLoad = serverLoadBuilder
                 .build();
 
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("new summary server load {}", serverLoad);
         }
 
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> reportServerDemand = report
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute, Double>>> reportServerDemand = report
                 .getComputeDemand();
-        final ImmutableMap.Builder<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemandBuilder = ImmutableMap
+        final ImmutableMap.Builder<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemandBuilder = ImmutableMap
                 .builder();
         reportServerDemand.forEach((service, map) -> {
-            final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>> regionMap = convertNodeToRegion(
+            final ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>> regionMap = convertNodeToRegion(
                     nodeToRegion, map);
             serverDemandBuilder.put(service, regionMap);
         });
-        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute<?>, Double>>> serverDemand = serverDemandBuilder
+        final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> serverDemand = serverDemandBuilder
                 .build();
 
-        final ImmutableMap<NodeAttribute<?>, Double> serverCapacity = report.getNodeComputeCapacity();
+        final ImmutableMap<NodeAttribute, Double> serverCapacity = report.getNodeComputeCapacity();
 
         // sum of single node is the value
         final ImmutableMap<ServiceIdentifier<?>, Double> serverAvgProcTimeSum = report.getAverageProcessingTime();
@@ -440,88 +503,105 @@ public class ResourceSummary implements Serializable {
 
         // use node network capacity as the summaries don't care about the
         // containers
-        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity = convertNodeToRegionExcludingThis1(
-                nodeToRegion, reportRegion, report.getNetworkCapacity());
+        final ImmutableMap<RegionIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity = convertInterfaceToRegion(
+                nodeToRegion, report.getNetworkCapacity());
 
-        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad = convertNodeToRegionExcludingThis3(
-                nodeToRegion, reportRegion, report.getNetworkLoad());
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad = convertInterfaceToRegion3(
+                nodeToRegion, report.getNetworkLoad());
 
-        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand = convertNodeToRegionExcludingThis3(
-                nodeToRegion, reportRegion, report.getNetworkDemand());
+        final ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand = convertInterfaceToRegion3(
+                nodeToRegion, report.getNetworkDemand());
 
         final ResourceSummary summary = new ResourceSummary(reportRegion, report.getTimestamp(), report.getTimestamp(),
                 report.getDemandEstimationWindow(), serverCapacity, serverLoad, serverDemand,
-                serverAvgProcTimeCount.build(), serverAvgProcTimeSum, networkCapacity, networkLoad, networkDemand);
+                serverAvgProcTimeCount.build(), serverAvgProcTimeSum, networkCapacity, networkLoad, networkDemand,
+                report.getMaximumServiceContainers(), report.getAllocatedServiceContainers());
         return summary;
     }
 
     /**
-     * Convert the map of NodeIdentifiers to RegionIdentifiers. Exclude neighbor
-     * nodes that are in thisRegion.
+     * Convert the map of InterfaceIdentifiers to RegionIdentifiers.
      */
     private static <T>
-            ImmutableMap<RegionIdentifier, ImmutableMap<RegionIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<T, Double>>>>
-            convertNodeToRegionExcludingThis3(@Nonnull final RegionLookupService nodeToRegion,
-                    @Nonnull final RegionIdentifier thisRegion,
-                    final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<T, Double>>>> source) {
-        final Map<RegionIdentifier, Map<RegionIdentifier, Map<ServiceIdentifier<?>, Map<T, Double>>>> dest = new HashMap<>();
+            ImmutableMap<RegionIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<T, Double>>>>
+            convertInterfaceToRegion3(@Nonnull final RegionLookupService nodeToRegion,
+                    final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<T, Double>>>> source) {
+        final Map<RegionIdentifier, Map<RegionNetworkFlow, Map<ServiceIdentifier<?>, Map<T, Double>>>> dest = new HashMap<>();
 
-        source.forEach((neighborNode, neighborData) -> {
-            final RegionIdentifier neighborRegion = nodeToRegion.getRegionForNode(neighborNode);
-            if (null != neighborRegion) {
-                if (!thisRegion.equals(neighborRegion)) {
+        source.forEach((neighborInterface, neighborData) -> {
+            final Set<RegionIdentifier> regions = neighborInterface.getNeighbors().stream()
+                    .map(nodeToRegion::getRegionForNode).collect(Collectors.toSet());
 
-                    final Map<RegionIdentifier, Map<ServiceIdentifier<?>, Map<T, Double>>> destNeighborData = dest
+            regions.forEach(neighborRegion -> {
+                if (null != neighborRegion) {
+                    final Map<RegionNetworkFlow, Map<ServiceIdentifier<?>, Map<T, Double>>> destNeighborData = dest
                             .computeIfAbsent(neighborRegion, k -> new HashMap<>());
 
-                    neighborData.forEach((sourceNode, sourceData) -> {
-                        final RegionIdentifier sourceRegion = nodeToRegion.getRegionForNode(sourceNode);
-                        if (null != sourceRegion) {
-                            final Map<ServiceIdentifier<?>, Map<T, Double>> destSourceData = destNeighborData
-                                    .computeIfAbsent(sourceRegion, k -> new HashMap<>());
-
-                            sourceData.forEach((service, serviceData) -> {
-                                final Map<T, Double> destServiceData = destSourceData.computeIfAbsent(service,
-                                        k -> new HashMap<>());
-
-                                serviceData.forEach((attr, value) -> {
-                                    destServiceData.merge(attr, value, Double::sum);
-                                }); // foreach attribute
-
-                            }); // foreach service
+                    neighborData.forEach((nodeFlow, sourceData) -> {
+                        final RegionIdentifier regionSource = nodeToRegion.getRegionForNode(nodeFlow.getSource());
+                        if (null == regionSource) {
+                            LOGGER.debug("Unable to find region for node(source) {}", nodeFlow.getSource());
                         } else {
-                            LOGGER.warn("Unable to find region for node {}", sourceNode);
+                            final RegionIdentifier regionDest = nodeToRegion
+                                    .getRegionForNode(nodeFlow.getDestination());
+                            if (null == regionDest) {
+                                LOGGER.debug("Unable to find region for node(dest) {}", nodeFlow.getDestination());
+                            } else {
+                                final NodeIdentifier serverNode = nodeFlow.getServer();
+                                final RegionIdentifier serverRegion;
+                                if (serverNode.equals(NodeIdentifier.UNKNOWN)) {
+                                    serverRegion = RegionIdentifier.UNKNOWN;
+                                } else {
+                                    serverRegion = nodeToRegion.getRegionForNode(serverNode);
+                                }
+
+                                final RegionNetworkFlow regionFlow = new RegionNetworkFlow(regionSource, regionDest,
+                                        serverRegion);
+                                final Map<ServiceIdentifier<?>, Map<T, Double>> destSourceData = destNeighborData
+                                        .computeIfAbsent(regionFlow, k -> new HashMap<>());
+
+                                sourceData.forEach((service, serviceData) -> {
+                                    final Map<T, Double> destServiceData = destSourceData.computeIfAbsent(service,
+                                            k -> new HashMap<>());
+
+                                    serviceData.forEach((attr, value) -> {
+                                        destServiceData.merge(attr, value, Double::sum);
+                                    }); // foreach attribute
+
+                                }); // foreach service
+                            }
                         }
                     }); // foreach source
+                } else {
+                    LOGGER.warn("Unable to find region for neighbor a node in {}, found {}",
+                            neighborInterface.getNeighbors(), regions);
+                }
+            });
 
-                } // check for other region
-            } else {
-                LOGGER.warn("Unable to find region for node {}", neighborNode);
-            }
         }); // foreach neighbor
 
         return ImmutableUtils.makeImmutableMap4(dest);
     }
 
     /**
-     * Convert the map of NodeIdentifiers to RegionIdentifiers. Exclude this
-     * region.
+     * Convert the map of InterfaceIdentifiers to RegionIdentifiers.
      */
-    private static <T> ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>> convertNodeToRegionExcludingThis1(
+    private static <T> ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>> convertInterfaceToRegion(
             @Nonnull final RegionLookupService nodeToRegion,
-            @Nonnull final RegionIdentifier thisRegion,
-            final ImmutableMap<NodeIdentifier, ImmutableMap<T, Double>> source) {
+            final ImmutableMap<InterfaceIdentifier, ImmutableMap<T, Double>> source) {
 
         final Map<RegionIdentifier, ImmutableMap<T, Double>> dest = new HashMap<>();
-        source.forEach((node, v) -> {
-            final RegionIdentifier region = nodeToRegion.getRegionForNode(node);
-            if (null != region) {
-                if (!thisRegion.equals(region)) {
+        source.forEach((ifce, v) -> {
+            final Set<RegionIdentifier> regions = ifce.getNeighbors().stream().map(nodeToRegion::getRegionForNode)
+                    .collect(Collectors.toSet());
+
+            regions.forEach(region -> {
+                if (null != region) {
                     dest.merge(region, v, ResourceSummary::mergeDoubleMapViaSum);
+                } else {
+                    LOGGER.warn("Unable to find region for a node in {} found: {}", ifce.getNeighbors(), regions);
                 }
-            } else {
-                LOGGER.warn("Unable to find region for node {}", node);
-            }
+            });
 
         });
 
@@ -529,7 +609,7 @@ public class ResourceSummary implements Serializable {
     }
 
     /**
-     * Convert the map of NodeIdentifiers to RegionIdentifiers.
+     * Convert the map of InterfaceIdentifiers to RegionIdentifiers.
      */
     private static <T> ImmutableMap<RegionIdentifier, ImmutableMap<T, Double>> convertNodeToRegion(
             @Nonnull final RegionLookupService nodeToRegion,
@@ -541,9 +621,8 @@ public class ResourceSummary implements Serializable {
             if (null != region) {
                 dest.merge(region, v, ResourceSummary::mergeDoubleMapViaSum);
             } else {
-                LOGGER.warn("Unable to find region for node {}", node);
+                LOGGER.warn("Unable to find region for node in {}", node);
             }
-
         });
 
         return ImmutableMap.copyOf(dest);

@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -31,19 +31,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.nustaq.net.TCPObjectSocket;
 import org.protelis.lang.datatype.DeviceUID;
-import org.protelis.vm.util.CodePath;
+import org.protelis.vm.CodePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +53,7 @@ import org.slf4j.LoggerFactory;
 /* package */
 final class NetworkNeighbor extends Thread {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkNeighbor.class);
+    private final Logger logger;
 
     private Map<CodePath, Object> sharedValues = new HashMap<>();
 
@@ -83,30 +82,23 @@ final class NetworkNeighbor extends Thread {
 
     private final int nonce;
 
-    private final ObjectInputStream in;
-    private final ObjectOutputStream out;
+    private final TCPObjectSocket serializer;
     private final Socket socket;
 
     // use separate object rather than this to keep other objects from blocking
     // us
     private final Object lock = new Object();
 
-    private final NetworkServer selfNode;
-    private final DeviceUID neighborUid;
-
     /* package */ NetworkNeighbor(final NetworkServer selfNode,
             final DeviceUID neighborUid,
             final int nonce,
             final InetSocketAddress addr,
             final Socket s,
-            final ObjectInputStream in,
-            final ObjectOutputStream out) {
-        super(String.format("%s -> %s:%s", selfNode.getDeviceUID(), neighborUid, addr.toString()));
+            final TCPObjectSocket serializer) {
+        super(String.format("%s_to_%s_port_%d", selfNode.getNodeIdentifier(), neighborUid, addr.getPort()));
+        logger = LoggerFactory.getLogger(NetworkNeighbor.class.getName() + "." + getName());
 
-        this.selfNode = selfNode;
-        this.neighborUid = neighborUid;
-        this.in = in;
-        this.out = out;
+        this.serializer = serializer;
         this.socket = s;
         this.nonce = nonce;
     }
@@ -134,6 +126,19 @@ final class NetworkNeighbor extends Thread {
         return running.get();
     }
 
+    private final Random random = new Random();
+
+    private boolean simulateDroppedMessage() {
+        final double messageDropPercentage = GlobalNetworkConfiguration.getInstance().getMessageDropPercentage();
+        if (messageDropPercentage > 0) {
+            final double value = random.nextDouble();
+            if (value <= messageDropPercentage) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Listen for incoming packets
      */
@@ -142,10 +147,10 @@ final class NetworkNeighbor extends Thread {
         running.set(true);
         try {
             while (running.get()) {
-                final Object incoming = in.readObject();
+                final Object incoming = serializer.readObject();
                 if (incoming instanceof String) {
                     if (CLOSE_CONNECTION.equals(incoming)) {
-                        LOGGER.debug("Received close connection message, exiting");
+                        logger.debug("Received close connection message, exiting");
                         break;
                     }
                 } else {
@@ -153,26 +158,30 @@ final class NetworkNeighbor extends Thread {
                     final Map<CodePath, Object> shared = (incoming instanceof Map) ? (Map<CodePath, Object>) incoming
                             : null;
 
-                    synchronized (lock) {
-                        sharedValues = shared;
-                        lastTouched = System.currentTimeMillis();
+                    if (!simulateDroppedMessage()) {
+                        synchronized (lock) {
+                            sharedValues = shared;
+                            lastTouched = System.currentTimeMillis();
+                        }
                     }
                 }
             }
         } catch (final ClassNotFoundException e) {
-            LOGGER.error(getName()
+            logger.error(getName()
                     + ": Error decoding object from neighbor. This suggests that the JVMs are out of sync with respect to class objects",
                     e);
         } catch (final OptionalDataException e) {
-            LOGGER.error(getName() + ": failed to read data from neighbor. eof: " + e.eof + " length: " + e.length, e);
+            logger.error(getName() + ": failed to read data from neighbor. eof: " + e.eof + " length: " + e.length, e);
         } catch (final IOException e) {
             if (!running.get()) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(getName() + ": failed to receive from neighbor (in shutdown)", e);
+                if (logger.isDebugEnabled()) {
+                    logger.debug(getName() + ": failed to receive from neighbor (in shutdown)", e);
                 }
             } else {
-                LOGGER.error(getName() + ": failed to receive from neighbor", e);
+                logger.error(getName() + ": failed to receive from neighbor", e);
             }
+        } catch (final Exception e) {
+            logger.error(getName() + ": unexpected exception", e);
         } finally {
             terminate();
         }
@@ -188,37 +197,32 @@ final class NetworkNeighbor extends Thread {
      * Terminate the connection.
      */
     public void terminate() {
-        LOGGER.debug("Terminating connection");
+        logger.debug("Terminating connection");
 
         try {
-            out.writeObject(CLOSE_CONNECTION);
+            serializer.writeObject(CLOSE_CONNECTION);
         } catch (final IOException e) {
-            LOGGER.debug("Got error writing close message, ignoring", e);
+            logger.debug("Got error writing close message, ignoring", e);
+        } catch (final Exception e) {
+            logger.error("Unexpected exception writing close message, ignoring", e);
         }
 
         running.set(false);
         interrupt();
 
         try {
-            in.close();
+            serializer.close();
         } catch (final IOException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Got error closing input stream on shutdown, ignoring.", e);
-            }
-        }
-        try {
-            out.close();
-        } catch (final IOException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Got error closing output stream on shutdown, ignoring.", e);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got error closing input stream on shutdown, ignoring.", e);
             }
         }
 
         try {
             socket.close();
         } catch (final IOException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Got error closing socket on shutdown, ignoring.", e);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got error closing socket on shutdown, ignoring.", e);
             }
         }
     }
@@ -233,26 +237,23 @@ final class NetworkNeighbor extends Thread {
      */
     public void sendMessage(final Map<CodePath, Object> toSend) throws IOException {
         if (!isInterrupted() && running.get()) {
-            if (NodeNetworkManager.PROFILE_LOGGER.isDebugEnabled()) {
-                try (ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
-                    try (ObjectOutputStream oos = new ObjectOutputStream(bytes)) {
-                        oos.writeObject(toSend);
-                    } catch (final IOException e) {
-                        NodeNetworkManager.PROFILE_LOGGER.error("Error writing object to byte stream for measurement",
-                                e);
-                    }
-                    final int size = bytes.size();
-                    NodeNetworkManager.PROFILE_LOGGER.debug("AP round {} sending from {} to {} a message of {} bytes",
-                            selfNode.getExecutionCount(), selfNode.getDeviceUID(), neighborUid, size);
-                } catch (final IOException e) {
-                    NodeNetworkManager.PROFILE_LOGGER.error("Error constructing byte stream for measurement", e);
-                }
-            }
             synchronized (lock) {
-                out.writeObject(toSend);
-                out.flush();
-                lastTouched = System.currentTimeMillis();
-                out.reset();
+                try {
+                    logger.trace("sendMessage is calling writeObject num elements: {}", toSend.size());
+                    serializer.writeObject(toSend);
+
+                    logger.trace("sendMessage is calling flush");
+                    serializer.flush();
+                    lastTouched = System.currentTimeMillis();
+
+                    logger.trace("sendMessage finished");
+                } catch (final IOException e) {
+                    throw e;
+                } catch (final Exception e) {
+                    // this should never come up as writeObject should only
+                    // throw IOException
+                    throw new RuntimeException("Unexpected exception writing object", e);
+                }
             }
         }
     }

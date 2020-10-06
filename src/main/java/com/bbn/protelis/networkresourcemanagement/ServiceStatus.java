@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -32,31 +32,30 @@ BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
 /**
- * Used to specify the type of information being reported for capacity or usage
- * of a {@link NetworkServer}.
+ * The various statuses that a service can be in.
  * 
+ * @author jschewe
+ *
  */
-public enum NodeAttributeEnum implements NodeAttribute<NodeAttributeEnum> {
-
+public enum ServiceStatus {
     /**
-     * CPU information. Measured in number of cores.
+     * The service is starting up and not yet able to respond to requests.
      */
-    CPU,
+    STARTING,
     /**
-     * Amount of memory in bytes.
+     * The service is running and able to respond to requests.
      */
-    MEMORY,
+    RUNNING,
     /**
-     * Amount of disk in bytes.
+     * The service is in the process of shutting down.
      */
-    DISK,
+    STOPPING,
     /**
-     * Measured in units of standard small containers.
+     * The service is stopped.
      */
-    TASK_CONTAINERS;
-
-    @Override
-    public NodeAttributeEnum getAttribute() {
-        return this;
-    }
+    STOPPED,
+    /**
+     * The service status is unknown.
+     */
+    UNKNOWN
 }

@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -48,6 +48,11 @@ public class RegionPlan implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Timestamp for null reports.
+     */
+    public static final long NULL_TIMESTAMP = -1;
+
+    /**
      * This is used as the default object by Protelis.
      * 
      * @param region
@@ -56,9 +61,26 @@ public class RegionPlan implements Serializable {
      */
     public static RegionPlan getNullRegionPlan(@Nonnull final RegionIdentifier region) {
         final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan = ImmutableMap.of();
-        return new RegionPlan(region, plan);
+        return new RegionPlan(region, NULL_TIMESTAMP, plan);
     }
 
+    /**
+     * 
+     * @param region
+     *            see {@link #getRegion()}
+     * @param timestamp
+     *            see {@link #getTimestamp()}
+     * @param plan
+     *            see {@link #getPlan()}
+     */
+    public RegionPlan(@JsonProperty("region") @Nonnull final RegionIdentifier region,
+            @JsonProperty("timestamp") @Nonnull final long timestamp,
+            @JsonProperty("plan") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan) {
+        this.region = region;
+        this.timestamp = timestamp;
+        this.plan = plan;
+    }
+    
     /**
      * 
      * @param region
@@ -66,8 +88,8 @@ public class RegionPlan implements Serializable {
      * @param plan
      *            see {@link #getPlan()}
      */
-    public RegionPlan(@JsonProperty("region") @Nonnull final RegionIdentifier region,
-            @JsonProperty("plan") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan) {
+    public RegionPlan(@Nonnull final RegionIdentifier region,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan) {
         this.region = region;
         this.plan = plan;
     }
@@ -80,6 +102,29 @@ public class RegionPlan implements Serializable {
     @Nonnull
     public RegionIdentifier getRegion() {
         return region;
+    }
+    
+    private long timestamp;
+
+    /**
+     * @param timestamp
+     *          see {@link #getTimestamp()}
+     */
+    public void setTimestamp(final long timestamp) {
+        this.timestamp = timestamp;
+    }
+    
+    /**
+     * The units of the timestamp are determined by the clock used for the
+     * network. Possible examples may be milliseconds since the epoch or
+     * milliseconds since the start of the application. It is not expected that
+     * this time be converted to a date time for display to the user. This value
+     * is used to differentiate 2 plans created at different times.
+     * 
+     * @return when the plan was created
+     */
+    public long getTimestamp() {
+        return timestamp;
     }
 
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan;
@@ -101,11 +146,18 @@ public class RegionPlan implements Serializable {
         return plan;
     }
 
+    /**
+     * Creates a hash for this plan without considering the timestamp.
+     */
     @Override
     public int hashCode() {
         return Objects.hash(region, plan);
     }
 
+    /**
+     * Checks for equality between the content of this plan and another plan.
+     * Does not consider the timestamp of either plan.
+     */
     @Override
     public boolean equals(final Object o) {
         if (o == this) {
@@ -120,7 +172,11 @@ public class RegionPlan implements Serializable {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + " [" + " region: " + region + " plan: " + plan + " ]";
+        return this.getClass().getSimpleName() + " ["
+                + " region: " + region
+                + " timestamp: " + timestamp
+                + " plan: " + plan
+                + " ]";
     }
 
 }

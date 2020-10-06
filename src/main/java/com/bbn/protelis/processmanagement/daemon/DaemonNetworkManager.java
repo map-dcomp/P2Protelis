@@ -11,9 +11,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,14 +22,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.util.Pair;
+import org.protelis.lang.datatype.DeviceUID;
+import org.protelis.lang.datatype.Tuple;
+import org.protelis.vm.CodePath;
+import org.protelis.vm.NetworkManager;
 import org.slf4j.Logger;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
-import org.protelis.lang.datatype.DeviceUID;
-import org.protelis.lang.datatype.Tuple;
-import org.protelis.vm.util.CodePath;
-import org.protelis.vm.NetworkManager;
 
 // TODO: This file needs checkstyle cleanup
 //CHECKSTYLE:OFF

@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement.testbed;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -170,6 +171,33 @@ public class Scenario<N extends NetworkServer, L extends NetworkLink, C extends 
     private final Set<L> links = new HashSet<>();
 
     /**
+     * 
+     * @param name
+     *            the name of the scenario
+     * @param servers
+     *            the servers in the scenario
+     * @param links
+     *            the links in the scenario
+     * @param clients
+     *            the clients in the scenario
+     */
+    public Scenario(final String name,
+            final Collection<N> servers,
+            final Collection<L> links,
+            final Collection<C> clients) {
+        this.name = name;
+        servers.forEach(s -> {
+            this.servers.put(s.getNodeIdentifier(), s);
+        });
+        clients.forEach(c -> {
+            this.clients.put(c.getNodeIdentifier(), c);
+        });
+        links.forEach(l -> {
+            this.links.add(l);
+        });
+    }
+
+    /**
      * Create a scenario from the toplogy.
      * 
      * @param topology
@@ -198,7 +226,7 @@ public class Scenario<N extends NetworkServer, L extends NetworkLink, C extends 
                 final N s = factory.createServer(id, node.getExtraData());
                 this.servers.put(id, s);
                 s.setHardware(node.getHardware());
-                
+
                 netNode = s;
             }
 
@@ -237,7 +265,7 @@ public class Scenario<N extends NetworkServer, L extends NetworkLink, C extends 
                     rightNodes.forEach(rightNode -> {
                         final NetworkNode rightNetNode = nameToNetworkNode.get(rightNode.getName());
 
-                        final L netLink = factory.createLink(l.getName(), leftNetNode, rightNetNode, l.getBandwidth());
+                        final L netLink = factory.createLink(l.getName(), leftNetNode, rightNetNode, l.getBandwidth(), l.getDelay());
                         this.links.add(netLink);
 
                         leftNetNode.addNeighbor(rightNetNode, netLink.getBandwidth());

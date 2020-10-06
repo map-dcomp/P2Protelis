@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -32,6 +32,7 @@ BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
@@ -76,22 +77,30 @@ public class ContainerResourceReport implements Serializable {
      *            see {@link #getNetworkLoad()}
      * @param networkDemand
      *            see {@link #getNetworkDemand()}
+     * @param serviceStatus
+     *            see {@link #getServiceStatus()}
      */
     public ContainerResourceReport(@JsonProperty("containerName") @Nonnull final NodeIdentifier containerName,
             @JsonProperty("timestamp") final long timestamp,
+
             @JsonProperty("service") final ServiceIdentifier<?> service,
+            @JsonProperty("serviceStatus") @Nonnull final ServiceStatus serviceStatus,
+
             @JsonProperty("demandEstimationWindow") @Nonnull final ResourceReport.EstimationWindow demandEstimationWindow,
-            @JsonProperty("computeCapacity") @Nonnull final ImmutableMap<NodeAttribute<?>, Double> computeCapacity,
-            @JsonProperty("computeLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeLoad,
-            @JsonProperty("computeDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeDemand,
+            @JsonProperty("computeCapacity") @Nonnull final ImmutableMap<NodeAttribute, Double> computeCapacity,
+            @JsonProperty("computeLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute, Double>> computeLoad,
+            @JsonProperty("computeDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute, Double>> computeDemand,
             @JsonProperty("averageProcessingTime") final double serverAverageProcessingTime,
 
-            @JsonProperty("networkCapacity") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity,
-            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad,
-            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand) {
+            @JsonProperty("networkCapacity") @Nonnull final ImmutableMap<InterfaceIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
+            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad,
+            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand) {
         this.containerName = containerName;
         this.timestamp = timestamp;
+
         this.service = service;
+        this.serviceStatus = Objects.requireNonNull(serviceStatus);
+
         this.demandEstimationWindow = demandEstimationWindow;
 
         this.computeLoad = computeLoad;
@@ -102,6 +111,17 @@ public class ContainerResourceReport implements Serializable {
         this.networkCapacity = networkCapacity;
         this.networkLoad = networkLoad;
         this.networkDemand = networkDemand;
+    }
+
+    private final ServiceStatus serviceStatus;
+
+    /**
+     * 
+     * @return the current status of the service
+     */
+    @Nonnull
+    public ServiceStatus getServiceStatus() {
+        return serviceStatus;
     }
 
     private final ServiceIdentifier<?> service;
@@ -165,7 +185,7 @@ public class ContainerResourceReport implements Serializable {
         return averageProcessingTime;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeLoad;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute, Double>> computeLoad;
 
     /**
      * Get compute load for this node. This is a measured value. node load is
@@ -175,11 +195,11 @@ public class ContainerResourceReport implements Serializable {
      * @return the load information. Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> getComputeLoad() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute, Double>> getComputeLoad() {
         return computeLoad;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> computeDemand;
+    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute, Double>> computeDemand;
 
     /**
      * Get estimated compute demand for this node. The meanings of the keys and
@@ -189,11 +209,11 @@ public class ContainerResourceReport implements Serializable {
      * @return the demand information. Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute<?>, Double>> getComputeDemand() {
+    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute, Double>> getComputeDemand() {
         return computeDemand;
     }
 
-    private final ImmutableMap<NodeAttribute<?>, Double> computeCapacity;
+    private final ImmutableMap<NodeAttribute, Double> computeCapacity;
 
     /**
      * Compute capacity for each attribute of a node.
@@ -201,38 +221,38 @@ public class ContainerResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeAttribute<?>, Double> getComputeCapacity() {
+    public ImmutableMap<NodeAttribute, Double> getComputeCapacity() {
         return computeCapacity;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> networkCapacity;
+    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity;
 
     /**
-     * Link capacity between a node an it's neighbors. neighbor node ->
-     * attribute -> value.
+     * Link capacity between a node an it's neighbors. interface -> attribute ->
+     * value.
      * 
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<LinkAttribute<?>, Double>> getNetworkCapacity() {
+    public ImmutableMap<InterfaceIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkCapacity() {
         return networkCapacity;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkLoad;
+    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad;
 
     /**
-     * Network load and where it comes from. neighbor node -> source node ->
-     * service -> attribute -> value
+     * Network load and where it comes from. interface -> source node -> service
+     * -> attribute -> value
      * 
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+    public ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
             getNetworkLoad() {
         return networkLoad;
     }
 
-    private final ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>> networkDemand;
+    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand;
 
     /**
      * Network demand with other nodes. See {@link #getNetworkLoad()} for
@@ -241,7 +261,7 @@ public class ContainerResourceReport implements Serializable {
      * @return Not null.
      */
     @Nonnull
-    public ImmutableMap<NodeIdentifier, ImmutableMap<NodeIdentifier, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute<?>, Double>>>>
+    public ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
             getNetworkDemand() {
         return networkDemand;
     }
@@ -261,6 +281,7 @@ public class ContainerResourceReport implements Serializable {
 
         return new ContainerResourceReport(containerName, NULL_TIMESTAMP, //
                 null, // service
+                ServiceStatus.STOPPED, //
                 demandWindow, //
                 ImmutableMap.of(), // serverCapacity
                 ImmutableMap.of(), // serverLoad

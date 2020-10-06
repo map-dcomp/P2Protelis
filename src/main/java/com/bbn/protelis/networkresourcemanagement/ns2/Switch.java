@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -56,14 +56,20 @@ public class Switch extends NetworkDevice {
      * @param bandwidth
      *            used as the bandwidth for the created links see
      *            {@link Link#getBandwidth()}
-     * @see Link#Link(String, NetworkDevice, NetworkDevice, double)
+     * @param delay
+     *            used as the delay for the created links see
+     *            {@link Link#getDelay()}
+     * @see Link#Link(String, NetworkDevice, NetworkDevice, double, double)
      */
-    public Switch(@Nonnull final String name, @Nonnull final Set<Node> nodes, final double bandwidth) {
+    public Switch(@Nonnull final String name,
+            @Nonnull final Set<Node> nodes,
+            final double bandwidth,
+            final double delay) {
         super(name);
         this.bandwidth = bandwidth;
 
         nodes.forEach(n -> {
-            final Link link = new Link(name, this, n, bandwidth);
+            final Link link = new Link(name, this, n, bandwidth, delay);
             links.put(n, link);
         });
 
@@ -92,7 +98,7 @@ public class Switch extends NetworkDevice {
 
     /**
      * 
-     * @return the bandwidth for the switch
+     * @return the bandwidth in megabits per second
      */
     public double getBandwidth() {
         return bandwidth;

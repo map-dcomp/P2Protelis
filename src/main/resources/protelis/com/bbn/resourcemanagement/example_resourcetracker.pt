@@ -10,7 +10,7 @@ import protelis:coord:nonselfstabilizing:accumulation
 
 // Deprecated --> will be replaced in a future Protelis release
 def once(v) {
-    rep(x <- v) { x };
+    rep(x <- v) { x }
 }
 
 public def countDevices(potential) {
@@ -19,7 +19,7 @@ public def countDevices(potential) {
 
 // TODO: check if I can just do this as Tuple.union
 public def union(a, b) {
-    a.union(b);
+    a.union(b)
 }
 
 public def C(potential, reduce, local, null) {
@@ -42,15 +42,15 @@ public def C(potential, reduce, local, null) {
 }
 
 public def regionSet(potential) {
-        C(potential, union, unionHood(nbr([self.getRegionIdentifier()])), []);
+    C(potential, union, unionHood(nbr([self.getDevice().getRegionIdentifier()])), [])
 }
 
 def countNodes() {
     let nonce = once(self.nextRandomDouble());
     let leader = nonce == gossip(nonce, min);
-        self.getExecutionEnvironment().put("blue",leader);
+    self.getExecutionEnvironment().put("blue",leader);
     let d = hopDistanceTo(leader);
-    countDevices(d);
+    countDevices(d)
 }
 
 def nbrRegions() {
@@ -58,7 +58,7 @@ def nbrRegions() {
     let leader = nonce == gossip(nonce, min);
     //self.putEnvironmentVariable("blue",leader);
     let d = hopDistanceTo(leader);
-    [leader, countDevices(d), regionSet(d)];
+    [leader, countDevices(d), regionSet(d)]
 }
 
 //countNodes();
@@ -67,13 +67,13 @@ def nbrRegions() {
 
 
 
-let rgn = self.getRegionIdentifier();
+let rgn = self.getDevice().getRegionIdentifier();
 let s = multiRegion(rgn,(n) -> { rgn == n },countNodes,[]);
 //multiRegion(rgn,(n) -> { rgn == n },nbrRegions,[]);
 //multiRegion(rgn,(n) -> { rgn == n },() -> { [rgn, self.getDeviceUID()] },[]);
 
-let report = self.getResourceReport(getShortEstimationWindow()); 
+let report = self.getDevice().getResourceReport(getShortEstimationWindow()); 
 let d = report.getComputeLoad();
 let c = report.getNodeComputeCapacity();
 
-[d,c,s];
+[d,c,s]

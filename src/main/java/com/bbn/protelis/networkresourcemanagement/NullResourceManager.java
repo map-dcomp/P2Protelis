@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -76,14 +76,14 @@ public class NullResourceManager implements ResourceManager<NetworkServer> {
 
     @Override
     @Nonnull
-    public ImmutableMap<NodeAttribute<?>, Double> getComputeCapacity() {
+    public ImmutableMap<NodeAttribute, Double> getComputeCapacity() {
         return ImmutableMap.of();
     }
 
     @Override
     @Nonnull
     public ServiceReport getServiceReport() {
-        return new ServiceReport(nodeId, ImmutableMap.of());
+        return new ServiceReport(nodeId, -1, ImmutableMap.of());
     }
 
     @Override
@@ -95,5 +95,16 @@ public class NullResourceManager implements ResourceManager<NetworkServer> {
     @Override
     public void init(@Nonnull final NetworkServer node, @Nonnull final Map<String, Object> extraData) {
         // nothing to do
+    }
+
+    @Override
+    public void fetchImage(@Nonnull final ServiceIdentifier<?> service) {
+        // nothing to do
+
+    }
+
+    @Override
+    public boolean waitForImage(@Nonnull final ServiceIdentifier<?> service) {
+        return true;
     }
 }

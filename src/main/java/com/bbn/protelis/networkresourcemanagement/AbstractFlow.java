@@ -36,85 +36,92 @@ import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
- * Attributes for metrics on a node.
+ * A flow between two nodes or regions. The {@link #getServer()} property exists
+ * to handle the situation where the definition of a server is different than
+ * the definition of which node/region started the flow or there is no server to
+ * the flow.
  * 
+ * @param <T>
+ *            the type of the objects in the flow
  */
-public class LinkAttribute implements Serializable {
+public abstract class AbstractFlow<T> implements Serializable {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 1L;
 
-    /**
-     * Transmit bandwidth in megabits per second.
-     */
-    public static final LinkAttribute DATARATE_TX = new LinkAttribute("DATARATE_TX");
-    /**
-     * Receive bandwidth in megabits per second.
-     */
-    public static final LinkAttribute DATARATE_RX = new LinkAttribute("DATARATE_RX");
+    private final T source;
 
     /**
-     * Calls {@link #LinkAttribute(String, boolean)} with application specific
-     * set to false.
      * 
-     * @param name
-     *            see {@link #getName()}
+     * @return the source of the flow
      */
-    public LinkAttribute(@Nonnull final String name) {
-        this(name, false);
+    @Nonnull
+    public T getSource() {
+        return this.source;
+    }
+
+    private final T destination;
+
+    /**
+     * 
+     * @return the destination of the flow
+     */
+    @Nonnull
+    public T getDestination() {
+        return this.destination;
+    }
+
+    private final T server;
+
+    /**
+     * The value will be {@link NodeIdentifier#UNKNOWN} or
+     * {@link RegionIdentifier#UNKNOWN} if the server of the network flow cannot
+     * be determined.
+     * 
+     * @return the server identifier
+     */
+    @Nonnull
+    public T getServer() {
+        return server;
     }
 
     /**
+     * Create a network flow.
      * 
-     * @param name
-     *            see {@link #getName()}
-     * @param applicationSpecific
-     *            see {@link #isApplicationSpecific()}
+     * @param source
+     *            see {@link #getSource()}
+     * @param destination
+     *            see {@link #getDestination()}
+     * @param server
+     *            see {@link #getServer()}
      */
-    public LinkAttribute(@JsonProperty("name") @Nonnull final String name,
-            @JsonProperty("applicationSpecific") final boolean applicationSpecific) {
-        this.name = name;
-        this.applicationSpecific = applicationSpecific;
-    }
-
-    private final boolean applicationSpecific;
-
-    /**
-     * 
-     * @return true if this metric is specific to an application, otherwise the
-     *         metric applies to all applications
-     */
-    public boolean isApplicationSpecific() {
-        return applicationSpecific;
-    }
-
-    private final String name;
-
-    /**
-     * 
-     * @return the name of the metric
-     */
-    public String getName() {
-        return name;
+    public AbstractFlow(@Nonnull final T source, @Nonnull final T destination, @Nonnull final T server) {
+        this.source = source;
+        this.destination = destination;
+        this.server = server;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(applicationSpecific, name);
+        return Objects.hash(source, destination);
     }
 
     /**
-     * Only the name is compared.
+     * Equality is defined as connecting the same pair of nodes with the same
+     * server.
      */
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;
-        } else if (o instanceof LinkAttribute) {
-            final LinkAttribute other = (LinkAttribute) o;
-            return Objects.equals(getName(), other.getName());
+        } else if (null == o) {
+            return false;
+        } else if (getClass() == o.getClass()) {
+            @SuppressWarnings("unchecked") // can't get the generic type
+            final AbstractFlow<T> other = (AbstractFlow<T>) o;
+            return Objects.equals(getSource(), other.getSource()) //
+                    && Objects.equals(getDestination(), other.getDestination()) //
+                    && Objects.equals(getServer(), other.getServer());
         } else {
             return false;
         }
@@ -122,6 +129,7 @@ public class LinkAttribute implements Serializable {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " {" + getName() + ", " + isApplicationSpecific() + "}";
+        return getClass().getSimpleName() + ": [" + getSource() + " <-> " + getDestination() + " server: " + getServer() + "]";
     }
+
 }

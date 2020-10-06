@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -36,6 +36,7 @@ import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -52,12 +53,16 @@ public class ServiceReport implements Serializable {
      * 
      * @param nodeName
      *            see {@link #getNodeName()}
+     * @param timestamp
+     *            see {@link #getTimestamp()}
      * @param serviceState
      *            see {@link #getServiceState()}
      */
-    public ServiceReport(@Nonnull final NodeIdentifier nodeName,
-            @Nonnull final ImmutableMap<NodeIdentifier, ServiceState> serviceState) {
+    public ServiceReport(@JsonProperty("nodeName") @Nonnull final NodeIdentifier nodeName,
+            @JsonProperty("timestamp") final long timestamp,
+            @JsonProperty("serviceState") @Nonnull final ImmutableMap<NodeIdentifier, ServiceState> serviceState) {
         this.nodeName = nodeName;
+        this.timestamp = timestamp;
         this.serviceState = serviceState;
     }
 
@@ -69,6 +74,22 @@ public class ServiceReport implements Serializable {
     @Nonnull
     public final NodeIdentifier getNodeName() {
         return nodeName;
+    }
+    
+    private final long timestamp;
+
+    /**
+     * The units of the timestamp are determined by the clock used for the
+     * network. Possible examples may be milliseconds since the epoch or
+     * milliseconds since the start of the application. It is not expected that
+     * this time be converted to a date time for display to the user. This value
+     * is used to differentiate 2 reports for the same node taken at different
+     * times.
+     * 
+     * @return when the report was generated
+     */
+    public long getTimestamp() {
+        return timestamp;
     }
 
     private final ImmutableMap<NodeIdentifier, ServiceState> serviceState;

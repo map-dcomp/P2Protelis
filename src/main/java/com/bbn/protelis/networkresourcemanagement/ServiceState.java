@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -36,6 +36,8 @@ import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * The state of a service in a container.
  * 
@@ -47,42 +49,14 @@ public class ServiceState implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The various statuses that a service can be in.
-     * 
-     * @author jschewe
-     *
-     */
-    public enum Status {
-        /**
-         * The service is starting up and not yet able to respond to requests.
-         */
-        STARTING,
-        /**
-         * The service is running and able to respond to requests.
-         */
-        RUNNING,
-        /**
-         * The service is in the process of shutting down.
-         */
-        STOPPING,
-        /**
-         * The service is stopped.
-         */
-        STOPPED,
-        /**
-         * The service status is unknown.
-         */
-        UNKNOWN
-    }
-
-    /**
      * 
      * @param service
      *            see {@link #getService()}
      * @param status
      *            see {@link #getStatus()}
      */
-    public ServiceState(@Nonnull final ServiceIdentifier<?> service, @Nonnull final Status status) {
+    public ServiceState(@JsonProperty("service") @Nonnull final ServiceIdentifier<?> service,
+            @JsonProperty("status") @Nonnull final ServiceStatus status) {
         this.service = service;
         this.status = status;
     }
@@ -98,14 +72,14 @@ public class ServiceState implements Serializable {
         return service;
     }
 
-    private final Status status;
+    private final ServiceStatus status;
 
     /**
      * 
      * @return the current status of the service
      */
     @Nonnull
-    public Status getStatus() {
+    public ServiceStatus getStatus() {
         return status;
     }
 

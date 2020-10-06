@@ -31,33 +31,65 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
-import java.util.Map;
-
-import javax.annotation.Nonnull;
-
-import com.bbn.protelis.utils.VirtualClock;
+import org.protelis.vm.CodePathFactory;
+import org.protelis.vm.ExecutionEnvironment;
+import org.protelis.vm.NetworkManager;
+import org.protelis.vm.impl.AbstractExecutionContext;
 
 /**
- * Creates {@link BasicResourceManager} objects.
+ * Execution context for Protelis.
  */
-public class BasicResourceManagerFactory implements ResourceManagerFactory<NetworkServer> {
-
-    private final VirtualClock clock;
+public class ExecutionContext extends AbstractExecutionContext<ExecutionContext> {
+    private final NetworkServer device;
+    private final NetworkManager networkManager;
+    private final CodePathFactory codePathFactory;
 
     /**
+     * Create a child context.
      * 
-     * @param clock
-     *            the clock to pass to
-     *            {@link BasicResourceManager#BasicResourceManager(VirtualClock, NetworkServer, Map)}
+     * @param device
+     *            see {@link #getDevice()}
+     * @param networkManager
+     *            passed to parent constructor
+     * @param codePathFactory
+     *            passed to parent constructor
+     * @param environment
+     *            passed to parent constructor
      */
-    public BasicResourceManagerFactory(@Nonnull final VirtualClock clock) {
-        this.clock = clock;
+    public ExecutionContext(final NetworkServer device,
+            final ExecutionEnvironment environment,
+            final NetworkManager networkManager,
+            final CodePathFactory codePathFactory) {
+        super(environment, networkManager, codePathFactory);
+        this.device = device;
+        this.networkManager = networkManager;
+        this.codePathFactory = codePathFactory;
     }
 
     @Override
-    @Nonnull
-    public ResourceManager<NetworkServer> createResourceManager() {
-        return new BasicResourceManager(clock);
+    public Number getCurrentTime() {
+        return System.currentTimeMillis();
     }
 
+    @Override
+    public NodeIdentifier getDeviceUID() {
+        return device.getNodeIdentifier();
+    }
+
+    @Override
+    public double nextRandomDouble() {
+        return Math.random();
+    }
+
+    @Override
+    protected ExecutionContext instance() {
+        return new ExecutionContext(device, getExecutionEnvironment(), networkManager, codePathFactory);
+    }
+
+    /**
+     * @return the device that Protelis is working with
+     */
+    public NetworkServer getDevice() {
+        return device;
+    }
 }

@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -45,6 +45,7 @@ import javax.annotation.Nonnull;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Used to build up a {@link LoadBalancerPlan} object incrementally.
@@ -69,25 +70,25 @@ public class LoadBalancerPlanBuilder {
      * 
      * @param prevPlan
      *            used to get the weights for the containers, may be null
-     * @param regionServiceState
-     *            the current state of the region
+     * @param resourceReports
+     *            reports the current state of the region
      */
     public LoadBalancerPlanBuilder(final LoadBalancerPlan prevPlan,
-            @Nonnull final RegionServiceState regionServiceState) {
+            @Nonnull final ImmutableSet<ResourceReport> resourceReports) {
         this.region = prevPlan.getRegion();
 
-        regionServiceState.getServiceReports().forEach(report -> {
+        resourceReports.forEach(report -> {
             final NodeIdentifier nodeId = report.getNodeName();
             final Collection<LoadBalancerPlan.ContainerInfo> prevNodeState = prevPlan.getServicePlan()
                     .getOrDefault(nodeId, ImmutableList.of());
             final Collection<LoadBalancerPlan.ContainerInfo> nodeState = plan.computeIfAbsent(nodeId,
                     k -> new LinkedList<>());
 
-            report.getServiceState().forEach((container, serviceState) -> {
+            report.getContainerReports().forEach((container, containerReport) -> {
                 // don't add stopped or stopping containers to the plan as there
                 // is nothing that can be done with them
-                if (!ServiceState.Status.STOPPED.equals(serviceState.getStatus())
-                        && !ServiceState.Status.STOPPING.equals(serviceState.getStatus())) {
+                if (!ServiceStatus.STOPPED.equals(containerReport.getServiceStatus())
+                        && !ServiceStatus.STOPPING.equals(containerReport.getServiceStatus())) {
                     final Optional<LoadBalancerPlan.ContainerInfo> oldInfo = prevNodeState.stream()
                             .filter(i -> container.equals(i.getId())).findAny();
                     final double weight;
@@ -104,7 +105,7 @@ public class LoadBalancerPlanBuilder {
                     }
 
                     final LoadBalancerPlan.ContainerInfo newInfo = new LoadBalancerPlan.ContainerInfo(container,
-                            serviceState.getService(), weight, stopTrafficTo, stop);
+                            containerReport.getService(), weight, stopTrafficTo, stop);
                     nodeState.add(newInfo);
                 } // non-stopped container
             });
@@ -267,7 +268,7 @@ public class LoadBalancerPlanBuilder {
 
     /**
      * 
-     * @param regionServiceState
+     * @param resourceReports
      *            the state of the region, used to check that all containers
      *            have been planned
      * @param overflowPlan
@@ -279,22 +280,25 @@ public class LoadBalancerPlanBuilder {
      *             from previous)
      */
     @Nonnull
-    public LoadBalancerPlan toLoadBalancerPlan(@Nonnull final RegionServiceState regionServiceState,
+    public LoadBalancerPlan toLoadBalancerPlan(@Nonnull final ImmutableSet<ResourceReport> resourceReports,
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan)
             throws IllegalArgumentException {
-        validatePlan(regionServiceState);
+        validatePlan(resourceReports);
 
         final ImmutableMap.Builder<NodeIdentifier, ImmutableCollection<LoadBalancerPlan.ContainerInfo>> servicePlan = ImmutableMap
                 .builder();
         plan.forEach((node, containerInfo) -> {
-            servicePlan.put(node, ImmutableList.copyOf(containerInfo));
+            if (!containerInfo.isEmpty()) {
+                servicePlan.put(node, ImmutableList.copyOf(containerInfo));
+            }
         });
 
         final LoadBalancerPlan newPlan = new LoadBalancerPlan(region, servicePlan.build(), overflowPlan);
         return newPlan;
     }
 
-    private void validatePlan(@Nonnull final RegionServiceState regionServiceState) throws IllegalArgumentException {
+    private void validatePlan(@Nonnull final ImmutableSet<ResourceReport> resourceReports)
+            throws IllegalArgumentException {
 
         // check for duplicate containers
         plan.forEach((node, containers) -> {
@@ -311,27 +315,32 @@ public class LoadBalancerPlanBuilder {
             });
         });
 
-        regionServiceState.getServiceReports().forEach(sreport -> {
-            final NodeIdentifier nodeName = sreport.getNodeName();
+        resourceReports.forEach(resourceReport -> {
+            final NodeIdentifier nodeName = resourceReport.getNodeName();
 
             final Collection<LoadBalancerPlan.ContainerInfo> nodeContainerInfo = plan.getOrDefault(nodeName,
                     Collections.emptyList());
-            sreport.getServiceState().forEach((containerId, state) -> {
+            resourceReport.getContainerReports().forEach((containerId, containerReport) -> {
+
                 final Optional<LoadBalancerPlan.ContainerInfo> found = nodeContainerInfo.stream()
                         .filter(info -> containerId.equals(info.getId())).findAny();
 
-                // make sure all containers in the service state are referenced
                 if (!found.isPresent()) {
-                    throw new IllegalArgumentException(
-                            "Container '" + containerId + "' on node '" + nodeName + "' is not referenced in the plan");
-                }
-
-                // make sure the service on a container isn't changing
-                final LoadBalancerPlan.ContainerInfo info = found.get();
-                if (!state.getService().equals(info.getService())) {
-                    throw new IllegalArgumentException("Container '" + containerId + "' on node '" + nodeName
-                            + "' is currently running service '" + state.getService()
-                            + "', but the plan has it running service '" + info.getService() + "'");
+                    // make sure all containers not STOPPING or STOPPED in the
+                    // ServiceState are referenced
+                    if (!ServiceStatus.STOPPED.equals(containerReport.getServiceStatus())
+                            && !ServiceStatus.STOPPING.equals(containerReport.getServiceStatus())) {
+                        throw new IllegalArgumentException("Container '" + containerId + "' on node '" + nodeName
+                                + "' is not referenced in the plan");
+                    }
+                } else {
+                    // make sure the service on a container isn't changing
+                    final LoadBalancerPlan.ContainerInfo info = found.get();
+                    if (!containerReport.getService().equals(info.getService())) {
+                        throw new IllegalArgumentException("Container '" + containerId + "' on node '" + nodeName
+                                + "' is currently running service '" + containerReport.getService()
+                                + "', but the plan has it running service '" + info.getService() + "'");
+                    }
                 }
             });
 

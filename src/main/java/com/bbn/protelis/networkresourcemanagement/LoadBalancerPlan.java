@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -50,6 +50,11 @@ public class LoadBalancerPlan implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Timestamp for null reports.
+     */
+    public static final long NULL_TIMESTAMP = -1;
+
+    /**
      * This is used as the default plan by Protelis.
      * 
      * @param region
@@ -58,8 +63,29 @@ public class LoadBalancerPlan implements Serializable {
      */
     @Nonnull
     public static LoadBalancerPlan getNullLoadBalancerPlan(@Nonnull final RegionIdentifier region) {
-        return new LoadBalancerPlan(region, ImmutableMap.of(), // servicePlan
+        return new LoadBalancerPlan(region, NULL_TIMESTAMP, ImmutableMap.of(), // servicePlan
                 ImmutableMap.of()); // overflowPlan
+    }
+
+    /**
+     * 
+     * @param region
+     *            see {@link #getRegion()}
+     * @param timestamp
+     *            see {@link #getTimestamp()}
+     * @param servicePlan
+     *            see {@link #getServicePlan()}
+     * @param overflowPlan
+     *            see {@link #getOverflowPlan()}
+     */
+    public LoadBalancerPlan(@JsonProperty("region") @Nonnull final RegionIdentifier region,
+            @JsonProperty("timestamp") @Nonnull final long timestamp,
+            @JsonProperty("servicePlan") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableCollection<ContainerInfo>> servicePlan,
+            @JsonProperty("overflowPlan") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan) {
+        this.regionName = region;
+        this.timestamp = timestamp;
+        this.servicePlan = servicePlan;
+        this.overflowPlan = overflowPlan;
     }
 
     /**
@@ -71,9 +97,9 @@ public class LoadBalancerPlan implements Serializable {
      * @param overflowPlan
      *            see {@link #getOverflowPlan()}
      */
-    public LoadBalancerPlan(@JsonProperty("region") @Nonnull final RegionIdentifier region,
-            @JsonProperty("servicePlan") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableCollection<ContainerInfo>> servicePlan,
-            @JsonProperty("overflowPlan") @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan) {
+    public LoadBalancerPlan(@Nonnull final RegionIdentifier region,
+            @Nonnull final ImmutableMap<NodeIdentifier, ImmutableCollection<ContainerInfo>> servicePlan,
+            @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> overflowPlan) {
         this.regionName = region;
         this.servicePlan = servicePlan;
         this.overflowPlan = overflowPlan;
@@ -87,6 +113,29 @@ public class LoadBalancerPlan implements Serializable {
     @Nonnull
     public RegionIdentifier getRegion() {
         return this.regionName;
+    }
+
+    private long timestamp;
+
+    /**
+     * @param timestamp
+     *            see {@link #getTimestamp()}
+     */
+    public void setTimestamp(final long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    /**
+     * The units of the timestamp are determined by the clock used for the
+     * network. Possible examples may be milliseconds since the epoch or
+     * milliseconds since the start of the application. It is not expected that
+     * this time be converted to a date time for display to the user. This value
+     * is used to differentiate 2 plans created at different times.
+     * 
+     * @return when the plan was created
+     */
+    public long getTimestamp() {
+        return timestamp;
     }
 
     private final ImmutableMap<NodeIdentifier, ImmutableCollection<ContainerInfo>> servicePlan;
@@ -122,11 +171,18 @@ public class LoadBalancerPlan implements Serializable {
         return overflowPlan;
     }
 
+    /**
+     * Creates a hash for this plan without considering the timestamp.
+     */
     @Override
     public int hashCode() {
         return Objects.hash(regionName, servicePlan, overflowPlan);
     }
 
+    /**
+     * Checks for equality between the content of this plan and another plan.
+     * Does not consider the timestamp of either plan.
+     */
     @Override
     public boolean equals(final Object o) {
         if (o == this) {
@@ -144,6 +200,7 @@ public class LoadBalancerPlan implements Serializable {
     @Override
     public String toString() {
         return this.getClass().getSimpleName() + " [" + " region: " + regionName //
+                + " timestamp: " + timestamp //
                 + " servicePlan: " + servicePlan //
                 + " overflowPlan: " + overflowPlan //
                 + " ]";
@@ -239,6 +296,31 @@ public class LoadBalancerPlan implements Serializable {
          */
         public boolean isStop() {
             return stop;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getId(), getService());
+        }
+
+        private static final double WEIGHT_COMPARISON_TOLERANCE = 1E6;
+
+        @Override
+        public boolean equals(final Object o) {
+            if (null == o) {
+                return false;
+            } else if (this == o) {
+                return true;
+            } else if (this.getClass().equals(o.getClass())) {
+                final ContainerInfo other = (ContainerInfo) o;
+                return Objects.equals(getId(), other.getId()) //
+                        && Objects.equals(getService(), other.getService()) //
+                        && Math.abs(getWeight() - other.getWeight()) < WEIGHT_COMPARISON_TOLERANCE //
+                        && isStop() == other.isStop() //
+                        && isStopTrafficTo() == other.isStopTrafficTo();
+            } else {
+                return false;
+            }
         }
 
         @Override

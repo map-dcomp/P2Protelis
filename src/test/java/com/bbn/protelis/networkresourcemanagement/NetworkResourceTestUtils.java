@@ -31,62 +31,66 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.apache.logging.log4j.ThreadContext;
 import org.junit.rules.RuleChain;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Some tests for {@link DnsNameIdentifier}.
+ * Utilities for working with tests in P2Protelis network resource management.
  * 
  * @author jschewe
  *
  */
-public class DnsNameIdentifierTest {
+public final class NetworkResourceTestUtils {
 
-    /**
-     * Rules for running tests.
-     */
-    @SuppressFBWarnings(value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD", justification = "Used by the JUnit framework")
-    @Rule
-    public RuleChain chain = NetworkResourceTestUtils.getStandardRuleChain();
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkResourceTestUtils.class);
 
-    /**
-     * Ensure that equality is properly defined to compare the names. This
-     * checks that when using 2 string names that are equal, but not the same
-     * reference produce {@link DnsNameIdentifier} objects that are equal.
-     */
-    @Test
-    @SuppressFBWarnings(value = "DM_STRING_CTOR", justification = "Intentionally want 2 distinct String objects with the same value")
-    public void testEquals() {
-        final String expectedName = new String("one");
-        final String compareName = new String("one");
-
-        Assert.assertEquals(expectedName, compareName);
-
-        // make sure that we really have 2 different string objects
-        Assert.assertFalse(expectedName == compareName);
-
-        final DnsNameIdentifier expected = new DnsNameIdentifier(expectedName);
-        final DnsNameIdentifier compare = new DnsNameIdentifier(compareName);
-
-        Assert.assertEquals(expected, compare);
+    private NetworkResourceTestUtils() {
     }
 
     /**
-     * Test that 2 names that have different case are equal.
+     * 
+     * @return standard rule chain for tests
+     * @see AddTestNameToLogContext
+     * @see ResetGlobalNetworkConfig
      */
-    @Test
-    public void testEqualsIgnoreCase() {
-        final String expectedName = "one";
-        final String compareName = "One";
+    public static RuleChain getStandardRuleChain() {
+        return RuleChain.outerRule(new AddTestNameToLogContext()).around(new ResetGlobalNetworkConfig());
+    }
 
-        final DnsNameIdentifier expected = new DnsNameIdentifier(expectedName);
-        final DnsNameIdentifier compare = new DnsNameIdentifier(compareName);
+    /**
+     * Add the test name to the logging {@link ThreadContext}.
+     */
+    public static class AddTestNameToLogContext extends TestWatcher {
+        @Override
+        protected void starting(final Description description) {
+            ThreadContext.push(description.getMethodName());
+            LOGGER.info("Starting test {} in {}", description.getMethodName(), description.getClassName());
+        }
 
-        Assert.assertEquals(expected, compare);
+        @Override
+        protected void finished(final Description description) {
+            LOGGER.info("Finished test {} in {}", description.getMethodName(), description.getClassName());
+            ThreadContext.pop();
+        }
+    }
+
+    /**
+     * Reset {@link GlobalNetworkConfiguration} before and after each test.
+     */
+    public static class ResetGlobalNetworkConfig extends TestWatcher {
+        @Override
+        protected void starting(final Description description) {
+            GlobalNetworkConfiguration.resetToDefaults();
+        }
+
+        @Override
+        protected void finished(final Description description) {
+            GlobalNetworkConfiguration.resetToDefaults();
+        }
     }
 
 }

@@ -28,7 +28,7 @@ import org.slf4j.Logger;
  * @author Jacob Beal
  *
  */
-public class Daemon extends AbstractExecutionContext {
+public class Daemon extends AbstractExecutionContext<Daemon> {
     
     // Management of execution and networking
     private final long uid; // uid for self vs. neighbor
@@ -197,7 +197,7 @@ public class Daemon extends AbstractExecutionContext {
 
     /* ********* Unimplemented ********* */
     @Override
-    protected AbstractExecutionContext instance() {
+    protected Daemon instance() {
         throw new UnsupportedOperationException();
     }
 }

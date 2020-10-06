@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -32,19 +32,112 @@ BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.io.Serializable;
+import java.util.Objects;
+
+import javax.annotation.Nonnull;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Attributes for metrics on a node. Implementations should be immutable and
- * must be {@link Comparable}.
+ * Attributes for metrics on a node.
  * 
- * @param <T>
- *            see {@link #getIdentifier()}
  */
-public interface NodeAttribute<T> extends Serializable {
+public class NodeAttribute implements Serializable {
+
+    private static final long serialVersionUID = 2L;
 
     /**
-     * @return the object being wrapped or itself
+     * Node attribute for measuring units of standard small containers. This
+     * attribute is not application specific.
      */
-    T getAttribute();
+    public static final NodeAttribute TASK_CONTAINERS = new NodeAttribute("TASK_CONTAINERS");
+
+    /**
+     * Example of an application specific metric.
+     */
+    public static final NodeAttribute QUEUE_LENGTH = new NodeAttribute("QueueLength", true);
+
+    /**
+     * Node attribute for CPU usage. This is a number between 0 and 1
+     * representing the percentage of the total CPUs busy. This attribute is not
+     * application specific.
+     */
+    public static final NodeAttribute CPU = new NodeAttribute("CPU");
+
+    /**
+     * Memory in gigabytes. This attribute is not application specific.
+     */
+    public static final NodeAttribute MEMORY = new NodeAttribute("MEMORY");
+
+    /**
+     * Calls {@link #NodeAttribute(String, boolean)} with application specific
+     * set to false.
+     * 
+     * @param name
+     *            see {@link #getName()}
+     */
+    public NodeAttribute(@Nonnull final String name) {
+        this(name, false);
+    }
+
+    /**
+     * 
+     * @param name
+     *            see {@link #getName()}
+     * @param applicationSpecific
+     *            see {@link #isApplicationSpecific()}
+     */
+    public NodeAttribute(@JsonProperty("name") @Nonnull final String name,
+            @JsonProperty("applicationSpecific") final boolean applicationSpecific) {
+        this.name = name;
+        this.applicationSpecific = applicationSpecific;
+    }
+
+    private final boolean applicationSpecific;
+
+    /**
+     * 
+     * @return true if this metric is specific to an application, otherwise the
+     *         metric applies to all applications
+     */
+    public boolean isApplicationSpecific() {
+        return applicationSpecific;
+    }
+
+    private final String name;
+
+    /**
+     * 
+     * @return the name of the metric
+     */
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(applicationSpecific, name);
+    }
+
+    /**
+     * Only the name is compared.
+     */
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        } else if (o instanceof NodeAttribute) {
+            final NodeAttribute other = (NodeAttribute) o;
+            return Objects.equals(getName(), other.getName())
+                    && isApplicationSpecific() == other.isApplicationSpecific();
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " {" + getName() + ", " + isApplicationSpecific() + "}";
+    }
 
 }

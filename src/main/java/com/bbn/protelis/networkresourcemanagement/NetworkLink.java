@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -79,6 +79,16 @@ public class NetworkLink {
         return this.bandwidth;
     }
 
+    private final double delay;
+
+    /**
+     * 
+     * @return delay in milliseconds
+     */
+    public double getDelay() {
+        return this.delay;
+    }
+
     /**
      * Create a link.
      * 
@@ -90,12 +100,19 @@ public class NetworkLink {
      *            see {@link #getRight()}
      * @param bandwidth
      *            see {@link #getBandwidth()}
+     * @param delay
+     *            see {@link #getDelay()}
      */
-    public NetworkLink(final String name, final NetworkNode left, final NetworkNode right, final double bandwidth) {
+    public NetworkLink(final String name,
+            final NetworkNode left,
+            final NetworkNode right,
+            final double bandwidth,
+            final double delay) {
         this.name = name;
         this.left = left;
         this.right = right;
         this.bandwidth = bandwidth;
+        this.delay = delay;
         // make sure that edge(one, two) is equal to edge(two, one)
         // Objects.hash returns different values depending on the order
         if (left.hashCode() < right.hashCode()) {
@@ -131,7 +148,7 @@ public class NetworkLink {
             return false;
         }
     }
-    
+
     @Override
     public String toString() {
         return getLeft() + " - " + getRight() + " @ " + getBandwidth() + "Mbps";

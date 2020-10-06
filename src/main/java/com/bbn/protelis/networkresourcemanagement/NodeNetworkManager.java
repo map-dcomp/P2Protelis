@@ -1,6 +1,6 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019>, <Raytheon BBN Technologies>
-To be applied to the DCOMP/MAP Public Source Code Release dated 2019-03-14, with
+Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
 Dispersed Computing (DCOMP)
@@ -31,21 +31,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.nustaq.net.TCPObjectSocket;
+import org.nustaq.serialization.FSTObjectOutput;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.lang.datatype.Tuple;
+import org.protelis.vm.CodePath;
 import org.protelis.vm.NetworkManager;
-import org.protelis.vm.util.CodePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +83,7 @@ public class NodeNetworkManager implements NetworkManager {
         final Map<DeviceUID, Map<CodePath, Object>> retval = new HashMap<>();
 
         synchronized (lock) {
-            for (final Map.Entry<DeviceUID, NetworkNeighbor> entry : nbrs.entrySet()) {
+            for (final Map.Entry<NodeIdentifier, NetworkNeighbor> entry : nbrs.entrySet()) {
                 retval.put(entry.getKey(), entry.getValue().getSharedValues());
             }
         }
@@ -105,7 +108,13 @@ public class NodeNetworkManager implements NetworkManager {
             message.append(" depth: ");
             message.append(depth);
 
-            if (o instanceof ResourceSummary) {
+            if (o instanceof ResourceReport) {
+                final ResourceReport rr = (ResourceReport) o;
+                message.append("  window: " + rr.getDemandEstimationWindow());
+                message.append("  nc.size: " + rr.getNetworkCapacity().size());
+                message.append("  nd.size: " + rr.getNetworkDemand().size());
+                message.append("  nl.size: " + rr.getNetworkLoad().size());
+            } else if (o instanceof ResourceSummary) {
                 final ResourceSummary rs = (ResourceSummary) o;
                 message.append(" sc.size: " + rs.getServerCapacity().size());
                 message.append(" sl.size: " + rs.getServerLoad().size());
@@ -145,8 +154,9 @@ public class NodeNetworkManager implements NetworkManager {
                 message.append(" size: " + p.getPlan().size());
             }
 
-            LOGGER.trace(message.toString());
+            PROFILE_LOGGER.trace(message.toString());
         }
+
     }
 
     @Override
@@ -161,15 +171,46 @@ public class NodeNetworkManager implements NetworkManager {
         PROFILE_LOGGER.debug("Top of share AP round {} sending from {} - neighbors: {}", node.getExecutionCount(), node,
                 nbrsCopy.keySet());
 
-        if (LOGGER.isTraceEnabled()) {
+        if (PROFILE_LOGGER.isDebugEnabled()) {
+            try (ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
+                try (FSTObjectOutput oos = new FSTObjectOutput(bytes)) {
+                    oos.writeObject(toSend);
+                } catch (final IOException e) {
+                    PROFILE_LOGGER.error("Error writing object to byte stream for measurement", e);
+                }
+                final int size = bytes.size();
+                PROFILE_LOGGER.debug("{} sharing state of {} bytes", node.getNodeIdentifier(), size);
+            } catch (final IOException e) {
+                NodeNetworkManager.PROFILE_LOGGER.error("Error constructing byte stream for measurement", e);
+            }
+        }
+
+        if (PROFILE_LOGGER.isTraceEnabled()) {
             toSend.forEach((code, o) -> {
+                if (PROFILE_LOGGER.isDebugEnabled()) {
+                    try (ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
+                        try (FSTObjectOutput oos = new FSTObjectOutput(bytes)) {
+                            oos.writeObject(o);
+                        } catch (final IOException e) {
+                            PROFILE_LOGGER.error("Error writing object to send to byte stream for measurement", e);
+                        }
+                        final int size = bytes.size();
+                        PROFILE_LOGGER.debug("key: {} value size: {} bytes", code, size);
+                    } catch (final IOException e) {
+                        NodeNetworkManager.PROFILE_LOGGER
+                                .error("Error constructing byte stream for measurement of object", e);
+                    }
+                }
                 unwrapAndLog(0, o);
+                PROFILE_LOGGER.debug("Finished logging {}", code);
             });
         }
 
         final Map<DeviceUID, NetworkNeighbor> toRemove = new HashMap<>();
         for (final Map.Entry<DeviceUID, NetworkNeighbor> entry : nbrsCopy.entrySet()) {
             final NetworkNeighbor neighbor = entry.getValue();
+            LOGGER.trace("Sending message to {}", entry.getKey());
+
             try {
                 neighbor.sendMessage(toSend);
             } catch (final IOException e) {
@@ -229,7 +270,7 @@ public class NodeNetworkManager implements NetworkManager {
         synchronized (lock) {
             // remove any disconnected neighbors
             nbrs.entrySet().removeIf(e -> !e.getValue().isRunning());
-            
+
             nbrsCopy.putAll(nbrs);
         }
 
@@ -258,6 +299,16 @@ public class NodeNetworkManager implements NetworkManager {
         }
     }
 
+    /**
+     * 
+     * @return the set of neighbors that are currently connected to AP
+     */
+    public Set<NodeIdentifier> getConnectedNeighbors() {
+        synchronized (lock) {
+            return new HashSet<>(nbrs.keySet());
+        }
+    }
+
     private boolean running = false;
 
     /**
@@ -271,6 +322,7 @@ public class NodeNetworkManager implements NetworkManager {
             nbrs.forEach((k, v) -> {
                 v.terminate();
                 try {
+                    LOGGER.trace("Waiting on {}", v.getName());
                     v.join();
                 } catch (final InterruptedException e) {
                     if (LOGGER.isTraceEnabled()) {
@@ -293,13 +345,10 @@ public class NodeNetworkManager implements NetworkManager {
     }
 
     /** neighbor -> connection */
-    private final Map<DeviceUID, NetworkNeighbor> nbrs = new HashMap<>();
+    private final Map<NodeIdentifier, NetworkNeighbor> nbrs = new HashMap<>();
 
-    private void addNeighbor(final DeviceUID uid,
-            final int nonce,
-            final Socket s,
-            final ObjectInputStream in,
-            final ObjectOutputStream out) {
+    private void
+            addNeighbor(final NodeIdentifier uid, final int nonce, final Socket s, final TCPObjectSocket serializer) {
         synchronized (lock) {
             // symmetry-break nonce
             // If UID isn't already linked, add a new neighbor
@@ -312,28 +361,25 @@ public class NodeNetworkManager implements NetworkManager {
                     other.terminate();
                 }
 
-                final NetworkNeighbor neighbor = new NetworkNeighbor(node, uid, nonce, remoteAddr, s, in, out);
+                final NetworkNeighbor neighbor = new NetworkNeighbor(node, uid, nonce, remoteAddr, s, serializer);
                 nbrs.put(uid, neighbor);
                 neighbor.start();
+                LOGGER.debug("Started new neighbor connection with {}", uid);
             } else {
                 LOGGER.debug("Closing connection to {} because we already have a connection from them", uid,
-                        node.getDeviceUID());
+                        node.getNodeIdentifier());
                 try {
-                    out.writeObject(NetworkNeighbor.CLOSE_CONNECTION);
+                    serializer.writeObject(NetworkNeighbor.CLOSE_CONNECTION);
                 } catch (final IOException e) {
                     LOGGER.debug("Error writing close to neighbor, ignoring", e);
+                } catch (final Exception e) {
+                    LOGGER.debug("Unepxected error writing close to neighbor, ignoring", e);
                 }
 
                 try {
-                    out.close();
+                    serializer.close();
                 } catch (final IOException e) {
-                    LOGGER.debug("Error closing output to neighbor, ignoring", e);
-                }
-
-                try {
-                    in.close();
-                } catch (final IOException e) {
-                    LOGGER.debug("Error closing input from neighbor, ignoring", e);
+                    LOGGER.debug("Error closing serializer to neighbor, ignoring", e);
                 }
 
                 try {
@@ -375,23 +421,29 @@ public class NodeNetworkManager implements NetworkManager {
                     while (running) {
                         final Socket s = server.accept();
 
+                        LOGGER.debug("Got a connection from {}", s.getInetAddress());
+
                         // don't need a thread here since addNeighbor will take
                         // care of creating a thread to service the connection.
                         try {
+                            final TCPObjectSocket serializer = new TCPObjectSocket(s,
+                                    GlobalNetworkConfiguration.getInstance().getFstConfiguration());
+
                             // If the link connects, trade UIDs
-                            final ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-                            final ObjectInputStream in = new ObjectInputStream(s.getInputStream());
 
                             // write uid for neighbor
-                            out.writeObject(node.getNodeIdentifier());
-                            out.flush();
+                            LOGGER.trace("Writing node identifier to new connection");
+                            serializer.writeObject(node.getNodeIdentifier());
+                            serializer.flush();
 
                             // reads data from connectToNeighbor()
-                            final DeviceUID uid = (DeviceUID) in.readObject();
-                            final int nonce = in.readInt();
+                            LOGGER.trace("Reading node identifier and nonce from neighbor {}", s.getInetAddress());
+                            final NodeIdentifier uid = (NodeIdentifier) serializer.readObject();
+                            final int nonce = ((Integer) serializer.readObject()).intValue();
+                            LOGGER.trace("Received uid {} and nonce {} from {}", uid, nonce, s.getInetAddress());
 
-                            addNeighbor(uid, nonce, s, in, out);
-                        } catch (final IOException | ClassNotFoundException e) {
+                            addNeighbor(uid, nonce, s, serializer);
+                        } catch (final Exception e) {
                             if (LOGGER.isDebugEnabled()) {
                                 LOGGER.debug("Got exception creating link to neighbor that connected to us.", e);
                             }
@@ -441,26 +493,27 @@ public class NodeNetworkManager implements NetworkManager {
             return;
         }
 
-        LOGGER.debug("Connecting to {} from {}", neighborUID, node.getDeviceUID());
+        LOGGER.debug("Connecting to {} from {}", neighborUID, node.getNodeIdentifier());
 
         try {
             // Try to link
             final Socket s = new Socket(addr.getAddress(), addr.getPort());
 
-            final int nonce = RANDOM.nextInt();
+            final Integer nonce = RANDOM.nextInt();
+
+            final TCPObjectSocket serializer = new TCPObjectSocket(s,
+                    GlobalNetworkConfiguration.getInstance().getFstConfiguration());
 
             // If the link connects, trade UIDs
-            final ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-            final ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+            LOGGER.debug("Reading identifier from neighbor {}", node.getNodeIdentifier());
+            final NodeIdentifier neighborUid = (NodeIdentifier) serializer.readObject();
 
-            final DeviceUID neighborUid = (DeviceUID) in.readObject();
+            serializer.writeObject(node.getNodeIdentifier());
+            serializer.writeObject(nonce);
+            serializer.flush();
 
-            out.writeObject(node.getNodeIdentifier());
-            out.writeInt(nonce);
-            out.flush();
-
-            addNeighbor(neighborUid, nonce, s, in, out);
-        } catch (final IOException | ClassNotFoundException e) {
+            addNeighbor(neighborUid, nonce, s, serializer);
+        } catch (final Exception e) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Couldn't connect to neighbor: {}. Will try again later.", neighborUID, e);
             }
