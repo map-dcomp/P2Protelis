@@ -42,11 +42,17 @@ pipeline {
                               tools: [spotBugs(pattern: '**/build/reports/spotbugs/*.xml'), \
 			              checkStyle(pattern: '**/build/reports/checkstyle/*.xml')]
                     
-			  junit testResults: "**/build/test-results/**/*.xml", keepLongStdio: true
+			  junit testResults: "**/build/test-results/**/*.xml", keepLongStdio: false
 			  
                           recordIssues tool: taskScanner(excludePattern: 'gradle-repo/**,maven-repo/**', includePattern: '**/*.java,**/*.sh,**/*.py', highTags: 'FIXME,HACK', normalTags: 'TODO')
   		 
                           recordIssues tool: java()
+			}
+		}
+
+		stage('Archive artifacts') {
+		        steps {
+			    archiveArtifacts artifacts: '**/*.log,**/build/reports/**,**/build/test-results/**'
 			}
 		}
 

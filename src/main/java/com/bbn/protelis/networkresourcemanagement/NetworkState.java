@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -46,8 +46,6 @@ public class NetworkState {
      */
     public NetworkState(final RegionIdentifier region) {
         this.region = region;
-        this.shortRegionSummary = ResourceSummary.getNullSummary(region, ResourceReport.EstimationWindow.SHORT);
-        this.longRegionSummary = ResourceSummary.getNullSummary(region, ResourceReport.EstimationWindow.LONG);
         this.regionPlan = RegionPlan.getNullRegionPlan(region);
         this.loadBalancerPlan = LoadBalancerPlan.getNullLoadBalancerPlan(region);
     }
@@ -60,53 +58,6 @@ public class NetworkState {
     @Nonnull
     public RegionIdentifier getRegion() {
         return region;
-    }
-
-    private ResourceSummary shortRegionSummary;
-    private ResourceSummary longRegionSummary;
-
-    /**
-     * @param estimationWindow
-     *            the estimation window for the demand
-     * @return the summary for the region.
-     */
-    @Nonnull
-    public ResourceSummary getRegionSummary(@Nonnull final ResourceReport.EstimationWindow estimationWindow) {
-        switch (estimationWindow) {
-        case LONG:
-            return longRegionSummary;
-        case SHORT:
-            return shortRegionSummary;
-        default:
-            throw new IllegalArgumentException("Unknown estimation window: " + estimationWindow);
-        }
-    }
-
-    /**
-     * Specify a new summary for the region.
-     * 
-     * @param summary
-     *            the new summary
-     * 
-     * @throws IllegalArgumentException
-     *             if the summary is for a different region than the node
-     */
-    public void setRegionSummary(@Nonnull final ResourceSummary summary) {
-        if (!summary.getRegion().equals(this.region)) {
-            throw new IllegalArgumentException(
-                    "Region summary must be for the same region as the network state object");
-        }
-
-        switch (summary.getDemandEstimationWindow()) {
-        case LONG:
-            longRegionSummary = summary;
-            break;
-        case SHORT:
-            shortRegionSummary = summary;
-            break;
-        default:
-            throw new IllegalArgumentException("Unknown estimation window: " + summary.getDemandEstimationWindow());
-        }
     }
 
     private RegionPlan regionPlan;

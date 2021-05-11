@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -135,5 +135,31 @@ public interface ResourceManager<T extends NetworkServer> {
      * @return if the image is local when the method returns
      */
     boolean waitForImage(@Nonnull ServiceIdentifier<?> service);
+
+    /**
+     * Record a failed request. This information can be used to enhance the
+     * demand computation.
+     * 
+     * @param serverEndTime
+     *            the expected end time of the server load had this request
+     *            succeeded
+     * @param serverLoad
+     *            the expected server load had this request succeeded
+     * @param networkEndTime
+     *            the expected end time of the network load had this request
+     *            succeeded
+     * @param networkLoad
+     *            the expected network load had this request succeeded
+     * @param containerId
+     *            the container that failed to process the request
+     * @param client
+     *            the client executing the request
+     */
+    void addFailedRequest(NodeIdentifier client,
+            NodeIdentifier containerId,
+            long serverEndTime,
+            Map<NodeAttribute, Double> serverLoad,
+            long networkEndTime,
+            Map<LinkAttribute, Double> networkLoad);
 
 }

@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -33,8 +33,6 @@ package com.bbn.protelis.networkresourcemanagement;
 
 import java.net.InetSocketAddress;
 
-import org.protelis.lang.datatype.DeviceUID;
-
 /**
  * Used to determine how to connect to a node for sharing information. Used by
  * {@link NodeNetworkManager}.
@@ -49,6 +47,6 @@ public interface NodeLookupService {
      *            the UID of the node to find
      * @return the hostname and port. Null is returned if no node can be found with the specified uid.
      */
-    InetSocketAddress getInetAddressForNode(DeviceUID uid);
+    InetSocketAddress getInetAddressForNode(NodeIdentifier uid);
 
 }

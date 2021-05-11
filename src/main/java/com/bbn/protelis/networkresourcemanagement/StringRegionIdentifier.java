@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -47,6 +47,7 @@ public class StringRegionIdentifier implements RegionIdentifier, Comparable<Stri
      */
     public StringRegionIdentifier(@Nonnull final String name) {
         this.name = name;
+        this.hashCode = this.name.hashCode();
     }
 
     private final String name;
@@ -73,15 +74,22 @@ public class StringRegionIdentifier implements RegionIdentifier, Comparable<Stri
         if (this == o) {
             return true;
         } else if (o instanceof StringRegionIdentifier) {
-            return ((StringRegionIdentifier) o).getName().equals(getName());
+            final StringRegionIdentifier other = (StringRegionIdentifier) o;
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return this.getName().equals(other.getName());
+            }
         } else {
             return false;
         }
     }
 
+    private final int hashCode;
+
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return hashCode;
     }
 
     @Override

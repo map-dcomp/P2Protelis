@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -66,12 +66,15 @@ public final class GlobalNetworkConfiguration {
      * @return the singleton instance
      */
     public static GlobalNetworkConfiguration getInstance() {
-        synchronized (INSTANCE_LOCK) {
-            if (null == instance) {
-                instance = new GlobalNetworkConfiguration();
+        if (null == instance) {
+            synchronized (INSTANCE_LOCK) {
+                if (null == instance) {
+                    instance = new GlobalNetworkConfiguration();
+                }
+                return instance;
             }
-            return instance;
         }
+        return instance;
     }
 
     /**
@@ -138,17 +141,75 @@ public final class GlobalNetworkConfiguration {
         messageDropPercentage = v;
     }
 
-    private final ThreadLocal<FSTConfiguration> fstConfiguration = new ThreadLocal<FSTConfiguration>() {
-        public FSTConfiguration initialValue() {
-            FSTConfiguration conf = FSTConfiguration.createDefaultConfiguration();
-            return conf;
-        }
-    };
-
     /**
      * @return the FST serialization configuration for this thread
      */
     public FSTConfiguration getFstConfiguration() {
-        return fstConfiguration.get();
+        return FSTConfiguration.createDefaultConfiguration();
     }
+
+    private static final boolean USE_JAVA_SERIALIZATION_DEFAULT = false;
+
+    private boolean useJavaSerialization = USE_JAVA_SERIALIZATION_DEFAULT;
+
+    /**
+     * 
+     * @return if true, then use Java serialization for communication, otherwise
+     *         use FST.
+     */
+    public boolean getUseJavaSerialization() {
+        return useJavaSerialization;
+    }
+
+    /**
+     * 
+     * @param v
+     *            {@link #getUseJavaSerialization()}
+     */
+    public void setUseJavaSerialization(final boolean v) {
+        useJavaSerialization = v;
+    }
+
+    private static final boolean USE_COMPRESSION_DEFAULT = true;
+
+    private boolean useCompression = USE_COMPRESSION_DEFAULT;
+
+    /**
+     * 
+     * @return if true, then use compression for AP messages.
+     */
+    public boolean getUseCompression() {
+        return useCompression;
+    }
+
+    /**
+     * 
+     * @param v
+     *            {@link #getUseCompression()}
+     */
+    public void setUseCompression(final boolean v) {
+        useCompression = v;
+    }
+
+    private static final boolean USE_DELTA_COMPRESSION_DEFAULT = true;
+
+    private boolean useDeltaCompression = USE_DELTA_COMPRESSION_DEFAULT;
+
+    /**
+     * 
+     * @return if true, then use delta compression for AP messages.
+     */
+    public boolean getUseDeltaCompression() {
+        return useDeltaCompression;
+    }
+
+    /**
+     * 
+     * @param v
+     *            {@link #getUseDeltaCompression()}
+     */
+    public void setUseDeltaCompression(final boolean v) {
+        useDeltaCompression = v;
+    }
+
 }

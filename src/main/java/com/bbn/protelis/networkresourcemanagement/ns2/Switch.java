@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -58,7 +58,7 @@ public class Switch extends NetworkDevice {
      *            {@link Link#getBandwidth()}
      * @param delay
      *            used as the delay for the created links see
-     *            {@link Link#getDelay()}
+     *            {@link Link#getDelay()}, {@link #getDelay()}
      * @see Link#Link(String, NetworkDevice, NetworkDevice, double, double)
      */
     public Switch(@Nonnull final String name,
@@ -67,6 +67,7 @@ public class Switch extends NetworkDevice {
             final double delay) {
         super(name);
         this.bandwidth = bandwidth;
+        this.delay = delay;
 
         nodes.forEach(n -> {
             final Link link = new Link(name, this, n, bandwidth, delay);
@@ -102,6 +103,16 @@ public class Switch extends NetworkDevice {
      */
     public double getBandwidth() {
         return bandwidth;
+    }
+
+    private final double delay;
+
+    /**
+     * 
+     * @return the delay in milliseconds
+     */
+    public double getDelay() {
+        return this.delay;
     }
 
 }

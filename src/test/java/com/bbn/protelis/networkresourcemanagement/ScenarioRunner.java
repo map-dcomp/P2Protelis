@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -29,7 +29,7 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
-package com.bbn.protelis.networkresourcemanagement.testbed;
+package com.bbn.protelis.networkresourcemanagement;
 
 import java.util.Map;
 
@@ -40,10 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
-import com.bbn.protelis.networkresourcemanagement.NetworkClient;
-import com.bbn.protelis.networkresourcemanagement.NetworkLink;
-import com.bbn.protelis.networkresourcemanagement.NetworkServer;
-import com.bbn.protelis.networkresourcemanagement.visualizer.ScenarioVisualizer;
 
 /**
  * Class to run a {@link Scenario}.
@@ -59,27 +55,17 @@ public class ScenarioRunner<N extends NetworkServer, L extends NetworkLink, C ex
     private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioRunner.class);
 
     private final Scenario<N, L, C> scenario;
-    private ScenarioVisualizer<?, ?, L, N, C> visualizer;
 
     /**
      * 
      * @param scenario
      *            the scenario to run
-     * @param visualizer
-     *            the visualizer to use, may be null. The scenario in this
-     *            visualizer must match the scenario argument
      */
-    public ScenarioRunner(@Nonnull final Scenario<N, L, C> scenario,
-            final ScenarioVisualizer<?, ?, L, N, C> visualizer) {
-        if (null != visualizer) {
-            visualizer.setScenario(scenario);
-        }
-
+    public ScenarioRunner(@Nonnull final Scenario<N, L, C> scenario) {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Initializing scenario");
         }
         this.scenario = scenario;
-        this.visualizer = visualizer;
     }
 
     /**
@@ -93,12 +79,6 @@ public class ScenarioRunner<N extends NetworkServer, L extends NetworkLink, C ex
             entry.getValue().startExecuting();
         }
 
-        // Launch the visualizer, if desired
-        LOGGER.debug(null != visualizer ? "Launching visualizer" : "Running headless");
-        if (null != visualizer) {
-            visualizer.start();
-        }
-
         LOGGER.info("Waiting while scenario runs");
         waitForTermination();
 
@@ -107,11 +87,6 @@ public class ScenarioRunner<N extends NetworkServer, L extends NetworkLink, C ex
 
     private void waitForTermination() {
         while (true) {
-            // Check if we've been told to exit by user click
-            if (visualizer != null && visualizer.isClosed()) {
-                LOGGER.debug("Termination signalled by user");
-                break;
-            }
 
             // Otherwise, check if the scenario has naturally terminated
             final TerminationCondition<Map<DeviceUID, N>> termination = scenario.getTerminationCondition();
@@ -138,9 +113,6 @@ public class ScenarioRunner<N extends NetworkServer, L extends NetworkLink, C ex
         LOGGER.debug("Signalling termination to all processes");
         for (final Map.Entry<DeviceUID, ? extends NetworkServer> entry : scenario.getServers().entrySet()) {
             entry.getValue().stopExecuting();
-        }
-        if (visualizer != null) {
-            visualizer.stop();
         }
 
         LOGGER.debug("Waiting for all daemons to stop");

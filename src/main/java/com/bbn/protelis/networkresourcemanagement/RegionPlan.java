@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -36,6 +36,7 @@ import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
+import com.bbn.protelis.utils.ComparisonUtils;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
@@ -79,8 +80,9 @@ public class RegionPlan implements Serializable {
         this.region = region;
         this.timestamp = timestamp;
         this.plan = plan;
+        this.hashCode = Objects.hash(this.region, this.plan);
     }
-    
+
     /**
      * 
      * @param region
@@ -92,6 +94,8 @@ public class RegionPlan implements Serializable {
             @Nonnull final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, Double>> plan) {
         this.region = region;
         this.plan = plan;
+        // don't include anything with a fuzzy match in equals
+        this.hashCode = this.region.hashCode();
     }
 
     private final RegionIdentifier region;
@@ -103,17 +107,17 @@ public class RegionPlan implements Serializable {
     public RegionIdentifier getRegion() {
         return region;
     }
-    
+
     private long timestamp;
 
     /**
      * @param timestamp
-     *          see {@link #getTimestamp()}
+     *            see {@link #getTimestamp()}
      */
     public void setTimestamp(final long timestamp) {
         this.timestamp = timestamp;
     }
-    
+
     /**
      * The units of the timestamp are determined by the clock used for the
      * network. Possible examples may be milliseconds since the epoch or
@@ -134,9 +138,10 @@ public class RegionPlan implements Serializable {
      * this region to neighboring regions. The value ideally should be a number
      * between 0 and 1 and represent a percentage.
      * 
-     * An empty map means all traffic stays local. If the plan is populated and
-     * the current region isn't included in the plan, this means that ALL
-     * traffic should be sent to other regions.
+     * An empty map means all traffic stays local, if possible. If the plan is
+     * populated and the current region isn't included in the plan, this means
+     * that ALL traffic should be sent to other regions. See
+     * {@link LoadBalancerPlan#getOverflowPlan()} for more information.
      * 
      * 
      * @return the plan for the region. service -> neighbor region -> value.
@@ -146,12 +151,14 @@ public class RegionPlan implements Serializable {
         return plan;
     }
 
+    private final int hashCode;
+
     /**
      * Creates a hash for this plan without considering the timestamp.
      */
     @Override
     public int hashCode() {
-        return Objects.hash(region, plan);
+        return hashCode;
     }
 
     /**
@@ -164,7 +171,13 @@ public class RegionPlan implements Serializable {
             return true;
         } else if (o instanceof RegionPlan) {
             final RegionPlan other = (RegionPlan) o;
-            return Objects.equals(getRegion(), other.getRegion()) && Objects.equals(getPlan(), other.getPlan());
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return Objects.equals(this.getRegion(), other.getRegion()) //
+                        && ComparisonUtils.doubleMapEquals2(this.getPlan(), other.getPlan(),
+                                ComparisonUtils.WEIGHT_COMPARISON_TOLERANCE);
+            }
         } else {
             return false;
         }
@@ -172,11 +185,8 @@ public class RegionPlan implements Serializable {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + " ["
-                + " region: " + region
-                + " timestamp: " + timestamp
-                + " plan: " + plan
-                + " ]";
+        return this.getClass().getSimpleName() + " [" + " region: " + region + " timestamp: " + timestamp + " plan: "
+                + plan + " ]";
     }
 
 }

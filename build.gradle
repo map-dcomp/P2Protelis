@@ -3,7 +3,6 @@ import org.gradle.internal.os.OperatingSystem
 buildscript {
   repositories {
       mavenCentral()
-      jcenter()
   }
   dependencies {
     classpath "gradle.plugin.com.github.spotbugs:spotbugs-gradle-plugin:1.7.1"
@@ -51,7 +50,7 @@ repositories {
   // local repository first
   mavenLocal()
   
-  jcenter()
+  mavenCentral()
 }
 
 ext {
@@ -61,7 +60,7 @@ ext {
 dependencies {
     api group: 'com.cedarsoftware', name: 'json-io', version:'4.10.1'
     api group: 'com.google.guava', name: 'guava', version: props.getProperty('guava_version')
-    api(group: 'org.protelis', name: 'protelis', version:'13.3.8') {
+    api(group: 'org.protelis', name: 'protelis', version:'14.0.0') {
         exclude module: 'guava'
     }
     api group: 'commons-cli', name: 'commons-cli', version: props.getProperty('commons_cli_version')

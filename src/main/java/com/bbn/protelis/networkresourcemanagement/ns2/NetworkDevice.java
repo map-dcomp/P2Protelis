@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -48,6 +48,7 @@ public abstract class NetworkDevice {
      */
     public NetworkDevice(@Nonnull final String name) {
         this.name = name;
+        this.hashCode = this.name.hashCode();
     }
 
     private final String name;
@@ -60,9 +61,11 @@ public abstract class NetworkDevice {
         return name;
     }
 
+    private final int hashCode;
+
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return hashCode;
     }
 
     @Override
@@ -73,12 +76,16 @@ public abstract class NetworkDevice {
             return true;
         } else if (getClass().equals(o.getClass())) {
             final NetworkDevice other = (NetworkDevice) o;
-            return getName().equals(other.getName());
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return getName().equals(other.getName());
+            }
         } else {
             return false;
         }
     }
-    
+
     @Override
     public String toString() {
         return "NetworkDevice " + getName();

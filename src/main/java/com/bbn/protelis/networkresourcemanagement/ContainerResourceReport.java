@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -36,6 +36,7 @@ import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
+import com.bbn.protelis.utils.ComparisonUtils;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
@@ -71,12 +72,6 @@ public class ContainerResourceReport implements Serializable {
      *            see {@link #getAverageProcessingTime()}
      * @param service
      *            see {@link #getService()}
-     * @param networkCapacity
-     *            see {@link #getNetworkCapacity()}
-     * @param networkLoad
-     *            see {@link #getNetworkLoad()}
-     * @param networkDemand
-     *            see {@link #getNetworkDemand()}
      * @param serviceStatus
      *            see {@link #getServiceStatus()}
      */
@@ -90,11 +85,7 @@ public class ContainerResourceReport implements Serializable {
             @JsonProperty("computeCapacity") @Nonnull final ImmutableMap<NodeAttribute, Double> computeCapacity,
             @JsonProperty("computeLoad") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute, Double>> computeLoad,
             @JsonProperty("computeDemand") @Nonnull final ImmutableMap<NodeIdentifier, ImmutableMap<NodeAttribute, Double>> computeDemand,
-            @JsonProperty("averageProcessingTime") final double serverAverageProcessingTime,
-
-            @JsonProperty("networkCapacity") @Nonnull final ImmutableMap<InterfaceIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
-            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad,
-            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand) {
+            @JsonProperty("averageProcessingTime") final double serverAverageProcessingTime) {
         this.containerName = containerName;
         this.timestamp = timestamp;
 
@@ -108,9 +99,8 @@ public class ContainerResourceReport implements Serializable {
         this.computeDemand = computeDemand;
         this.averageProcessingTime = serverAverageProcessingTime;
 
-        this.networkCapacity = networkCapacity;
-        this.networkLoad = networkLoad;
-        this.networkDemand = networkDemand;
+        // don't include anything that does a fuzzy match in equals
+        this.hashCode = Objects.hash(this.containerName, this.service, this.serviceStatus, this.demandEstimationWindow);
     }
 
     private final ServiceStatus serviceStatus;
@@ -225,47 +215,6 @@ public class ContainerResourceReport implements Serializable {
         return computeCapacity;
     }
 
-    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity;
-
-    /**
-     * Link capacity between a node an it's neighbors. interface -> attribute ->
-     * value.
-     * 
-     * @return Not null.
-     */
-    @Nonnull
-    public ImmutableMap<InterfaceIdentifier, ImmutableMap<LinkAttribute, Double>> getNetworkCapacity() {
-        return networkCapacity;
-    }
-
-    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad;
-
-    /**
-     * Network load and where it comes from. interface -> source node -> service
-     * -> attribute -> value
-     * 
-     * @return Not null.
-     */
-    @Nonnull
-    public ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
-            getNetworkLoad() {
-        return networkLoad;
-    }
-
-    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand;
-
-    /**
-     * Network demand with other nodes. See {@link #getNetworkLoad()} for
-     * details on the map definition.
-     * 
-     * @return Not null.
-     */
-    @Nonnull
-    public ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
-            getNetworkDemand() {
-        return networkDemand;
-    }
-
     /**
      * Create a container resource report with no data. The timestamp is set to
      * {@link #NULL_TIMESTAMP}.
@@ -286,10 +235,7 @@ public class ContainerResourceReport implements Serializable {
                 ImmutableMap.of(), // serverCapacity
                 ImmutableMap.of(), // serverLoad
                 ImmutableMap.of(), // serverDemand
-                0, // serverAverageProcessingTime
-                ImmutableMap.of(), // networkCapacity
-                ImmutableMap.of(), // networkLoad
-                ImmutableMap.of() // networkDemand
+                0 // serverAverageProcessingTime
         );
 
     }
@@ -298,6 +244,41 @@ public class ContainerResourceReport implements Serializable {
     public String toString() {
         return "{" + " computeCapacity: " + getComputeCapacity() + " computeLoad: " + getComputeLoad()
                 + " computeDemand: " + getComputeDemand() + " }";
+    }
+
+    private final int hashCode;
+
+    @Override
+    public int hashCode() {
+        return hashCode;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        } else if (null == o) {
+            return false;
+        } else if (getClass().equals(o.getClass())) {
+            final ContainerResourceReport other = (ContainerResourceReport) o;
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return Objects.equals(this.containerName, other.containerName) //
+                        && Objects.equals(this.service, other.service) //
+                        && Objects.equals(this.serviceStatus, other.serviceStatus) //
+                        && Objects.equals(this.demandEstimationWindow, other.demandEstimationWindow) //
+                        && ComparisonUtils.doubleMapEquals(this.computeCapacity, other.computeCapacity,
+                                ComparisonUtils.NODE_ATTRIBUTE_COMPARISON_TOLERANCE) //
+                        && ComparisonUtils.doubleMapEquals2(this.computeLoad, other.computeLoad,
+                                ComparisonUtils.NODE_ATTRIBUTE_COMPARISON_TOLERANCE)//
+                        && ComparisonUtils.doubleMapEquals2(this.computeDemand, other.computeDemand,
+                                ComparisonUtils.NODE_ATTRIBUTE_COMPARISON_TOLERANCE)//
+                ;
+            }
+        } else {
+            return false;
+        }
     }
 
 }

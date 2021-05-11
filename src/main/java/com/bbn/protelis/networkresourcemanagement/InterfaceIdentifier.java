@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -60,6 +60,7 @@ public class InterfaceIdentifier implements Serializable {
     public InterfaceIdentifier(@Nonnull final String name, @Nonnull final ImmutableSet<NodeIdentifier> neighbors) {
         this.name = Objects.requireNonNull(name);
         this.neighbors = Objects.requireNonNull(neighbors);
+        this.hashCode = name.hashCode();
     }
 
     private final ImmutableSet<NodeIdentifier> neighbors;
@@ -82,9 +83,11 @@ public class InterfaceIdentifier implements Serializable {
         return name;
     }
 
+    private final int hashCode;
+
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return hashCode;
     }
 
     /**
@@ -98,7 +101,11 @@ public class InterfaceIdentifier implements Serializable {
             return true;
         } else if (this.getClass().equals(o.getClass())) {
             final InterfaceIdentifier other = (InterfaceIdentifier) o;
-            return getName().equals(other.getName());
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return getName().equals(other.getName());
+            }
         } else {
             return false;
         }

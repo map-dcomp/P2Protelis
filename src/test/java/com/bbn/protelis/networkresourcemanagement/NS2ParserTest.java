@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -58,12 +58,9 @@ import org.xbill.DNS.Address;
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
 import com.bbn.protelis.networkresourcemanagement.ns2.Link;
 import com.bbn.protelis.networkresourcemanagement.ns2.NS2Parser;
-import com.bbn.protelis.networkresourcemanagement.ns2.NS2Parser.NS2FormatException;
 import com.bbn.protelis.networkresourcemanagement.ns2.Node;
 import com.bbn.protelis.networkresourcemanagement.ns2.Topology;
 import com.bbn.protelis.networkresourcemanagement.testbed.LocalNodeLookupService;
-import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
-import com.bbn.protelis.networkresourcemanagement.testbed.ScenarioRunner;
 import com.bbn.protelis.networkresourcemanagement.testbed.termination.ExecutionCountTermination;
 import com.bbn.protelis.utils.SimpleClock;
 import com.bbn.protelis.utils.VirtualClock;
@@ -131,8 +128,7 @@ public class NS2ParserTest {
                 maxExecutions);
         scenario.setTerminationCondition(condition);
 
-        final ScenarioRunner<NetworkServer, NetworkLink, NetworkClient> emulation = new ScenarioRunner<>(scenario,
-                null);
+        final ScenarioRunner<NetworkServer, NetworkLink, NetworkClient> emulation = new ScenarioRunner<>(scenario);
         emulation.run();
 
         for (final Map.Entry<DeviceUID, NetworkServer> entry : scenario.getServers().entrySet()) {
@@ -305,7 +301,7 @@ public class NS2ParserTest {
      * @throws IOException
      *             if there is an error reading the test files
      */
-    @Test(expected = NS2FormatException.class)
+    @Test(expected = RuntimeException.class)
     public void testFailSetIp() throws URISyntaxException, IOException {
         final URL baseu = Thread.currentThread().getContextClassLoader().getResource("ns2/test-set-ip-fail");
         final Path baseDirectory = Paths.get(baseu.toURI());

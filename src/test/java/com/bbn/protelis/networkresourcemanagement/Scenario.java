@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -29,7 +29,7 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
-package com.bbn.protelis.networkresourcemanagement.testbed;
+package com.bbn.protelis.networkresourcemanagement;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -45,14 +45,6 @@ import javax.annotation.Nonnull;
 import org.protelis.lang.datatype.DeviceUID;
 
 import com.bbn.protelis.common.testbed.termination.TerminationCondition;
-import com.bbn.protelis.networkresourcemanagement.NetworkClient;
-import com.bbn.protelis.networkresourcemanagement.NetworkFactory;
-import com.bbn.protelis.networkresourcemanagement.NetworkLink;
-import com.bbn.protelis.networkresourcemanagement.NetworkNode;
-import com.bbn.protelis.networkresourcemanagement.NetworkServer;
-import com.bbn.protelis.networkresourcemanagement.NodeIdentifier;
-import com.bbn.protelis.networkresourcemanagement.RegionIdentifier;
-import com.bbn.protelis.networkresourcemanagement.RegionLookupService;
 import com.bbn.protelis.networkresourcemanagement.ns2.NetworkDevice;
 import com.bbn.protelis.networkresourcemanagement.ns2.Node;
 import com.bbn.protelis.networkresourcemanagement.ns2.Switch;
@@ -153,6 +145,7 @@ public class Scenario<N extends NetworkServer, L extends NetworkLink, C extends 
 
     // RegionLookupService
     @Override
+    @Nonnull
     public RegionIdentifier getRegionForNode(@Nonnull final NodeIdentifier nodeId) {
         final N server = servers.get(nodeId);
         if (null != server) {
@@ -162,7 +155,7 @@ public class Scenario<N extends NetworkServer, L extends NetworkLink, C extends 
             if (null != client) {
                 return client.getRegionIdentifier();
             } else {
-                return null;
+                return RegionIdentifier.UNKNOWN;
             }
         }
     }
@@ -265,7 +258,8 @@ public class Scenario<N extends NetworkServer, L extends NetworkLink, C extends 
                     rightNodes.forEach(rightNode -> {
                         final NetworkNode rightNetNode = nameToNetworkNode.get(rightNode.getName());
 
-                        final L netLink = factory.createLink(l.getName(), leftNetNode, rightNetNode, l.getBandwidth(), l.getDelay());
+                        final L netLink = factory.createLink(l.getName(), leftNetNode, rightNetNode, l.getBandwidth(),
+                                l.getDelay());
                         this.links.add(netLink);
 
                         leftNetNode.addNeighbor(rightNetNode, netLink.getBandwidth());

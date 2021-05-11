@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -75,15 +75,14 @@ public class BasicResourceReportTest {
         final String basePath = "ns2/multinode";
         final Map<String, Object> extraData = NS2Parser.getNodeDataFromResource(basePath, nodeName);
 
-        final RegionLookupService regionLookup = new DelegateRegionLookup();
         final String programStr = "true";
         final ProtelisProgram program = ProtelisLoader.parseAnonymousModule(programStr);
         final int dummyBasePort = 5000;
         final VirtualClock clock = new SimpleClock();
         final BasicResourceManagerFactory resMgrFactory = new BasicResourceManagerFactory(clock);
         final ResourceManager<NetworkServer> resMgr = resMgrFactory.createResourceManager();
-        final NetworkServer node = new NetworkServer(new LocalNodeLookupService(dummyBasePort), regionLookup, program,
-                new DnsNameIdentifier(nodeName), resMgr, extraData);
+        final NetworkServer node = new NetworkServer(new LocalNodeLookupService(dummyBasePort), program, new DnsNameIdentifier(nodeName),
+                resMgr, extraData);
         resMgr.init(node, Collections.emptyMap());
         final ResourceReport report = node.getResourceManager()
                 .getCurrentResourceReport(ResourceReport.EstimationWindow.SHORT);

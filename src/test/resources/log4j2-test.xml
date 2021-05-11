@@ -6,7 +6,7 @@
             <PatternLayout pattern="%r [%t] %p %c %notEmpty{%x} %notEmpty{%X}- %m%n" />
         </Console>
 
-        <RollingFile name="LOGFILE" filename="p2protelis.log" filePattern="p2protelis-%d{yyyyMMdd-HHmmss}.%i.log">
+        <RollingFile name="LOGFILE" filename="p2protelis-test.log" filePattern="p2protelis-test-%d{yyyyMMdd-HHmmss}.%i.log">
             <PatternLayout pattern="%r [%t] %p %c %notEmpty{%x} %notEmpty{%X}- %m%n" />
              <Policies>
                 <OnStartupTriggeringPolicy />

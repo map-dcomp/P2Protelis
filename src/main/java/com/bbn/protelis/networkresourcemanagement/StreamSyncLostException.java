@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -31,19 +31,35 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
-import javax.annotation.Nonnull;
+import java.io.IOException;
 
 /**
- * Provide information about the nodes in a region.
+ * Thrown when we lose sync on the message stream.
  * 
+ * @author jschewe
+ *
  */
-public interface RegionNodeStateProvider {
+public class StreamSyncLostException extends IOException {
+    private static final long serialVersionUID = 1L;
 
     /**
      * 
-     * @return the detailed state of the nodes in a region
+     * @param message
+     *            {@link getMessage()}
      */
-    @Nonnull
-    RegionNodeState getRegionNodeState();
+    public StreamSyncLostException(final String message) {
+        super(message);
+    }
+
+    /**
+     * 
+     * @param message
+     *            {@link #getMessage()}
+     * @param cause
+     *            {@link #getCause()}
+     */
+    public StreamSyncLostException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 
 }

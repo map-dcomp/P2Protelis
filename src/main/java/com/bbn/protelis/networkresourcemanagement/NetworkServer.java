@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -61,8 +61,7 @@ import com.google.common.hash.Hashing;
  * This class is thread-safe with the exception of access to Protelis data in
  * {@link AbstractExecutionContext}
  */
-public class NetworkServer
-        implements NetworkStateProvider, RegionNodeStateProvider, RegionServiceStateProvider, NetworkNode {
+public class NetworkServer implements NetworkStateProvider, RegionServiceStateProvider, NetworkNode {
 
     private final Object lock = new Object();
 
@@ -261,21 +260,18 @@ public class NetworkServer
     /**
      * Creates a {@link NetworkServer}.
      * 
+     * @param nodeLookupService
+     *            How to find other nodes
      * @param program
      *            the program to run on the node
      * @param name
      *            the name of the node (must be unique)
-     * @param nodeLookupService
-     *            How to find other nodes
-     * @param regionLookupService
-     *            used by {@link #convertToSummary(ResourceReport)}
      * @param manager
      *            see {@link #getResourceManager()}
      * @param extraData
      *            data to help define extra attributes about the node
      */
     public NetworkServer(@Nonnull final NodeLookupService nodeLookupService,
-            @Nonnull final RegionLookupService regionLookupService,
             @Nonnull final ProtelisProgram program,
             @Nonnull final NodeIdentifier name,
             @Nonnull final ResourceManager<? extends NetworkServer> manager,
@@ -292,12 +288,9 @@ public class NetworkServer
         }
 
         this.networkState = new NetworkState(this.region);
-        this.regionNodeState = new RegionNodeState(this.region);
         this.regionServiceState = new RegionServiceState(this.region, ImmutableSet.of());
 
         this.resourceManager = manager;
-
-        this.regionLookupService = regionLookupService;
 
         final Object pool = extraData.get(EXTRA_DATA_POOL);
         if (null != pool) {
@@ -374,11 +367,13 @@ public class NetworkServer
     }
 
     /**
-     * Execute the protolis program.
+     * Execute the Protelis program.
      */
     private void run() {
         while (running.get()) {
             try {
+                final long start = System.currentTimeMillis();
+
                 logger.debug("Executing preRunCycle");
                 preRunCycle();
                 if (!running.get()) {
@@ -398,8 +393,13 @@ public class NetworkServer
                     break;
                 }
 
-                logger.debug("sleep");
-                Thread.sleep(sleepTime);
+                final long remaining = sleepTime - (System.currentTimeMillis() - start);
+                if (remaining > 0) {
+                    logger.debug("sleeping for {} ms", remaining);
+                    Thread.sleep(remaining);
+                } else {
+                    logger.debug("No more time remaining to sleep");
+                }
             } catch (final InterruptedException e) {
                 logger.debug("Node " + getName() + " got interrupted, waking up to check if it's time to exit", e);
             } catch (final Throwable e) {
@@ -452,53 +452,45 @@ public class NetworkServer
     protected void preStopExecuting() {
     }
 
+    private static final long EXECUTE_THREAD_SHUTDOWN_TIMEOUT_MS = 3000;
+
     /**
      * Stop the node executing and wait for the stop.
      */
     public final void stopExecuting() {
-        if (isExecuting()) {
-            if (logger.isTraceEnabled()) {
-                logger.trace("Before lock in stopExecuting on node: {}", getNodeIdentifier());
-            }
+        running.set(false);
 
-            running.set(false);
+        logger.trace("Executing preStopExecuting on node: {}", getNodeIdentifier());
+        preStopExecuting();
 
-            if (logger.isTraceEnabled()) {
-                logger.trace("Executing preStopExecuting on node: {}", getNodeIdentifier());
-            }
-            preStopExecuting();
+        // stop all network communication
+        logger.trace("Stopping network manager on node: {}", getNodeIdentifier());
+        accessNetworkManager().stop();
 
-            // stop all network communication
-            if (logger.isTraceEnabled()) {
-                logger.trace("Stopping network manager on node: {}", getNodeIdentifier());
-            }
-            accessNetworkManager().stop();
+        // store the reference so that we don't hold the lock longer
+        // than needed
+        Thread executeThreadTemp;
+        synchronized (executeThreadLock) {
+            executeThreadTemp = executeThread;
+            executeThread = null;
+        } // lock
 
-            // store the reference so that we don't hold the lock longer
-            // than needed
-            Thread executeThreadTemp;
-            synchronized (executeThreadLock) {
-                executeThreadTemp = executeThread;
-                executeThread = null;
-            } // lock
+        if (null != executeThreadTemp) {
+            logger.trace("Interrupting and then joining node: {}", getNodeIdentifier());
+            executeThreadTemp.interrupt();
 
-            if (null != executeThreadTemp) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("Interrupting and then joining node: {}", getNodeIdentifier());
+            try {
+                executeThreadTemp.join(EXECUTE_THREAD_SHUTDOWN_TIMEOUT_MS);
+                if (executeThreadTemp.isAlive()) {
+                    logger.error(
+                            "Tried to stop execution thread and it didn't respond. Continuing with other shutdown tasks.");
                 }
-                executeThreadTemp.interrupt();
 
-                try {
-                    executeThreadTemp.join(); // may want to have a timeout here
-
-                    if (logger.isTraceEnabled()) {
-                        logger.trace("Node finished: {}", getNodeIdentifier());
-                    }
-                } catch (final InterruptedException e) {
-                    logger.debug("Got interrupted waiting for join, probably just time to shutdown", e);
-                }
-            } // non-null executeThread
-        } // isExecuting
+                logger.trace("Node finished: {}", getNodeIdentifier());
+            } catch (final InterruptedException e) {
+                logger.debug("Got interrupted waiting for join, probably just time to shutdown", e);
+            }
+        } // non-null executeThread
     }
 
     private final ResourceManager<?> resourceManager;
@@ -522,7 +514,14 @@ public class NetworkServer
      */
     @Nonnull
     public ResourceReport getResourceReport(@Nonnull final ResourceReport.EstimationWindow demandWindow) {
-        return resourceManager.getCurrentResourceReport(demandWindow);
+        final ResourceReport report = resourceManager.getCurrentResourceReport(demandWindow);
+        final long time = getResourceManager().getClock().getCurrentTime();
+
+        logger.debug(
+                "getResourceReport: retrieving report contructed at time {}, which was {} ms ago. current time = {}",
+                report.getTimestamp(), time - report.getTimestamp(), time);
+
+        return report;
     }
 
     /**
@@ -568,16 +567,6 @@ public class NetworkServer
     }
     // ---- end NetworkStateProvider
 
-    // ---- RegionNodeStateProvider
-    private final RegionNodeState regionNodeState;
-
-    @Override
-    @Nonnull
-    public RegionNodeState getRegionNodeState() {
-        return regionNodeState;
-    }
-    // ---- end RegionNodeStateProvider
-
     // --- RegionServiceStateProvider
     // separate from the main lock so that we don't hang up stopping
     private final Object regionServiceStateLock = new Object();
@@ -605,41 +594,6 @@ public class NetworkServer
 
     /**
      * This method is used by AP to call
-     * {@link RegionNodeState#setResourceReports(com.google.common.collect.ImmutableSet)}.
-     * 
-     * @param tuple
-     *            the list of reports as a tuple
-     */
-    public void setRegionResourceReports(final Tuple tuple) {
-        final long time = getResourceManager().getClock().getCurrentTime();
-
-        if (logger.isTraceEnabled()) {
-            logger.trace("Setting region resource reports. Region: " + getRegionIdentifier());
-        }
-
-        final ImmutableSet.Builder<ResourceReport> builder = ImmutableSet.builder();
-        for (final Object entry : tuple) {
-            final ResourceReport report = (ResourceReport) entry;
-            final long propagationDelay = time - report.getTimestamp();
-
-            logger.debug(
-                    "Received ResourceReport with timestamp {} from {} at time {} after a propagation delay of {} ms.",
-                    report.getTimestamp(), report.getNodeName(), time, propagationDelay);
-
-            builder.add(report);
-            if (logger.isTraceEnabled()) {
-                logger.trace("Adding report for " + report.getNodeName());
-            }
-        }
-        getRegionNodeState().setResourceReports(builder.build());
-
-        if (logger.isTraceEnabled()) {
-            logger.trace("Finished setting region resource reports.");
-        }
-    }
-
-    /**
-     * This method is used by AP to call
      * {@link RegionServiceState#setServiceReports(ImmutableSet)}.
      * 
      * @param tuple
@@ -652,7 +606,7 @@ public class NetworkServer
             logger.trace("Setting region service reports. Region: " + getRegionIdentifier());
         }
 
-        final ImmutableSet.Builder<ServiceReport> builder = ImmutableSet.builder();
+        final Map<NodeIdentifier, ServiceReport> reportMap = new HashMap<>();
         for (final Object entry : tuple) {
             final ServiceReport report = (ServiceReport) entry;
             final long propagationDelay = time - report.getTimestamp();
@@ -661,31 +615,29 @@ public class NetworkServer
                     "Received ServiceReport with timestamp {} from {} at time {} after a propagation delay of {} ms.",
                     report.getTimestamp(), report.getNodeName(), time, propagationDelay);
 
-            builder.add(report);
+            if (reportMap.containsKey(report.getNodeName())) {
+                final long oneTimestamp = reportMap.get(report.getNodeName()).getTimestamp();
+                final long twoTimestamp = report.getTimestamp();
+                logger.warn(
+                        "Saw duplicate service report from {}, using the one with the latest timestamp. one timestamp: {} two timestamp: {}",
+                        report.getNodeName(), oneTimestamp, twoTimestamp);
+                if (oneTimestamp < twoTimestamp) {
+                    reportMap.put(report.getNodeName(), report);
+                }
+            } else {
+                reportMap.put(report.getNodeName(), report);
+            }
+
             if (logger.isTraceEnabled()) {
                 logger.trace("Adding report for " + report.getNodeName());
             }
         }
-        setRegionServiceState(new RegionServiceState(getRegionIdentifier(), builder.build()));
+        final ImmutableSet<ServiceReport> reports = ImmutableSet.copyOf(reportMap.values());
+        setRegionServiceState(new RegionServiceState(getRegionIdentifier(), reports));
 
         if (logger.isTraceEnabled()) {
             logger.trace("Finished setting region service reports.");
         }
-    }
-
-    private final RegionLookupService regionLookupService;
-
-    /**
-     * Allow protelis to convert reports to summaries using the
-     * {@link RegionLookupService} passed to this node.
-     * 
-     * @param report
-     *            the report to convert
-     * @return the return value from
-     *         {@link ResourceSummary#convertToSummary(ResourceReport, RegionLookupService)}
-     */
-    public ResourceSummary convertToSummary(@Nonnull final ResourceReport report) {
-        return ResourceSummary.convertToSummary(report, regionLookupService);
     }
 
 }

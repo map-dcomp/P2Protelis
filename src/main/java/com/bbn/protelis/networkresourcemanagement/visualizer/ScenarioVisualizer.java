@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -57,11 +57,8 @@ import org.apache.commons.collections15.Transformer;
 import org.protelis.lang.datatype.DeviceUID;
 
 import com.bbn.protelis.common.visualizer.MultiVertexRenderer;
-import com.bbn.protelis.networkresourcemanagement.NetworkClient;
 import com.bbn.protelis.networkresourcemanagement.NetworkLink;
 import com.bbn.protelis.networkresourcemanagement.NetworkNode;
-import com.bbn.protelis.networkresourcemanagement.NetworkServer;
-import com.bbn.protelis.networkresourcemanagement.testbed.Scenario;
 
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
@@ -74,7 +71,7 @@ import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
 import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
 
 /**
- * Visualizer for a {@link Scenario}. Call {@link #start()} to open the
+ * Visualizer for a {@link Graph}. Call {@link #start()} to open the
  * visualization.
  *
  * @param <N>
@@ -85,10 +82,8 @@ import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
  *            the server display type
  * @param <DL>
  *            the link display type
- * @param <C>
- *            the client type
  */
-public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, L extends NetworkLink, N extends NetworkServer, C extends NetworkClient>
+public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, L extends NetworkLink, N extends NetworkNode>
         extends JPanel {
 
     // Serialization inherited from JPanel
@@ -111,7 +106,7 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
      * Access to the viewer so that one can change behavior.
      * 
      * @return the current viewer, may be null
-     * @see #setScenario(Scenario)
+     * @see #setScenario(Graph)
      */
     public VisualizationViewer<DN, DL> getViewer() {
         return vv;
@@ -134,14 +129,7 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     // Graph contents
     private Map<DeviceUID, DN> nodes = new HashMap<>();
     private Set<DL> edges = new HashSet<>();
-    private Scenario<N, L, C> scenario = null;
-
-    /**
-     * @return the scenario that is being visualized, may be null
-     */
-    public final Scenario<N, L, C> getScenario() {
-        return scenario;
-    }
+    private Graph<N, L> networkGraph = null;
 
     /**
      * Create a visualization.
@@ -158,22 +146,22 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     /**
      * Sets the scenario and configures the visualization viewer.
      * 
-     * @param scenario
-     *            the scenario to display
+     * @param networkGraph
+     *            the network graph to display
      * @see #getViewer()
      */
-    public void setScenario(final Scenario<N, L, C> scenario) {
+    public void setScenario(final Graph<N, L> networkGraph) {
         if (null != vv) {
             this.remove(vv);
             vv = null;
         }
 
-        this.scenario = scenario;
+        this.networkGraph = networkGraph;
 
         // Add the nodes and edges
         createGraphFromNetwork();
         configureGraphRendering();
-        
+
         final GraphZoomScrollPane gzsp = new GraphZoomScrollPane(vv);
         this.add(gzsp);
     }
@@ -183,16 +171,13 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
         clearEdges();
         clearNodes();
 
-        if (null == scenario) {
+        if (null == networkGraph) {
             return;
         }
 
         // First add nodes to collection, so they'll be there for edge addition
-        for (final Map.Entry<DeviceUID, N> entry : scenario.getServers().entrySet()) {
-            addNode(entry.getValue());
-        }
-        for (final Map.Entry<DeviceUID, C> entry : scenario.getClients().entrySet()) {
-            addNode(entry.getValue());
+        for (final N node : networkGraph.getVertices()) {
+            addNode(node);
         }
 
         // create edges
@@ -219,12 +204,12 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
     private void refreshEdges() {
         clearEdges();
 
-        if (null == scenario) {
+        if (null == networkGraph) {
             return;
         }
 
         // Next, add all edges
-        for (final L l : scenario.getLinks()) {
+        for (final L l : networkGraph.getEdges()) {
             final DN leftNode = nodes.get(l.getLeft().getNodeIdentifier());
             if (null == leftNode) {
                 throw new RuntimeException("Link " + l.getName() + " refers to node "
@@ -378,7 +363,7 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
      *             if already running
      */
     public void start(final boolean createFrame) throws IllegalStateException {
-        if (null == scenario) {
+        if (null == networkGraph) {
             throw new IllegalStateException("Cannot start without a scenario");
         }
 
@@ -387,7 +372,7 @@ public class ScenarioVisualizer<DN extends DisplayNode, DL extends DisplayEdge, 
         }
 
         if (createFrame) {
-            final JFrame frame = new JFrame("Graph View: " + scenario.getName());
+            final JFrame frame = new JFrame("Graph View");
             frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
             // The the display that it should kill the remote nodes on window

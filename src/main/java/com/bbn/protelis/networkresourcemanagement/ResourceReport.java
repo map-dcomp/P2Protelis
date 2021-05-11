@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -34,10 +34,11 @@ package com.bbn.protelis.networkresourcemanagement;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
+import com.bbn.protelis.utils.ComparisonUtils;
 import com.bbn.protelis.utils.ImmutableUtils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -165,6 +166,10 @@ public class ResourceReport implements Serializable {
                                 + " does not match Resource report estimation window " + demandEstimationWindow);
             }
         });
+
+        // don't include anything that does a fuzzy match in equals
+        this.hashCode = Objects.hash(this.nodeName, this.demandEstimationWindow, this.containerReports,
+                this.maximumServiceContainers, this.allocatedServiceContainers);
     }
 
     private final ImmutableMap<NodeIdentifier, ContainerResourceReport> containerReports;
@@ -377,76 +382,6 @@ public class ResourceReport implements Serializable {
         return getSumContainerCapacity();
     }
 
-    private transient ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> containerNetworkLoad = null;
-
-    /**
-     * Sum of {@link ContainerResourceReport#getNetworkLoad()} across all
-     * containers on the node.
-     * 
-     * @return Not null.
-     */
-    @Nonnull
-    public ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
-            getContainerNetworkLoad() {
-        if (null == containerNetworkLoad) {
-            // compute it
-            containerNetworkLoad = sumContainerNetworkValue(report -> report.getNetworkLoad());
-        }
-        return containerNetworkLoad;
-    }
-
-    private ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
-            sumContainerNetworkValue(
-                    final Function<ContainerResourceReport, ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>> reportFunction) {
-        // compute it
-        final Map<InterfaceIdentifier, Map<NodeNetworkFlow, Map<ServiceIdentifier<?>, Map<LinkAttribute, Double>>>> nload = new HashMap<>();
-        containerReports.forEach((container, report) -> {
-            final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> cload = reportFunction
-                    .apply(report);
-
-            cload.forEach((neighborNode, cneighborLoad) -> {
-                final Map<NodeNetworkFlow, Map<ServiceIdentifier<?>, Map<LinkAttribute, Double>>> neighborLoad = nload
-                        .computeIfAbsent(neighborNode, k -> new HashMap<>());
-
-                cneighborLoad.forEach((flow, csourceLoad) -> {
-                    final Map<ServiceIdentifier<?>, Map<LinkAttribute, Double>> sourceLoad = neighborLoad
-                            .computeIfAbsent(flow, k -> new HashMap<>());
-
-                    csourceLoad.forEach((service, cserviceLoad) -> {
-
-                        final Map<LinkAttribute, Double> serviceLoad = sourceLoad.computeIfAbsent(service,
-                                k -> new HashMap<>());
-
-                        cserviceLoad.forEach((attr, value) -> {
-                            serviceLoad.merge(attr, value, Double::sum);
-                        }); // foreach value
-
-                    }); // foreach service
-                }); // foreach source
-            }); // foreach neighbor
-        }); // foreach container
-
-        return ImmutableUtils.makeImmutableMap4(nload);
-    }
-
-    private transient ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> containerNetworkDemand = null;
-
-    /**
-     * Network demand to neighboring nodes summed across the containers. See
-     * {@link #getContainerNetworkDemand()} for details on the map definition.
-     * 
-     * @return Not null.
-     */
-    @Nonnull
-    public ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
-            getContainerNetworkDemand() {
-        if (null == containerNetworkDemand) {
-            // compute it
-            containerNetworkDemand = sumContainerNetworkValue(report -> report.getNetworkDemand());
-        }
-        return containerNetworkDemand;
-    }
-
     private final int maximumServiceContainers;
 
     /**
@@ -554,6 +489,43 @@ public class ResourceReport implements Serializable {
             sumContainerComputeLoad = ImmutableUtils.makeImmutableMap3(sload);
         }
         return sumContainerComputeLoad;
+    }
+
+    private final int hashCode;
+
+    @Override
+    public int hashCode() {
+        return hashCode;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        } else if (o == null) {
+            return false;
+        } else if (this.getClass().equals(o.getClass())) {
+            final ResourceReport other = (ResourceReport) o;
+
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return Objects.equals(this.nodeName, other.nodeName) //
+                        && Objects.equals(this.demandEstimationWindow, other.demandEstimationWindow) //
+                        && this.maximumServiceContainers == other.maximumServiceContainers //
+                        && this.allocatedServiceContainers == other.allocatedServiceContainers //
+                        && ComparisonUtils.doubleMapEquals(this.nodeComputeCapacity, other.nodeComputeCapacity,
+                                ComparisonUtils.NODE_ATTRIBUTE_COMPARISON_TOLERANCE) //
+                        && ComparisonUtils.doubleMapEquals2(this.networkCapacity, other.networkCapacity,
+                                ComparisonUtils.LINK_ATTRIBUTE_COMPARISON_TOLERANCE) //
+                        && ComparisonUtils.doubleMapEquals4(this.networkLoad, other.networkLoad,
+                                ComparisonUtils.LINK_ATTRIBUTE_COMPARISON_TOLERANCE) //
+                        && Objects.equals(this.containerReports, other.containerReports) //
+                ;
+            }
+        } else {
+            return false;
+        }
     }
 
 }

@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -64,6 +64,7 @@ public class ServiceReport implements Serializable {
         this.nodeName = nodeName;
         this.timestamp = timestamp;
         this.serviceState = serviceState;
+        this.hashCode = Objects.hash(this.nodeName, this.serviceState);
     }
 
     private final NodeIdentifier nodeName;
@@ -75,7 +76,7 @@ public class ServiceReport implements Serializable {
     public final NodeIdentifier getNodeName() {
         return nodeName;
     }
-    
+
     private final long timestamp;
 
     /**
@@ -104,6 +105,9 @@ public class ServiceReport implements Serializable {
         return serviceState;
     }
 
+    /**
+     * Ignores timestamp differences.
+     */
     @Override
     public boolean equals(final Object o) {
         if (null == o) {
@@ -112,15 +116,21 @@ public class ServiceReport implements Serializable {
             return true;
         } else if (o.getClass().equals(getClass())) {
             final ServiceReport other = (ServiceReport) o;
-            return getNodeName().equals(other.getNodeName()) && getServiceState().equals(other.getServiceState());
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return getNodeName().equals(other.getNodeName()) && getServiceState().equals(other.getServiceState());
+            }
         } else {
             return false;
         }
     }
 
+    private final int hashCode;
+
     @Override
     public int hashCode() {
-        return Objects.hash(getNodeName(), getServiceState());
+        return hashCode;
     }
 
     @Override

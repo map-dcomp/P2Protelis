@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -41,6 +41,7 @@ public class DnsNameIdentifier implements NodeIdentifier, Comparable<DnsNameIden
     private static final long serialVersionUID = 1L;
 
     private final String name;
+    private final String nameLower;
 
     /**
      * 
@@ -49,6 +50,8 @@ public class DnsNameIdentifier implements NodeIdentifier, Comparable<DnsNameIden
      */
     public DnsNameIdentifier(@Nonnull final String name) {
         this.name = name;
+        this.nameLower = this.name.toLowerCase();
+        this.hashCode = this.nameLower.hashCode();
     }
 
     @Override
@@ -64,15 +67,21 @@ public class DnsNameIdentifier implements NodeIdentifier, Comparable<DnsNameIden
             return true;
         } else if (getClass().equals(alt.getClass())) {
             final DnsNameIdentifier other = (DnsNameIdentifier) alt;
-            return getName().equalsIgnoreCase(other.getName());
+            if (other.hashCode() != this.hashCode()) {
+                return false;
+            } else {
+                return this.nameLower.equals(other.nameLower);
+            }
         } else {
             return false;
         }
     }
 
+    private final int hashCode;
+
     @Override
     public int hashCode() {
-        return this.name.toLowerCase().hashCode();
+        return hashCode;
     }
 
     @Override
@@ -82,6 +91,6 @@ public class DnsNameIdentifier implements NodeIdentifier, Comparable<DnsNameIden
 
     @Override
     public int compareTo(final DnsNameIdentifier other) {
-        return getName().toLowerCase().compareTo(other.getName().toLowerCase());
+        return this.nameLower.compareTo(other.nameLower);
     }
 }

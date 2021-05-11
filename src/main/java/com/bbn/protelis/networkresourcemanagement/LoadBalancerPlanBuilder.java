@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -36,11 +36,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +59,8 @@ import com.google.common.collect.ImmutableSet;
  *
  */
 public class LoadBalancerPlanBuilder {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoadBalancerPlanBuilder.class);
 
     /**
      * Create an empty plan.
@@ -69,18 +76,26 @@ public class LoadBalancerPlanBuilder {
      * Create a plan based on the current state of a region.
      * 
      * @param prevPlan
-     *            used to get the weights for the containers, may be null
+     *            used to get the weights for the containers
      * @param resourceReports
      *            reports the current state of the region
      */
-    public LoadBalancerPlanBuilder(final LoadBalancerPlan prevPlan,
+    public LoadBalancerPlanBuilder(@Nonnull final LoadBalancerPlan prevPlan,
             @Nonnull final ImmutableSet<ResourceReport> resourceReports) {
         this.region = prevPlan.getRegion();
 
+        // need a mutable version of previous plan state
+        final Map<NodeIdentifier, List<LoadBalancerPlan.ContainerInfo>> previousPlanState = new HashMap<>();
+        prevPlan.getServicePlan().forEach((node, containerInfos) -> {
+            previousPlanState.put(node, new LinkedList<>(containerInfos));
+        });
+
         resourceReports.forEach(report -> {
             final NodeIdentifier nodeId = report.getNodeName();
-            final Collection<LoadBalancerPlan.ContainerInfo> prevNodeState = prevPlan.getServicePlan()
-                    .getOrDefault(nodeId, ImmutableList.of());
+
+            final List<LoadBalancerPlan.ContainerInfo> previousNodePlanState = previousPlanState.computeIfAbsent(nodeId,
+                    k -> new LinkedList<>());
+
             final Collection<LoadBalancerPlan.ContainerInfo> nodeState = plan.computeIfAbsent(nodeId,
                     k -> new LinkedList<>());
 
@@ -89,27 +104,74 @@ public class LoadBalancerPlanBuilder {
                 // is nothing that can be done with them
                 if (!ServiceStatus.STOPPED.equals(containerReport.getServiceStatus())
                         && !ServiceStatus.STOPPING.equals(containerReport.getServiceStatus())) {
-                    final Optional<LoadBalancerPlan.ContainerInfo> oldInfo = prevNodeState.stream()
-                            .filter(i -> container.equals(i.getId())).findAny();
-                    final double weight;
-                    final boolean stopTrafficTo;
-                    final boolean stop;
-                    if (oldInfo.isPresent()) {
-                        weight = oldInfo.get().getWeight();
-                        stopTrafficTo = oldInfo.get().isStopTrafficTo();
-                        stop = oldInfo.get().isStop();
-                    } else {
-                        weight = 1;
-                        stopTrafficTo = false;
-                        stop = false;
-                    }
 
-                    final LoadBalancerPlan.ContainerInfo newInfo = new LoadBalancerPlan.ContainerInfo(container,
-                            containerReport.getService(), weight, stopTrafficTo, stop);
-                    nodeState.add(newInfo);
+                    addToNewNodeState(nodeState, previousNodePlanState, containerReport);
                 } // non-stopped container
+            }); // foreach container report
+
+            // add planned new containers that aren't running yet
+            previousNodePlanState.forEach(cinfo -> {
+                if (null == cinfo.getId()) {
+                    nodeState.add(cinfo);
+                }
             });
-        });
+
+        }); // foreach resource report
+
+    }
+
+    private void addToNewNodeState(final Collection<LoadBalancerPlan.ContainerInfo> nodeState,
+            final List<LoadBalancerPlan.ContainerInfo> previousNodePlanState,
+            final ContainerResourceReport containerReport) {
+        // check for a match by container ID
+        final Optional<LoadBalancerPlan.ContainerInfo> idMatch = previousNodePlanState.stream()
+                .filter(c -> Objects.equals(c.getId(), containerReport.getContainerName())).findFirst();
+        if (idMatch.isPresent()) {
+            final LoadBalancerPlan.ContainerInfo cinfo = idMatch.get();
+            if (!containerReport.getService().equals(cinfo.getService())) {
+                LOGGER.warn(
+                        "Service running on container {} is {}, however the previous plan wanted {} running on this container",
+                        containerReport.getContainerName(), containerReport.getService(), cinfo.getService());
+            }
+            nodeState.add(createNewContainerInfo(containerReport, cinfo));
+            previousNodePlanState.remove(cinfo);
+            return;
+        }
+
+        // check for a new container on the node with the same service
+        final Optional<LoadBalancerPlan.ContainerInfo> newContainerMatch = previousNodePlanState.stream()
+                .filter(c -> null == c.getId() && c.getService().equals(containerReport.getService())).findFirst();
+        if (newContainerMatch.isPresent()) {
+            final LoadBalancerPlan.ContainerInfo cinfo = newContainerMatch.get();
+            nodeState.add(createNewContainerInfo(containerReport, cinfo));
+            previousNodePlanState.remove(cinfo);
+            return;
+        }
+
+        // no matches
+        LOGGER.warn("Cannot find a match for container {} with service {} in {}", containerReport.getContainerName(),
+                containerReport.getService(), previousNodePlanState);
+        nodeState.add(createNewContainerInfo(containerReport, null));
+    }
+
+    private LoadBalancerPlan.ContainerInfo createNewContainerInfo(final ContainerResourceReport containerReport,
+            final LoadBalancerPlan.ContainerInfo oldInfo) {
+        final double weight;
+        final boolean stopTrafficTo;
+        final boolean stop;
+        if (null != oldInfo) {
+            weight = oldInfo.getWeight();
+            stopTrafficTo = oldInfo.isStopTrafficTo();
+            stop = oldInfo.isStop();
+        } else {
+            weight = 1;
+            stopTrafficTo = false;
+            stop = false;
+        }
+
+        final LoadBalancerPlan.ContainerInfo newInfo = new LoadBalancerPlan.ContainerInfo(
+                containerReport.getContainerName(), containerReport.getService(), weight, stopTrafficTo, stop);
+        return newInfo;
     }
 
     private final RegionIdentifier region;
@@ -364,7 +426,8 @@ public class LoadBalancerPlanBuilder {
         final Optional<LoadBalancerPlan.ContainerInfo> infoFound = plan.getOrDefault(node, Collections.emptyList())
                 .stream().filter(i -> container.equals(i.getId())).findAny();
         if (!infoFound.isPresent()) {
-            throw new IllegalArgumentException("Cannot find container '" + container + "' on node '" + node + "'");
+            throw new IllegalArgumentException(
+                    "Cannot find container '" + container + "' on node '" + node + "' in " + plan);
         }
 
         return infoFound.get();

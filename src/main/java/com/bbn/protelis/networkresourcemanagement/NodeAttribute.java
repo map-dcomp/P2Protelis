@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -53,7 +53,8 @@ public class NodeAttribute implements Serializable {
     public static final NodeAttribute TASK_CONTAINERS = new NodeAttribute("TASK_CONTAINERS");
 
     /**
-     * Example of an application specific metric.
+     * The length of the queue for an application. Some applications may provide
+     * this, some may not. The capacity value for this is not specified.
      */
     public static final NodeAttribute QUEUE_LENGTH = new NodeAttribute("QueueLength", true);
 
@@ -91,6 +92,7 @@ public class NodeAttribute implements Serializable {
             @JsonProperty("applicationSpecific") final boolean applicationSpecific) {
         this.name = name;
         this.applicationSpecific = applicationSpecific;
+        this.hashCode = Objects.hash(applicationSpecific, name);
     }
 
     private final boolean applicationSpecific;
@@ -114,9 +116,11 @@ public class NodeAttribute implements Serializable {
         return name;
     }
 
+    private final int hashCode;
+
     @Override
     public int hashCode() {
-        return Objects.hash(applicationSpecific, name);
+        return hashCode;
     }
 
     /**
@@ -128,8 +132,13 @@ public class NodeAttribute implements Serializable {
             return true;
         } else if (o instanceof NodeAttribute) {
             final NodeAttribute other = (NodeAttribute) o;
-            return Objects.equals(getName(), other.getName())
-                    && isApplicationSpecific() == other.isApplicationSpecific();
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return isApplicationSpecific() == other.isApplicationSpecific() //
+                        && Objects.equals(getName(), other.getName()) //
+                ;
+            }
         } else {
             return false;
         }

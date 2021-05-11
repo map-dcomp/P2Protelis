@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -59,6 +59,7 @@ public class ServiceState implements Serializable {
             @JsonProperty("status") @Nonnull final ServiceStatus status) {
         this.service = service;
         this.status = status;
+        this.hashCode = Objects.hash(this.service, this.status);
     }
 
     private final ServiceIdentifier<?> service;
@@ -91,15 +92,21 @@ public class ServiceState implements Serializable {
             return false;
         } else if (o.getClass().equals(this.getClass())) {
             final ServiceState other = (ServiceState) o;
-            return getService().equals(other.getService()) && getStatus().equals(other.getStatus());
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return getService().equals(other.getService()) && getStatus().equals(other.getStatus());
+            }
         } else {
             return false;
         }
     }
 
+    private final int hashCode;
+
     @Override
     public int hashCode() {
-        return Objects.hash(getService(), getStatus());
+        return hashCode;
     }
 
     @Override

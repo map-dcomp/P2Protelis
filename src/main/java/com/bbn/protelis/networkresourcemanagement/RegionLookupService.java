@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -48,8 +48,10 @@ public interface RegionLookupService {
      *            the node to lookup, may be the id of a {@link NetworkServer}
      *            or {@link NetworkClient}.
      * 
-     * @return the region for the node or null if the node cannot be found
+     * @return the region for the node or {@link RegionIdentifier#UNKNOWN} if
+     *         the node cannot be found
      */
+    @Nonnull
     RegionIdentifier getRegionForNode(@Nonnull NodeIdentifier nodeId);
 
 }

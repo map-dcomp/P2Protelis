@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -99,11 +99,14 @@ public abstract class AbstractFlow<T> implements Serializable {
         this.source = source;
         this.destination = destination;
         this.server = server;
+        this.hashCode = Objects.hash(source, destination);
     }
+
+    private final int hashCode;
 
     @Override
     public int hashCode() {
-        return Objects.hash(source, destination);
+        return hashCode;
     }
 
     /**
@@ -119,9 +122,13 @@ public abstract class AbstractFlow<T> implements Serializable {
         } else if (getClass() == o.getClass()) {
             @SuppressWarnings("unchecked") // can't get the generic type
             final AbstractFlow<T> other = (AbstractFlow<T>) o;
-            return Objects.equals(getSource(), other.getSource()) //
-                    && Objects.equals(getDestination(), other.getDestination()) //
-                    && Objects.equals(getServer(), other.getServer());
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return Objects.equals(getSource(), other.getSource()) //
+                        && Objects.equals(getDestination(), other.getDestination()) //
+                        && Objects.equals(getServer(), other.getServer());
+            }
         } else {
             return false;
         }
@@ -129,7 +136,8 @@ public abstract class AbstractFlow<T> implements Serializable {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ": [" + getSource() + " <-> " + getDestination() + " server: " + getServer() + "]";
+        return getClass().getSimpleName() + ": [" + getSource() + " <-> " + getDestination() + " server: " + getServer()
+                + "]";
     }
 
 }

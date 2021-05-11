@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -56,6 +56,13 @@ public class LinkAttribute implements Serializable {
     public static final LinkAttribute DATARATE_RX = new LinkAttribute("DATARATE_RX");
 
     /**
+     * Link delay in milliseconds. There is no capacity value for this
+     * attribute. When this information is summarized across a region only link
+     * delays between regions are considered.
+     */
+    public static final LinkAttribute DELAY = new LinkAttribute("DELAY");
+
+    /**
      * Calls {@link #LinkAttribute(String, boolean)} with application specific
      * set to false.
      * 
@@ -77,6 +84,7 @@ public class LinkAttribute implements Serializable {
             @JsonProperty("applicationSpecific") final boolean applicationSpecific) {
         this.name = name;
         this.applicationSpecific = applicationSpecific;
+        this.hashCode = Objects.hash(applicationSpecific, name);
     }
 
     private final boolean applicationSpecific;
@@ -100,9 +108,11 @@ public class LinkAttribute implements Serializable {
         return name;
     }
 
+    private final int hashCode;
+
     @Override
     public int hashCode() {
-        return Objects.hash(applicationSpecific, name);
+        return hashCode;
     }
 
     /**
@@ -114,7 +124,11 @@ public class LinkAttribute implements Serializable {
             return true;
         } else if (o instanceof LinkAttribute) {
             final LinkAttribute other = (LinkAttribute) o;
-            return Objects.equals(getName(), other.getName());
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return Objects.equals(getName(), other.getName());
+            }
         } else {
             return false;
         }

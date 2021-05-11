@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -32,10 +32,13 @@ BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -43,7 +46,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.nustaq.net.TCPObjectSocket;
 import org.nustaq.serialization.FSTObjectOutput;
 import org.protelis.lang.datatype.DeviceUID;
 import org.protelis.lang.datatype.Tuple;
@@ -161,6 +163,12 @@ public class NodeNetworkManager implements NetworkManager {
 
     @Override
     public void shareState(final Map<CodePath, Object> toSend) {
+        // make a copy because the data structure inside Protelis being passed
+        // is actually LinkedHashMap and reading from that data structure can
+        // alter
+        // the internal structure of the map causing problems with serialization
+        final Map<CodePath, Object> localSend = Collections.unmodifiableMap(new HashMap<>(toSend));
+
         // copy the list so that we don't hold the lock while sending all of the
         // messages
         final Map<DeviceUID, NetworkNeighbor> nbrsCopy = new HashMap<>();
@@ -168,13 +176,13 @@ public class NodeNetworkManager implements NetworkManager {
             nbrsCopy.putAll(nbrs);
         }
 
-        PROFILE_LOGGER.debug("Top of share AP round {} sending from {} - neighbors: {}", node.getExecutionCount(), node,
+        LOGGER.debug("Top of share AP round {} sending from {} - neighbors: {}", node.getExecutionCount(), node,
                 nbrsCopy.keySet());
 
         if (PROFILE_LOGGER.isDebugEnabled()) {
             try (ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
                 try (FSTObjectOutput oos = new FSTObjectOutput(bytes)) {
-                    oos.writeObject(toSend);
+                    oos.writeObject(localSend);
                 } catch (final IOException e) {
                     PROFILE_LOGGER.error("Error writing object to byte stream for measurement", e);
                 }
@@ -186,7 +194,7 @@ public class NodeNetworkManager implements NetworkManager {
         }
 
         if (PROFILE_LOGGER.isTraceEnabled()) {
-            toSend.forEach((code, o) -> {
+            localSend.forEach((code, o) -> {
                 if (PROFILE_LOGGER.isDebugEnabled()) {
                     try (ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
                         try (FSTObjectOutput oos = new FSTObjectOutput(bytes)) {
@@ -206,22 +214,18 @@ public class NodeNetworkManager implements NetworkManager {
             });
         }
 
-        final Map<DeviceUID, NetworkNeighbor> toRemove = new HashMap<>();
-        for (final Map.Entry<DeviceUID, NetworkNeighbor> entry : nbrsCopy.entrySet()) {
+        final Map<DeviceUID, NetworkNeighbor> toRemove = nbrsCopy.entrySet().stream().map(entry -> {
             final NetworkNeighbor neighbor = entry.getValue();
-            LOGGER.trace("Sending message to {}", entry.getKey());
-
-            try {
-                neighbor.sendMessage(toSend);
-            } catch (final IOException e) {
-                if (!neighbor.isRunning()) {
-                    LOGGER.debug("Neighbor has stopped, removing. Neighbor: " + entry.getKey(), e);
-                } else {
-                    LOGGER.error("Got error sending message to neighbor, removing. Neighbor: " + entry.getKey(), e);
-                }
-                toRemove.put(entry.getKey(), neighbor);
+            if (!neighbor.isRunning()) {
+                LOGGER.warn("{} is not running, removing from the list of active connections", entry.getKey());
+                return entry;
             }
-        }
+
+            LOGGER.trace("Sending message from {} to {}", node.getName(), entry.getKey());
+            neighbor.shareApState(localSend);
+            LOGGER.trace("Finished sending message from {} to {}", node.getName(), entry.getKey());
+            return null;
+        }).filter(e -> null != e).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         if (!toRemove.isEmpty()) {
             synchronized (lock) {
@@ -232,7 +236,7 @@ public class NodeNetworkManager implements NetworkManager {
             }
         }
 
-        PROFILE_LOGGER.debug("Bottom of share AP round {} sending from {}", node.getExecutionCount(), node);
+        LOGGER.debug("Bottom of share AP round {} sending from {}", node.getExecutionCount(), node);
     }
 
     /**
@@ -274,11 +278,11 @@ public class NodeNetworkManager implements NetworkManager {
             nbrsCopy.putAll(nbrs);
         }
 
-        for (final DeviceUID neighborUID : node.getApNeighbors()) {
+        node.getApNeighbors().parallelStream().forEach(neighborUID -> {
             if (!nbrsCopy.containsKey(neighborUID)) {
                 connectToNeighbor(neighborUID);
             }
-        }
+        });
     }
 
     /**
@@ -321,14 +325,6 @@ public class NodeNetworkManager implements NetworkManager {
             // stop talking to neighbors
             nbrs.forEach((k, v) -> {
                 v.terminate();
-                try {
-                    LOGGER.trace("Waiting on {}", v.getName());
-                    v.join();
-                } catch (final InterruptedException e) {
-                    if (LOGGER.isTraceEnabled()) {
-                        LOGGER.trace("Interrupted during join", e);
-                    }
-                }
             });
 
             // force one to stop listening
@@ -347,29 +343,33 @@ public class NodeNetworkManager implements NetworkManager {
     /** neighbor -> connection */
     private final Map<NodeIdentifier, NetworkNeighbor> nbrs = new HashMap<>();
 
-    private void
-            addNeighbor(final NodeIdentifier uid, final int nonce, final Socket s, final TCPObjectSocket serializer) {
+    private void addNeighbor(final int nonce,
+            final NodeIdentifier neighborId,
+            final Socket s,
+            final DataInputStream input,
+            final DataOutputStream output) {
         synchronized (lock) {
             // symmetry-break nonce
             // If UID isn't already linked, add a new neighbor
 
             final InetSocketAddress remoteAddr = new InetSocketAddress(s.getInetAddress(), s.getPort());
-            final NetworkNeighbor other = nbrs.get(uid);
+            final NetworkNeighbor other = nbrs.get(neighborId);
             if (null == other || other.getNonce() < nonce) {
                 if (null != other) {
-                    LOGGER.debug("Closing remote connection from {} because there's a connection to them", uid);
+                    LOGGER.debug("Closing remote connection from {} because there's a connection to them", neighborId);
                     other.terminate();
                 }
 
-                final NetworkNeighbor neighbor = new NetworkNeighbor(node, uid, nonce, remoteAddr, s, serializer);
-                nbrs.put(uid, neighbor);
+                final NetworkNeighbor neighbor = new NetworkNeighbor(node, neighborId, nonce, remoteAddr, s, input,
+                        output);
+                nbrs.put(neighborId, neighbor);
                 neighbor.start();
-                LOGGER.debug("Started new neighbor connection with {}", uid);
+                LOGGER.debug("Started new neighbor connection with {}", neighborId);
             } else {
-                LOGGER.debug("Closing connection to {} because we already have a connection from them", uid,
+                LOGGER.debug("Closing connection to {} because we already have a connection from them", neighborId,
                         node.getNodeIdentifier());
                 try {
-                    serializer.writeObject(NetworkNeighbor.CLOSE_CONNECTION);
+                    writeCloseConnection(output);
                 } catch (final IOException e) {
                     LOGGER.debug("Error writing close to neighbor, ignoring", e);
                 } catch (final Exception e) {
@@ -377,9 +377,15 @@ public class NodeNetworkManager implements NetworkManager {
                 }
 
                 try {
-                    serializer.close();
+                    input.close();
                 } catch (final IOException e) {
-                    LOGGER.debug("Error closing serializer to neighbor, ignoring", e);
+                    LOGGER.debug("Error closing input to neighbor, ignoring", e);
+                }
+
+                try {
+                    output.close();
+                } catch (final IOException e) {
+                    LOGGER.debug("Error closing output to neighbor, ignoring", e);
                 }
 
                 try {
@@ -389,6 +395,19 @@ public class NodeNetworkManager implements NetworkManager {
                 }
             }
         } // lock so that we don't add 2 connections to the neighbor
+    }
+
+    /**
+     * Write the message that the connection should close.
+     * 
+     * @param output
+     *            where to write the message
+     * @throws IOException
+     *             if there is an error writing to {@code output}
+     */
+    public static void writeCloseConnection(final DataOutputStream output) throws IOException {
+        output.write(MESSAGE_TYPE_CLOSE);
+        output.flush();
     }
 
     private ServerSocket server = null;
@@ -421,29 +440,36 @@ public class NodeNetworkManager implements NetworkManager {
                     while (running) {
                         final Socket s = server.accept();
 
-                        LOGGER.debug("Got a connection from {}", s.getInetAddress());
+                        LOGGER.debug("Got a connection from {}", s.getRemoteSocketAddress());
 
                         // don't need a thread here since addNeighbor will take
                         // care of creating a thread to service the connection.
                         try {
-                            final TCPObjectSocket serializer = new TCPObjectSocket(s,
-                                    GlobalNetworkConfiguration.getInstance().getFstConfiguration());
+                            final DataOutputStream output = new DataOutputStream(s.getOutputStream());
+                            final DataInputStream input = new DataInputStream(s.getInputStream());
 
                             // If the link connects, trade UIDs
 
                             // write uid for neighbor
                             LOGGER.trace("Writing node identifier to new connection");
-                            serializer.writeObject(node.getNodeIdentifier());
-                            serializer.flush();
+                            writeHello(output, RANDOM.nextInt(), node.getNodeIdentifier());
 
                             // reads data from connectToNeighbor()
-                            LOGGER.trace("Reading node identifier and nonce from neighbor {}", s.getInetAddress());
-                            final NodeIdentifier uid = (NodeIdentifier) serializer.readObject();
-                            final int nonce = ((Integer) serializer.readObject()).intValue();
-                            LOGGER.trace("Received uid {} and nonce {} from {}", uid, nonce, s.getInetAddress());
+                            LOGGER.trace("Reading node identifier and nonce from neighbor {}",
+                                    s.getRemoteSocketAddress());
+                            final byte remoteMessageType = input.readByte();
+                            if (remoteMessageType == MESSAGE_TYPE_HELLO) {
+                                final HelloMessage remoteHello = HelloMessage.readMessage(input);
 
-                            addNeighbor(uid, nonce, s, serializer);
-                        } catch (final Exception e) {
+                                addNeighbor(remoteHello.getNonce(), remoteHello.getId(), s, input, output);
+                                LOGGER.trace("Received uid {} and nonce {} from {}", remoteHello.getId(),
+                                        remoteHello.getNonce(), s.getRemoteSocketAddress());
+                            } else {
+                                LOGGER.error("Unexpected message type from neighbor: "
+                                        + String.format("%02x", remoteMessageType));
+                                s.close();
+                            }
+                        } catch (final IOException e) {
                             if (LOGGER.isDebugEnabled()) {
                                 LOGGER.debug("Got exception creating link to neighbor that connected to us.", e);
                             }
@@ -480,12 +506,31 @@ public class NodeNetworkManager implements NetworkManager {
     }
 
     /**
+     * 
+     * @param output
+     *            where to write the message
+     * @param nonce
+     *            see {@link HelloMessage#getNonce()}
+     * @param id
+     *            see {@link HelloMessage#getId()}
+     * @throws IOException
+     *             if there is an error writing to or flushing the stream
+     */
+    public static void writeHello(final DataOutputStream output, final int nonce, final NodeIdentifier id)
+            throws IOException {
+        final HelloMessage localHello = new HelloMessage(id, nonce);
+        output.writeByte(MESSAGE_TYPE_HELLO);
+        localHello.writeMessage(output);
+        output.flush();
+    }
+
+    /**
      * Attempt to create a connection to a neighbor.
      * 
      * @param neighborNode
      *            the neighbor to connect to
      */
-    private void connectToNeighbor(final DeviceUID neighborUID) {
+    private void connectToNeighbor(final NodeIdentifier neighborUID) {
         final InetSocketAddress addr = lookupService.getInetAddressForNode(neighborUID);
         if (null == addr) {
             LOGGER.warn(neighborUID
@@ -499,25 +544,41 @@ public class NodeNetworkManager implements NetworkManager {
             // Try to link
             final Socket s = new Socket(addr.getAddress(), addr.getPort());
 
-            final Integer nonce = RANDOM.nextInt();
+            final int nonce = RANDOM.nextInt();
 
-            final TCPObjectSocket serializer = new TCPObjectSocket(s,
-                    GlobalNetworkConfiguration.getInstance().getFstConfiguration());
+            final DataOutputStream output = new DataOutputStream(s.getOutputStream());
+            final DataInputStream input = new DataInputStream(s.getInputStream());
 
             // If the link connects, trade UIDs
+            writeHello(output, nonce, node.getNodeIdentifier());
+
             LOGGER.debug("Reading identifier from neighbor {}", node.getNodeIdentifier());
-            final NodeIdentifier neighborUid = (NodeIdentifier) serializer.readObject();
+            final byte remoteMessageType = input.readByte();
+            if (remoteMessageType == MESSAGE_TYPE_HELLO) {
+                final HelloMessage remoteHello = HelloMessage.readMessage(input);
 
-            serializer.writeObject(node.getNodeIdentifier());
-            serializer.writeObject(nonce);
-            serializer.flush();
-
-            addNeighbor(neighborUid, nonce, s, serializer);
-        } catch (final Exception e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Couldn't connect to neighbor: {}. Will try again later.", neighborUID, e);
+                addNeighbor(nonce, remoteHello.getId(), s, input, output);
+            } else {
+                LOGGER.error("Unexpected message type connecting to neighbor {}: {}", neighborUID,
+                        String.format("%02x", remoteMessageType));
+                s.close();
             }
+        } catch (final Exception e) {
+            LOGGER.debug("Couldn't connect to neighbor: {} at {}. Will try again later.", neighborUID, addr, e);
         }
     }
+
+    /**
+     * Message type for {@link ShareDataMessage}.
+     */
+    public static final byte MESSAGE_TYPE_AP_SHARE = 1;
+    /**
+     * Message type for {@link HelloMessage}.
+     */
+    public static final byte MESSAGE_TYPE_HELLO = 2;
+    /**
+     * Message type for closing of the connection.
+     */
+    public static final byte MESSAGE_TYPE_CLOSE = 3;
 
 }

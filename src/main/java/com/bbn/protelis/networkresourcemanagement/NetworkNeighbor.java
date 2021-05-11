@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -31,17 +31,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BBN_LICENSE_END*/
 package com.bbn.protelis.networkresourcemanagement;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OptionalDataException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
-import org.nustaq.net.TCPObjectSocket;
-import org.protelis.lang.datatype.DeviceUID;
+import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.protelis.vm.CodePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,18 +54,20 @@ import org.slf4j.LoggerFactory;
  * send and receive data.
  */
 /* package */
-final class NetworkNeighbor extends Thread {
+final class NetworkNeighbor {
 
     private final Logger logger;
 
+    @GuardedBy("sharedValuesLock")
     private Map<CodePath, Object> sharedValues = new HashMap<>();
+    private final Object sharedValuesLock = new Object();
 
     /**
      * @return The data most recently shared from the remote
      *         {@link NetworkServer}. Not null.
      */
     public Map<CodePath, Object> getSharedValues() {
-        synchronized (lock) {
+        synchronized (sharedValuesLock) {
             if (null == sharedValues) {
                 return new HashMap<CodePath, Object>();
             } else {
@@ -82,38 +87,34 @@ final class NetworkNeighbor extends Thread {
 
     private final int nonce;
 
-    private final TCPObjectSocket serializer;
+    private final DataInputStream input;
+    @GuardedBy("sendLock")
+    private final DataOutputStream output;
     private final Socket socket;
+    private final Object sendLock = new Object();
 
-    // use separate object rather than this to keep other objects from blocking
-    // us
-    private final Object lock = new Object();
+    private final Thread readThread;
+    private final Thread sendThread;
 
     /* package */ NetworkNeighbor(final NetworkServer selfNode,
-            final DeviceUID neighborUid,
+            final NodeIdentifier neighborUid,
             final int nonce,
             final InetSocketAddress addr,
             final Socket s,
-            final TCPObjectSocket serializer) {
-        super(String.format("%s_to_%s_port_%d", selfNode.getNodeIdentifier(), neighborUid, addr.getPort()));
-        logger = LoggerFactory.getLogger(NetworkNeighbor.class.getName() + "." + getName());
+            final DataInputStream input,
+            final DataOutputStream output) {
+        final String baseName = String.format("%s_to_%s_port_%d", selfNode.getNodeIdentifier(), neighborUid,
+                addr.getPort());
 
-        this.serializer = serializer;
+        logger = LoggerFactory.getLogger(NetworkNeighbor.class.getName() + "." + baseName);
+
+        readThread = new Thread(this::readData, baseName + "-receive");
+        sendThread = new Thread(this::sendData, baseName + "-send");
+
+        this.input = input;
+        this.output = output;
         this.socket = s;
         this.nonce = nonce;
-    }
-
-    private long lastTouched = System.currentTimeMillis();
-
-    /**
-     * The last time this link sent or received a message.
-     * 
-     * @return milliseconds since epoch
-     */
-    public long getLastTouched() {
-        synchronized (lock) {
-            return lastTouched;
-        }
     }
 
     private AtomicBoolean running = new AtomicBoolean(false);
@@ -124,6 +125,21 @@ final class NetworkNeighbor extends Thread {
      */
     public boolean isRunning() {
         return running.get();
+    }
+
+    /**
+     * Start reading and writing on the socket.
+     * 
+     * @throws IllegalThreadStateException
+     *             if the threads are already running
+     */
+    public void start() {
+        if (isRunning()) {
+            throw new IllegalThreadStateException("Already running");
+        }
+        running.set(true);
+        readThread.start();
+        sendThread.start();
     }
 
     private final Random random = new Random();
@@ -142,79 +158,84 @@ final class NetworkNeighbor extends Thread {
     /**
      * Listen for incoming packets
      */
-    @Override
-    public void run() {
-        running.set(true);
+    private void readData() {
         try {
             while (running.get()) {
-                final Object incoming = serializer.readObject();
-                if (incoming instanceof String) {
-                    if (CLOSE_CONNECTION.equals(incoming)) {
-                        logger.debug("Received close connection message, exiting");
-                        break;
-                    }
-                } else {
-                    @SuppressWarnings("unchecked")
-                    final Map<CodePath, Object> shared = (incoming instanceof Map) ? (Map<CodePath, Object>) incoming
-                            : null;
+                final byte messageType = input.readByte();
+                if (NodeNetworkManager.MESSAGE_TYPE_AP_SHARE == messageType) {
+                    final ShareDataMessage msg = ShareDataMessage.readMessage(input);
 
                     if (!simulateDroppedMessage()) {
-                        synchronized (lock) {
-                            sharedValues = shared;
-                            lastTouched = System.currentTimeMillis();
+                        synchronized (sharedValuesLock) {
+                            sharedValues = applyDelta(msg.getData());
                         }
                     }
+                } else if (NodeNetworkManager.MESSAGE_TYPE_CLOSE == messageType) {
+                    logger.debug("Received close connection message, exiting");
+                    break;
+                } else {
+                    logger.error("Received unexpected message type ({}), assuming corrupted stream and exiting",
+                            String.format("%02x", messageType));
+                    break;
                 }
             }
-        } catch (final ClassNotFoundException e) {
-            logger.error(getName()
-                    + ": Error decoding object from neighbor. This suggests that the JVMs are out of sync with respect to class objects",
-                    e);
+        } catch (final StreamSyncLostException e) {
+            logger.error("Lost sync of the AP stream", e);
         } catch (final OptionalDataException e) {
-            logger.error(getName() + ": failed to read data from neighbor. eof: " + e.eof + " length: " + e.length, e);
+            logger.error("failed to read data from neighbor. eof: " + e.eof + " length: " + e.length, e);
         } catch (final IOException e) {
             if (!running.get()) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug(getName() + ": failed to receive from neighbor (in shutdown)", e);
+                    logger.debug("failed to receive from neighbor (in shutdown)", e);
                 }
             } else {
-                logger.error(getName() + ": failed to receive from neighbor", e);
+                logger.error("failed to receive from neighbor", e);
             }
         } catch (final Exception e) {
-            logger.error(getName() + ": unexpected exception", e);
+            logger.error("unexpected exception receiving", e);
         } finally {
             terminate();
         }
     }
 
     /**
-     * Sent to signify that the connection should be closed. This is sent as an
-     * object on the stream.
-     */
-    public static final String CLOSE_CONNECTION = "CLOSE_CONNETION";
-
-    /**
      * Terminate the connection.
      */
     public void terminate() {
+        if (!running.get()) {
+            // already shutdown or in terminate already
+            return;
+        }
+
         logger.debug("Terminating connection");
 
-        try {
-            serializer.writeObject(CLOSE_CONNECTION);
-        } catch (final IOException e) {
-            logger.debug("Got error writing close message, ignoring", e);
-        } catch (final Exception e) {
-            logger.error("Unexpected exception writing close message, ignoring", e);
+        synchronized (sendLock) {
+            try {
+                NodeNetworkManager.writeCloseConnection(output);
+            } catch (final IOException e) {
+                logger.debug("Got error writing close message, ignoring", e);
+            } catch (final Exception e) {
+                logger.error("Unexpected exception writing close message, ignoring", e);
+            }
         }
 
         running.set(false);
-        interrupt();
+        readThread.interrupt();
+        sendThread.interrupt();
 
         try {
-            serializer.close();
+            input.close();
         } catch (final IOException e) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Got error closing input stream on shutdown, ignoring.", e);
+            }
+        }
+
+        try {
+            output.close();
+        } catch (final IOException e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got error closing output stream on shutdown, ignoring.", e);
             }
         }
 
@@ -227,6 +248,135 @@ final class NetworkNeighbor extends Thread {
         }
     }
 
+    private final Object apDataLock = new Object();
+    @GuardedBy("apDataLock")
+    private Map<CodePath, Object> nextApStateToShare = null;
+
+    /**
+     * Share some state with this neighbor. This state will be shared as soon as
+     * the network is available.
+     * 
+     * @param stateToShare
+     *            the state to be shared
+     */
+    public void shareApState(final Map<CodePath, Object> stateToShare) {
+        synchronized (apDataLock) {
+            nextApStateToShare = stateToShare;
+            apDataLock.notifyAll();
+        }
+    }
+
+    private void sendData() {
+        try {
+            while (running.get()) {
+                final Map<CodePath, Object> toSend;
+
+                synchronized (apDataLock) {
+                    while (running.get() && null == nextApStateToShare) {
+                        try {
+                            logger.trace("Waiting for AP data");
+                            apDataLock.wait();
+                        } catch (final InterruptedException interrupted) {
+                            logger.debug("Got interrupted waiting for AP data to send", interrupted);
+                        }
+                    }
+                    toSend = nextApStateToShare;
+                    nextApStateToShare = null;
+                }
+
+                if (null != toSend) {
+                    logger.trace("Sending ap state");
+                    sendApState(toSend);
+                }
+            }
+        } catch (final IOException e) {
+            if (!running.get()) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("failed to send to neighbor (in shutdown)", e);
+                }
+            } else {
+                logger.error("failed to send to neighbor", e);
+            }
+        } catch (final Exception e) {
+            logger.error("unexpected exception sending", e);
+        } finally {
+            logger.info("Terminating sendData");
+            terminate();
+        }
+    }
+
+    private Map<CodePath, Object> previouslySentState = new HashMap<>();
+
+    private static final String AP_STATE_DELETE_KEY = "delete-key";
+
+    private Map<CodePath, Object> applyDelta(final Map<CodePath, Object> receivedData) {
+        if (GlobalNetworkConfiguration.getInstance().getUseDeltaCompression()) {
+            final Map<CodePath, Object> newShared = getSharedValues();
+            receivedData.forEach((codePath, newValue) -> {
+                if (AP_STATE_DELETE_KEY.equals(newValue)) {
+                    newShared.remove(codePath);
+                } else {
+                    newShared.put(codePath, newValue);
+                }
+            });
+            return newShared;
+        } else {
+            return receivedData;
+        }
+    }
+
+    private Map<CodePath, Object> doDeltaCompression(final Map<CodePath, Object> toSend) {
+        if (GlobalNetworkConfiguration.getInstance().getUseDeltaCompression()) {
+            // use parallel stream in case the equals implementation is slow
+            final Map<CodePath, Object> newData = toSend.entrySet().parallelStream() //
+                    .map(entry -> {
+                        final CodePath path = entry.getKey();
+                        final Object data = entry.getValue();
+                        if (previouslySentState.containsKey(path)) {
+                            final Object prevData = previouslySentState.get(path);
+                            if (Objects.equals(prevData, data)) {
+                                // if the data hasn't changed, don't send it
+                                return null;
+                            } else {
+                                return entry;
+                            }
+                        } else {
+                            return entry;
+                        }
+                    }) //
+                    .filter(e -> null != e) //
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            previouslySentState.forEach((codePath, value) -> {
+                if (!toSend.containsKey(codePath)) {
+                    newData.put(codePath, AP_STATE_DELETE_KEY);
+                }
+            });
+            return newData;
+        } else {
+            return toSend;
+        }
+    }
+
+    private void sendApState(final Map<CodePath, Object> fullToSend) throws IOException {
+
+        // The encoding of the message is done here rather than in
+        // NodeNetworkManager so that we can do delta
+        // compression on the Map.
+        final Map<CodePath, Object> deltaToSend = doDeltaCompression(fullToSend);
+
+        logger.debug("Start encode AP data");
+        final ShareDataMessage message = new ShareDataMessage(deltaToSend);
+        logger.debug("End encode AP data");
+
+        logger.debug("Start send of AP data");
+        sendMessage(NodeNetworkManager.MESSAGE_TYPE_AP_SHARE, message);
+        logger.debug("End send of AP data");
+
+        // if sendMessage didn't throw an exception, we assume that the state
+        // has been sent
+        previouslySentState = fullToSend;
+    }
+
     /**
      * Send a message to this neighbor.
      * 
@@ -235,25 +385,16 @@ final class NetworkNeighbor extends Thread {
      * @throws IOException
      *             when there is an error writing
      */
-    public void sendMessage(final Map<CodePath, Object> toSend) throws IOException {
-        if (!isInterrupted() && running.get()) {
-            synchronized (lock) {
-                try {
-                    logger.trace("sendMessage is calling writeObject num elements: {}", toSend.size());
-                    serializer.writeObject(toSend);
+    private void sendMessage(final byte messageType, final ApMessage msg) throws IOException {
+        if (running.get()) {
+            synchronized (sendLock) {
+                output.writeByte(messageType);
+                msg.writeMessage(output);
 
-                    logger.trace("sendMessage is calling flush");
-                    serializer.flush();
-                    lastTouched = System.currentTimeMillis();
+                logger.trace("sendMessage is calling flush");
+                output.flush();
 
-                    logger.trace("sendMessage finished");
-                } catch (final IOException e) {
-                    throw e;
-                } catch (final Exception e) {
-                    // this should never come up as writeObject should only
-                    // throw IOException
-                    throw new RuntimeException("Unexpected exception writing object", e);
-                }
+                logger.trace("sendMessage finished");
             }
         }
     }

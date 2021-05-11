@@ -1,5 +1,5 @@
 /*BBN_LICENSE_START -- DO NOT MODIFY BETWEEN LICENSE_{START,END} Lines
-Copyright (c) <2017,2018,2019,2020>, <Raytheon BBN Technologies>
+Copyright (c) <2017,2018,2019,2020,2021>, <Raytheon BBN Technologies>
 To be applied to the DCOMP/MAP Public Source Code Release dated 2018-04-19, with
 the exception of the dcop implementation identified below (see notes).
 
@@ -36,6 +36,7 @@ import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
+import com.bbn.protelis.utils.ComparisonUtils;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -86,6 +87,8 @@ public class LoadBalancerPlan implements Serializable {
         this.timestamp = timestamp;
         this.servicePlan = servicePlan;
         this.overflowPlan = overflowPlan;
+        // don't include things that use a fuzzy match in equals
+        this.hashCode = Objects.hash(regionName, this.servicePlan);
     }
 
     /**
@@ -103,6 +106,7 @@ public class LoadBalancerPlan implements Serializable {
         this.regionName = region;
         this.servicePlan = servicePlan;
         this.overflowPlan = overflowPlan;
+        this.hashCode = Objects.hash(regionName, this.servicePlan, this.overflowPlan);
     }
 
     private final RegionIdentifier regionName;
@@ -157,9 +161,11 @@ public class LoadBalancerPlan implements Serializable {
      * Plan for handling overflow. This is usually based on
      * {@link RegionPlan#getPlan()} and the current load in the region.
      * 
-     * An empty map means all traffic stays local. If the overflow plan is
-     * populated and the current region isn't included in the plan, this means
-     * that ALL traffic should be sent to other regions.
+     * An empty map means all traffic stays local if there are containers
+     * started in the current region, otherwise the traffic all goes to the
+     * default region for the service. If the overflow plan is populated and the
+     * current region isn't included in the plan, this means that ALL traffic
+     * should be sent to other regions.
      * 
      * @return the plan. service -> region to send traffic to -> value, ideally
      *         a value between 0 and 1 that represents a percentage of traffic
@@ -171,12 +177,14 @@ public class LoadBalancerPlan implements Serializable {
         return overflowPlan;
     }
 
+    private final int hashCode;
+
     /**
      * Creates a hash for this plan without considering the timestamp.
      */
     @Override
     public int hashCode() {
-        return Objects.hash(regionName, servicePlan, overflowPlan);
+        return hashCode;
     }
 
     /**
@@ -189,9 +197,14 @@ public class LoadBalancerPlan implements Serializable {
             return true;
         } else if (o instanceof LoadBalancerPlan) {
             final LoadBalancerPlan other = (LoadBalancerPlan) o;
-            return Objects.equals(getRegion(), other.getRegion())
-                    && Objects.equals(getServicePlan(), other.getServicePlan())
-                    && Objects.equals(getOverflowPlan(), other.getOverflowPlan());
+            if (this.hashCode != other.hashCode) {
+                return false;
+            } else {
+                return Objects.equals(getRegion(), other.getRegion())
+                        && Objects.equals(getServicePlan(), other.getServicePlan())
+                        && ComparisonUtils.doubleMapEquals2(this.getOverflowPlan(), other.getOverflowPlan(),
+                                ComparisonUtils.WEIGHT_COMPARISON_TOLERANCE);
+            }
         } else {
             return false;
         }
@@ -243,6 +256,8 @@ public class LoadBalancerPlan implements Serializable {
             this.weight = weight;
             this.stopTrafficTo = stopTrafficTo;
             this.stop = stop;
+            // don't include things that have a fuzzy match in equals
+            this.hashCode = Objects.hash(this.id, this.service);
         }
 
         private final NodeIdentifier id;
@@ -298,12 +313,12 @@ public class LoadBalancerPlan implements Serializable {
             return stop;
         }
 
+        private final int hashCode;
+
         @Override
         public int hashCode() {
-            return Objects.hash(getId(), getService());
+            return hashCode;
         }
-
-        private static final double WEIGHT_COMPARISON_TOLERANCE = 1E6;
 
         @Override
         public boolean equals(final Object o) {
@@ -313,11 +328,15 @@ public class LoadBalancerPlan implements Serializable {
                 return true;
             } else if (this.getClass().equals(o.getClass())) {
                 final ContainerInfo other = (ContainerInfo) o;
-                return Objects.equals(getId(), other.getId()) //
-                        && Objects.equals(getService(), other.getService()) //
-                        && Math.abs(getWeight() - other.getWeight()) < WEIGHT_COMPARISON_TOLERANCE //
-                        && isStop() == other.isStop() //
-                        && isStopTrafficTo() == other.isStopTrafficTo();
+                if (this.hashCode != other.hashCode) {
+                    return false;
+                } else {
+                    return Objects.equals(getId(), other.getId()) //
+                            && Objects.equals(getService(), other.getService()) //
+                            && Math.abs(getWeight() - other.getWeight()) < ComparisonUtils.WEIGHT_COMPARISON_TOLERANCE
+                            && isStop() == other.isStop() //
+                            && isStopTrafficTo() == other.isStopTrafficTo();
+                }
             } else {
                 return false;
             }
