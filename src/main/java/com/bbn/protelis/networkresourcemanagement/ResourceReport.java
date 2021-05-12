@@ -138,8 +138,8 @@ public class ResourceReport implements Serializable {
             @JsonProperty("nodeComputeCapacity") @Nonnull final ImmutableMap<NodeAttribute, Double> nodeComputeCapacity,
 
             @JsonProperty("networkCapacity") @Nonnull final ImmutableMap<InterfaceIdentifier, ImmutableMap<LinkAttribute, Double>> networkCapacity,
-            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad,
-            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand,
+            @JsonProperty("networkLoad") @Nonnull final ImmutableMap<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad,
+            @JsonProperty("networkDemand") @Nonnull final ImmutableMap<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand,
 
             @JsonProperty("containerReports") @Nonnull final ImmutableMap<NodeIdentifier, ContainerResourceReport> containerReports,
             @JsonProperty("maximumServiceContainers") final int maximumServiceContainers,
@@ -229,7 +229,7 @@ public class ResourceReport implements Serializable {
         return networkCapacity;
     }
 
-    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad;
+    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad;
 
     /**
      * This is the network traffic passing through this node or terminating at
@@ -241,12 +241,12 @@ public class ResourceReport implements Serializable {
      * @return the network load
      */
     @Nonnull
-    public ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
+    public ImmutableMap<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
             getNetworkLoad() {
         return networkLoad;
     }
 
-    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand;
+    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkDemand;
 
     /**
      * This is the demand based on {@link #getNetworkLoad()}.
@@ -257,7 +257,7 @@ public class ResourceReport implements Serializable {
      * @return the network demand
      */
     @Nonnull
-    public ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
+    public ImmutableMap<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
             getNetworkDemand() {
         return networkDemand;
     }

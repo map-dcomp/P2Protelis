@@ -87,7 +87,7 @@ public class BasicResourceManager implements ResourceManager<NetworkServer> {
     private final ImmutableMap<ServiceIdentifier<?>, ImmutableMap<RegionIdentifier, ImmutableMap<NodeAttribute, Double>>> computeLoad;
     private final ImmutableMap<NodeAttribute, Double> computeCapacity;
     private final ImmutableMap<ServiceIdentifier<?>, Double> serverAvgProcTime;
-    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad;
+    private final ImmutableMap<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> networkLoad;
     private final VirtualClock clock;
     private final int maximumContainers = Integer.MAX_VALUE;
 
@@ -311,8 +311,8 @@ public class BasicResourceManager implements ResourceManager<NetworkServer> {
         // isn't correct
         final ImmutableMap<InterfaceIdentifier, ImmutableMap<LinkAttribute, Double>> nodeNetworkCapacity = node
                 .getNeighborLinkCapacity(LinkAttribute.DATARATE_TX);
-        final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> nodeNetworkLoad = networkLoad;
-        final ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> nodeNetworkDemand = computeNeighborLinkDemand();
+        final ImmutableMap<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> nodeNetworkLoad = networkLoad;
+        final ImmutableMap<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> nodeNetworkDemand = computeNeighborLinkDemand();
 
         final ResourceReport report = new ResourceReport(node.getNodeIdentifier(), System.currentTimeMillis(),
                 demandWindow, this.computeCapacity, nodeNetworkCapacity, nodeNetworkLoad, nodeNetworkDemand,
@@ -321,16 +321,16 @@ public class BasicResourceManager implements ResourceManager<NetworkServer> {
     }
 
     @Nonnull
-    private ImmutableMap<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
+    private ImmutableMap<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>
             computeNeighborLinkDemand() {
-        final ImmutableMap.Builder<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> builder = ImmutableMap
+        final ImmutableMap.Builder<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>> builder = ImmutableMap
                 .builder();
         this.node.getConnectedNeighbors().forEach(neighborId -> {
             final InterfaceIdentifier ii = BasicResourceManager.createInterfaceIdentifierForNeighbor(neighborId);
             if (this.networkLoad.containsKey(ii)) {
                 builder.put(ii, this.networkLoad.get(ii));
             } else {
-                final Optional<Map.Entry<InterfaceIdentifier, ImmutableMap<NodeNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>> globEntry = this.networkLoad
+                final Optional<Map.Entry<InterfaceIdentifier, ImmutableMap<RegionNetworkFlow, ImmutableMap<ServiceIdentifier<?>, ImmutableMap<LinkAttribute, Double>>>>> globEntry = this.networkLoad
                         .entrySet().stream().filter(entry -> entry.getKey().getName().equals("*")).findFirst();
                 if (globEntry.isPresent()) {
                     builder.put(ii, globEntry.get().getValue());
